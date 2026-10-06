@@ -1,0 +1,14 @@
+{
+  "name": "typing-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "中一至中三打字練習平台（英文、速成）",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "grades": [
+    { "id": "starter",  "name": "入門", "enWpm": 10, "zhCpm": 6,  "accuracy": 90 },
+    { "id": "bronze",   "name": "銅章", "enWpm": 20, "zhCpm": 12, "accuracy": 90 },
+    { "id": "silver",   "name": "銀章", "enWpm": 30, "zhCpm": 18, "accuracy": 90 },
+    { "id": "gold",     "name": "金章", "enWpm": 40, "zhCpm": 24, "accuracy": 92 },
+    { "id": "platinum", "name": "白金", "enWpm": 55, "zhCpm": 33, "accuracy": 95 }
+  ],
+  "yearTargets": {
+    "S1": { "enWpm": 10, "zhCpm": 6,  "accuracy": 90, "grade": "starter" },
+    "S2": { "enWpm": 20, "zhCpm": 12, "accuracy": 90, "grade": "bronze" },
+    "S3": { "enWpm": 30, "zhCpm": 18, "accuracy": 90, "grade": "silver" }
+  },
+  "stars": {
+    "note": "達過關條件得 1 粒星。有速度要求的課：速度達要求 1.1 倍或準確率高 5 個百分點得 2 粒；速度達 1.2 倍且準確率高 7 個百分點得 3 粒。只有準確率要求的課：只看準確率。",
+    "two":   { "speedRatio": 1.1, "accPlus": 5 },
+    "three": { "speedRatio": 1.2, "accPlus": 7 }
+  }
+}

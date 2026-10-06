@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>打字練習</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/type.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="index.html">打字練習平台</a>
+      <span class="crumb muted" id="crumb"></span>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="toggle-fingers" type="button" aria-pressed="true">手指顏色：開</button>
+    </header>
+
+    <section class="lesson-head">
+      <div>
+        <p class="eyebrow" id="lesson-eyebrow"></p>
+        <h1 id="lesson-title">載入中…</h1>
+      </div>
+      <ol class="steps" id="steps" aria-label="課堂步驟"></ol>
+    </section>
+
+    <section class="stage card" id="stage" aria-live="polite">
+      <div class="stage-head">
+        <div>
+          <h2 id="step-title"></h2>
+          <p class="muted" id="step-hint"></p>
+        </div>
+        <dl class="meters" id="meters">
+          <div><dt>速度</dt><dd><span id="m-wpm">0</span><small> WPM</small></dd></div>
+          <div><dt>準確率</dt><dd><span id="m-acc">100</span><small>%</small></dd></div>
+          <div><dt id="m-time-label">時間</dt><dd><span id="m-time">0:00</span></dd></div>
+        </dl>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="m-progress"></span></div>
+      <div class="text-wrap" id="text-wrap">
+        <div class="text" id="text"></div>
+      </div>
+      <p class="start-hint muted" id="start-hint">雙手放在基準位，準備好就直接打第一個字。</p>
+      <div class="guide" id="guide" hidden></div>
+    </section>
+
+    <section class="kb-area" id="kb-area">
+      <div id="keyboard"></div>
+      <div id="hands"></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="panel card" role="dialog" aria-modal="true" aria-labelledby="panel-title">
+      <div class="stars" id="panel-stars" aria-hidden="true"></div>
+      <h2 id="panel-title"></h2>
+      <p class="muted" id="panel-msg"></p>
+      <dl class="panel-stats" id="panel-stats"></dl>
+      <p class="rest" id="panel-rest" hidden>你已連續打字超過 20 分鐘，站起來伸展一下手腕，望遠處休息眼睛吧。</p>
+      <div class="panel-actions" id="panel-actions"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/type-page.js"></script>
+</body>
+</html>

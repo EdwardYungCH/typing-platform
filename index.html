@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>打字練習平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <style>
+    .hero { padding: 24px 0 8px; }
+    .hero h1 { margin: 0; font-size: clamp(28px, 4vw, 40px); line-height: 1.2; }
+    .hero p { margin: 8px 0 0; font-size: 18px; }
+    .tracks { display: grid; gap: 16px; margin-top: 24px; }
+    @media (min-width: 760px) { .tracks { grid-template-columns: 1fr 1fr; } }
+    .track { padding: 20px 22px; }
+    .track h2 { margin: 0; font-size: 22px; }
+    .track .tag { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: var(--accent); }
+    .lesson-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+    .lesson-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+      background: var(--surface); color: var(--ink); text-decoration: none;
+    }
+    .lesson-link:hover { border-color: var(--accent); }
+    .lesson-link .num {
+      flex: none; width: 34px; height: 34px; border-radius: 50%;
+      display: grid; place-items: center; font-weight: 700;
+      background: var(--surface-2); color: var(--ink-2);
+    }
+    .lesson-link.done .num { background: var(--ok-bg); color: var(--ok); }
+    .lesson-link .t { flex: 1; min-width: 0; }
+    .lesson-link .t b { display: block; }
+    .lesson-link .t span { font-size: 14px; color: var(--ink-2); }
+    .lesson-link .s { color: var(--star); letter-spacing: 2px; white-space: nowrap; }
+    .soon { margin: 14px 0 0; padding: 14px; border: 1px dashed var(--line); border-radius: var(--radius-sm); color: var(--ink-2); }
+    .note { margin-top: 24px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="index.html">打字練習平台</a>
+      <span class="spacer"></span>
+    </header>
+
+    <section class="hero">
+      <h1>由零開始，練到流暢打字</h1>
+      <p class="muted">每課 5 至 10 分鐘：先學、再練、後測。準確比快更重要。</p>
+    </section>
+
+    <section class="tracks">
+      <article class="track card">
+        <span class="tag">ENGLISH</span>
+        <h2>英文打字</h2>
+        <ul class="lesson-list" id="en-lessons"></ul>
+        <p class="soon">第 2 至 16 課即將推出。</p>
+      </article>
+      <article class="track card">
+        <span class="tag">速成</span>
+        <h2>中文速成</h2>
+        <p class="soon">速成課堂即將推出。建議先完成英文第 0、1 課，熟習十指基準位。</p>
+      </article>
+    </section>
+
+    <p class="note muted">目前為試用版：紀錄只存在這部電腦的瀏覽器內。</p>
+  </div>
+
+  <script type="module">
+    import { getProgress } from './js/storage.js';
+
+    const list = document.getElementById('en-lessons');
+    const { lessons } = await fetch('data/en-lessons.json').then((r) => r.json());
+    const progress = getProgress('en');
+    for (const l of lessons) {
+      const p = progress[l.id];
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.className = 'lesson-link' + (p?.done ? ' done' : '');
+      a.href = `type.html?lang=en&mode=lesson&id=${l.id}`;
+      a.innerHTML = `
+        <span class="num">${p?.done ? '✓' : l.id}</span>
+        <span class="t"><b>第 ${l.id} 課：${l.title}</b><span>${l.subtitle}</span></span>
+        <span class="s" aria-label="${p?.stars ?? 0} 粒星">${p?.stars ? '★'.repeat(p.stars) : ''}</span>`;
+      li.append(a);
+      list.append(li);
+    }
+  </script>
+</body>
+</html>

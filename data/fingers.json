@@ -1,0 +1,81 @@
+{
+  "fingers": {
+    "L5": { "name": "左尾指", "hand": "L", "color": "violet" },
+    "L4": { "name": "左無名指", "hand": "L", "color": "blue" },
+    "L3": { "name": "左中指", "hand": "L", "color": "green" },
+    "L2": { "name": "左食指", "hand": "L", "color": "orange" },
+    "TH": { "name": "拇指", "hand": "B", "color": "gray" },
+    "R2": { "name": "右食指", "hand": "R", "color": "orange" },
+    "R3": { "name": "右中指", "hand": "R", "color": "green" },
+    "R4": { "name": "右無名指", "hand": "R", "color": "blue" },
+    "R5": { "name": "右尾指", "hand": "R", "color": "violet" }
+  },
+  "home": ["KeyA", "KeyS", "KeyD", "KeyF", "KeyJ", "KeyK", "KeyL", "Semicolon"],
+  "bumps": ["KeyF", "KeyJ"],
+  "layout": [
+    [
+      { "code": "Backquote", "key": "`", "shift": "~", "finger": "L5" },
+      { "code": "Digit1", "key": "1", "shift": "!", "finger": "L5" },
+      { "code": "Digit2", "key": "2", "shift": "@", "finger": "L4" },
+      { "code": "Digit3", "key": "3", "shift": "#", "finger": "L3" },
+      { "code": "Digit4", "key": "4", "shift": "$", "finger": "L2" },
+      { "code": "Digit5", "key": "5", "shift": "%", "finger": "L2" },
+      { "code": "Digit6", "key": "6", "shift": "^", "finger": "R2" },
+      { "code": "Digit7", "key": "7", "shift": "&", "finger": "R2" },
+      { "code": "Digit8", "key": "8", "shift": "*", "finger": "R3" },
+      { "code": "Digit9", "key": "9", "shift": "(", "finger": "R4" },
+      { "code": "Digit0", "key": "0", "shift": ")", "finger": "R5" },
+      { "code": "Minus", "key": "-", "shift": "_", "finger": "R5" },
+      { "code": "Equal", "key": "=", "shift": "+", "finger": "R5" },
+      { "code": "Backspace", "label": "Backspace", "finger": "R5", "width": 2 }
+    ],
+    [
+      { "code": "Tab", "label": "Tab", "finger": "L5", "width": 1.5 },
+      { "code": "KeyQ", "key": "q", "shift": "Q", "finger": "L5" },
+      { "code": "KeyW", "key": "w", "shift": "W", "finger": "L4" },
+      { "code": "KeyE", "key": "e", "shift": "E", "finger": "L3" },
+      { "code": "KeyR", "key": "r", "shift": "R", "finger": "L2" },
+      { "code": "KeyT", "key": "t", "shift": "T", "finger": "L2" },
+      { "code": "KeyY", "key": "y", "shift": "Y", "finger": "R2" },
+      { "code": "KeyU", "key": "u", "shift": "U", "finger": "R2" },
+      { "code": "KeyI", "key": "i", "shift": "I", "finger": "R3" },
+      { "code": "KeyO", "key": "o", "shift": "O", "finger": "R4" },
+      { "code": "KeyP", "key": "p", "shift": "P", "finger": "R5" },
+      { "code": "BracketLeft", "key": "[", "shift": "{", "finger": "R5" },
+      { "code": "BracketRight", "key": "]", "shift": "}", "finger": "R5" },
+      { "code": "Backslash", "key": "\\", "shift": "|", "finger": "R5", "width": 1.5 }
+    ],
+    [
+      { "code": "CapsLock", "label": "Caps", "finger": "L5", "width": 1.75 },
+      { "code": "KeyA", "key": "a", "shift": "A", "finger": "L5" },
+      { "code": "KeyS", "key": "s", "shift": "S", "finger": "L4" },
+      { "code": "KeyD", "key": "d", "shift": "D", "finger": "L3" },
+      { "code": "KeyF", "key": "f", "shift": "F", "finger": "L2" },
+      { "code": "KeyG", "key": "g", "shift": "G", "finger": "L2" },
+      { "code": "KeyH", "key": "h", "shift": "H", "finger": "R2" },
+      { "code": "KeyJ", "key": "j", "shift": "J", "finger": "R2" },
+      { "code": "KeyK", "key": "k", "shift": "K", "finger": "R3" },
+      { "code": "KeyL", "key": "l", "shift": "L", "finger": "R4" },
+      { "code": "Semicolon", "key": ";", "shift": ":", "finger": "R5" },
+      { "code": "Quote", "key": "'", "shift": "\"", "finger": "R5" },
+      { "code": "Enter", "label": "Enter", "finger": "R5", "width": 2.25 }
+    ],
+    [
+      { "code": "ShiftLeft", "label": "Shift", "finger": "L5", "width": 2.25 },
+      { "code": "KeyZ", "key": "z", "shift": "Z", "finger": "L5" },
+      { "code": "KeyX", "key": "x", "shift": "X", "finger": "L4" },
+      { "code": "KeyC", "key": "c", "shift": "C", "finger": "L3" },
+      { "code": "KeyV", "key": "v", "shift": "V", "finger": "L2" },
+      { "code": "KeyB", "key": "b", "shift": "B", "finger": "L2" },
+      { "code": "KeyN", "key": "n", "shift": "N", "finger": "R2" },
+      { "code": "KeyM", "key": "m", "shift": "M", "finger": "R2" },
+      { "code": "Comma", "key": ",", "shift": "<", "finger": "R3" },
+      { "code": "Period", "key": ".", "shift": ">", "finger": "R4" },
+      { "code": "Slash", "key": "/", "shift": "?", "finger": "R5" },
+      { "code": "ShiftRight", "label": "Shift", "finger": "R5", "width": 2.75 }
+    ],
+    [
+      { "code": "Space", "key": " ", "label": "", "finger": "TH", "width": 6.25, "offset": 3.75 }
+    ]
+  ]
+}

@@ -1,0 +1,476 @@
+// 打字畫面的控制程式：讀取課堂資料，逐步執行「導覽／練習／小測」，顯示結果。
+// 網址例子：type.html?lang=en&mode=lesson&id=1&step=2
+
+import { CONFIG } from './config.js';
+import { TypingEngine, generateText, makeRng } from './engine.js';
+import { VirtualKeyboard, Hands, loadFingers, keyForChar, fingerName } from './keyboard.js';
+import { computeStats, starsFor, fmt, fmtAcc } from './stats.js';
+import * as store from './storage.js';
+
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const lang = params.get('lang') === 'zh' ? 'zh' : 'en';
+const lessonId = Number(params.get('id') ?? 0);
+
+const state = {
+  lesson: null,
+  lessons: [],
+  levels: null,
+  stepIndex: 0,
+  maxReached: 0,
+  engine: null,
+  kb: null,
+  hands: null,
+  testResult: null,
+};
+
+init().catch((err) => {
+  console.error(err);
+  $('lesson-title').textContent = '載入失敗';
+  $('step-hint').textContent = '請重新整理頁面；如果問題持續，請告訴老師。';
+});
+
+async function init() {
+  const [, lessonsData, levels] = await Promise.all([
+    loadFingers(),
+    fetch(`data/${lang}-lessons.json`).then((r) => r.json()),
+    fetch('data/levels.json').then((r) => r.json()),
+  ]);
+  state.lessons = lessonsData.lessons;
+  state.levels = levels;
+  state.lesson = state.lessons.find((l) => l.id === lessonId);
+  if (!state.lesson) {
+    $('lesson-title').textContent = '找不到這一課';
+    return;
+  }
+
+  const showFingers = store.getSetting('showFingers', CONFIG.defaults.showFingers);
+  state.kb = new VirtualKeyboard($('keyboard'), { showFingers });
+  state.hands = new Hands($('hands'));
+  setupFingerToggle(showFingers);
+
+  const L = state.lesson;
+  document.title = `第 ${L.id} 課：${L.title}｜打字練習`;
+  $('crumb').textContent = lang === 'en' ? '英文打字' : '中文速成';
+  $('lesson-eyebrow').textContent = `第 ${L.id} 課`;
+  $('lesson-title').textContent = `${L.title}　${L.subtitle ?? ''}`.trim();
+
+  const startStep = Math.min(Math.max(Number(params.get('step') ?? 1) - 1, 0), L.steps.length - 1);
+  state.maxReached = startStep;
+  renderSteps();
+  runStep(startStep);
+}
+
+function setupFingerToggle(initial) {
+  const btn = $('toggle-fingers');
+  const apply = (on) => {
+    btn.textContent = `手指顏色：${on ? '開' : '關'}`;
+    btn.setAttribute('aria-pressed', String(on));
+    state.kb.setFingers(on);
+  };
+  apply(initial);
+  btn.addEventListener('click', () => {
+    const on = !state.kb.showFingers;
+    store.setSetting('showFingers', on);
+    apply(on);
+    btn.blur();
+  });
+}
+
+// ---------- 步驟列 ----------
+
+function renderSteps() {
+  const ol = $('steps');
+  ol.innerHTML = '';
+  state.lesson.steps.forEach((s, i) => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'step-pill';
+    b.textContent = `${i + 1}. ${s.title}`;
+    if (i === state.stepIndex) b.setAttribute('aria-current', 'step');
+    if (i < state.maxReached || (i === state.maxReached && i < state.stepIndex)) b.classList.add('done');
+    b.disabled = i > state.maxReached;
+    b.addEventListener('click', () => { b.blur(); runStep(i); });
+    li.append(b);
+    ol.append(li);
+  });
+}
+
+// ---------- 執行一個步驟 ----------
+
+function runStep(i) {
+  state.engine?.detach();
+  state.guideCleanup?.();
+  state.guideCleanup = null;
+  state.stepIndex = i;
+  state.maxReached = Math.max(state.maxReached, i);
+  hidePanel();
+  renderSteps();
+
+  const step = state.lesson.steps[i];
+  const url = new URL(location.href);
+  url.searchParams.set('step', i + 1);
+  history.replaceState(null, '', url);
+
+  $('step-title').textContent = step.title;
+  $('step-hint').textContent = step.hint ?? '';
+
+  // 課堂只教的鍵（第 0 課以外）：其他鍵變淡，令學生專注
+  const focus = state.lesson.newKeys?.length ? [...state.lesson.newKeys, 'Space'] : null;
+  state.kb.focusKeys(focus);
+
+  if (step.type === 'guide') runGuide(step);
+  else runTyping(step);
+}
+
+// ---------- 導覽（第 0 課）----------
+
+function runGuide(step) {
+  showTypingUI(false);
+  const box = $('guide');
+  box.hidden = false;
+  let idx = 0;
+
+  const render = () => {
+    const s = step.slides[idx];
+    box.innerHTML = `
+      <div class="slide">
+        <div class="slide-text">
+          <p class="slide-count">${idx + 1} / ${step.slides.length}</p>
+          <h3>${s.title}</h3>
+          <ul>${s.points.map((p) => `<li>${p}</li>`).join('')}</ul>
+        </div>
+        <div class="slide-visual">${s.show === 'posture' ? POSTURE_SVG : ''}</div>
+      </div>
+      <div class="slide-nav">
+        <button class="btn" type="button" data-nav="prev" ${idx === 0 ? 'disabled' : ''}>上一頁</button>
+        <span class="muted kbd-tip">按 Enter 下一頁</span>
+        <button class="btn primary" type="button" data-nav="next">${idx === step.slides.length - 1 ? '開始練習' : '下一頁'}</button>
+      </div>`;
+
+    $('kb-area').hidden = s.show === 'posture';
+    $('keyboard').hidden = s.show === 'hands';
+    state.kb.setFingers(s.fingers ? true : store.getSetting('showFingers', CONFIG.defaults.showFingers));
+    state.kb.setNext(s.highlight ?? []);
+    if (s.show === 'hands') state.hands.setFinger(['L2', 'R2'], '兩隻食指放在 F 和 J 的凸點上');
+    else state.hands.setFinger([], '');
+  };
+
+  const go = (d) => {
+    if (d > 0 && idx === step.slides.length - 1) {
+      cleanup();
+      finishStep({ guide: true });
+      return;
+    }
+    idx = Math.min(Math.max(idx + d, 0), step.slides.length - 1);
+    render();
+  };
+
+  const onClick = (e) => {
+    const nav = e.target.closest('[data-nav]')?.dataset.nav;
+    if (nav) go(nav === 'next' ? 1 : -1);
+  };
+  const onKey = (e) => {
+    if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+  };
+  const cleanup = () => {
+    box.removeEventListener('click', onClick);
+    window.removeEventListener('keydown', onKey);
+    box.hidden = true;
+    $('keyboard').hidden = false;
+    $('kb-area').hidden = false;
+    state.kb.setFingers(store.getSetting('showFingers', CONFIG.defaults.showFingers));
+  };
+
+  box.addEventListener('click', onClick);
+  window.addEventListener('keydown', onKey);
+  state.guideCleanup = cleanup;
+  render();
+}
+
+// ---------- 打字練習和小測 ----------
+
+function runTyping(step) {
+  showTypingUI(true);
+
+  const text = step.text ?? generateText(step.gen, makeRng());
+  const textEl = $('text');
+  textEl.className = 'text' + (step.display === 'big' ? ' big' : '');
+  $('text-wrap').className = 'text-wrap' + (step.display === 'big' ? ' big' : '');
+  $('text-wrap').scrollTop = 0;
+  const spans = renderText(textEl, text);
+
+  $('start-hint').hidden = false;
+  $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
+  updateMeters(null, step);
+
+  const engine = new TypingEngine({
+    text,
+    errorMode: step.type === 'test' ? 'continue' : store.getSetting('errorMode', CONFIG.defaults.errorMode),
+    timeLimit: step.timeLimit ?? 0,
+    onKey: (e, eng) => {
+      $('start-hint').hidden = true;
+      state.kb.press(eng.lastKey.code, eng.lastKey.ok);
+      paint(spans, eng);
+      updateMeters(eng, step);
+      if (!eng.lastKey.ok) flashError(spans[eng.errorMode === 'block' ? eng.pos : eng.pos - 1]);
+    },
+    onTick: (eng) => updateMeters(eng, step),
+    onFinish: (eng) => onTypingDone(step, eng),
+  });
+  state.engine = engine;
+  paint(spans, engine);
+  engine.attach();
+}
+
+function showTypingUI(on) {
+  $('text-wrap').hidden = !on;
+  $('meters').hidden = !on;
+  $('start-hint').hidden = !on;
+  document.querySelector('.progress').hidden = !on;
+  $('guide').hidden = on;
+}
+
+/** 文字逐字放入 span；每個詞連同後面的空格包成一組，令換行只發生在詞與詞之間。 */
+function renderText(el, text) {
+  el.innerHTML = '';
+  const spans = [];
+  let word = document.createElement('span');
+  word.className = 'word';
+  [...text].forEach((ch, i) => {
+    const s = document.createElement('span');
+    s.className = 'ch' + (ch === ' ' ? ' space' : '');
+    s.textContent = ch === ' ' ? ' ' : ch;
+    spans.push(s);
+    word.append(s);
+    if (ch === ' ' || i === text.length - 1) {
+      el.append(word);
+      word = document.createElement('span');
+      word.className = 'word';
+    }
+  });
+  return spans;
+}
+
+function paint(spans, eng) {
+  spans.forEach((s, i) => {
+    const st = eng.status[i];
+    s.classList.toggle('ok', st === 'ok');
+    s.classList.toggle('fixed', st === 'fixed');
+    s.classList.toggle('bad', st === 'bad');
+    s.classList.toggle('cur', i === eng.pos && !eng.finished);
+  });
+  const cur = spans[eng.pos];
+  if (cur) keepInView(cur);
+  showNextKey(eng.text[eng.pos]);
+  $('m-progress').style.width = `${(eng.pos / eng.text.length) * 100}%`;
+}
+
+/** 令目前一行保持在第 2 行（第一行時除外），每次捲動剛好一整行。 */
+function keepInView(span) {
+  const wrap = $('text-wrap');
+  const lineH = parseFloat(getComputedStyle($('text')).lineHeight);
+  const line = Math.round(span.offsetTop / lineH);
+  const target = Math.max(0, line - 1) * lineH;
+  if (Math.abs(wrap.scrollTop - target) > 1) wrap.scrollTo({ top: target, behavior: 'smooth' });
+}
+
+function showNextKey(ch) {
+  if (ch === undefined) {
+    state.kb.setNext([]);
+    state.hands.setFinger([], '');
+    return;
+  }
+  const info = keyForChar(ch);
+  if (!info) {
+    state.kb.setNext([]);
+    state.hands.setFinger([], '');
+    return;
+  }
+  const codes = info.shiftCode ? [info.code, info.shiftCode] : [info.code];
+  const fingers = info.shiftFinger ? [info.finger, info.shiftFinger] : [info.finger];
+  state.kb.setNext(codes);
+  const keyText = ch === ' ' ? '空白鍵' : ch.toUpperCase();
+  let label = `用${fingerName(info.finger)}按 ${keyText}`;
+  if (info.finger === 'TH') label = '用拇指按空白鍵';
+  if (info.shiftFinger) label = `${fingerName(info.shiftFinger)}按住 Shift，${fingerName(info.finger)}按 ${ch}`;
+  state.hands.setFinger(fingers, label);
+}
+
+function flashError(span) {
+  if (!span) return;
+  span.classList.remove('err');
+  void span.offsetWidth;
+  span.classList.add('err');
+}
+
+function updateMeters(eng, step) {
+  if (!eng || !eng.started) {
+    $('m-wpm').textContent = '0';
+    $('m-acc').textContent = '100';
+    $('m-time').textContent = step.timeLimit ? clock(step.timeLimit) : '0:00';
+    return;
+  }
+  const st = computeStats(eng);
+  $('m-wpm').textContent = fmt(st.netWpm);
+  $('m-acc').textContent = fmtAcc(st.accuracy);
+  $('m-time').textContent = step.timeLimit ? clock(eng.remainingSec()) : clock(st.seconds);
+}
+
+function clock(sec) {
+  const s = Math.max(0, Math.round(sec));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+// ---------- 完成步驟 ----------
+
+function onTypingDone(step, eng) {
+  const stats = computeStats(eng);
+  const typingTotal = store.addTypingTime(stats.seconds);
+  let stars = null;
+  if (step.type === 'test') {
+    stars = starsFor(stats, step.pass ?? {}, state.levels.stars);
+    state.testResult = { stats, stars };
+  }
+  store.saveAttempt({
+    lang, mode: 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
+  });
+  finishStep({ stats, stars, step, rest: typingTotal >= CONFIG.restReminderMinutes * 60 });
+}
+
+function finishStep({ stats, stars, step, rest, guide }) {
+  const L = state.lesson;
+  const isLast = state.stepIndex === L.steps.length - 1;
+  const isTest = step?.type === 'test';
+  const passed = !isTest || stars > 0;
+
+  if (rest) store.resetTypingTime();
+  $('panel-rest').hidden = !rest;
+
+  const actions = [];
+  const statsList = [];
+  if (stats) {
+    statsList.push(['速度', `${fmt(stats.netWpm)} WPM`]);
+    statsList.push(['準確率', `${fmtAcc(stats.accuracy)}%`]);
+    statsList.push(['用時', clock(stats.seconds)]);
+    statsList.push(['打錯', `${stats.errors} 次`]);
+  }
+
+  let title;
+  let msg = '';
+  if (isTest && !passed) {
+    title = '差一點就過關';
+    msg = `準確率要達 ${step.pass.accuracy}% 才過關。慢慢來，先求準。`;
+    actions.push(['再試一次', () => runStep(state.stepIndex), true]);
+    actions.push(['回到練習', () => runStep(Math.max(0, state.stepIndex - 1)), false]);
+  } else if (isLast) {
+    const best = saveLessonDone(stars, stats);
+    title = isTest ? '過關！' : '完成這一課！';
+    msg = best;
+    const next = state.lessons.find((l) => l.id === L.id + 1);
+    if (next) actions.push([`下一課：${next.title}`, () => goLesson(next.id), true]);
+    else actions.push(['回到首頁', () => (location.href = 'index.html'), true]);
+    actions.push(['再做一次', () => runStep(isTest ? state.stepIndex : 0), false]);
+  } else {
+    title = guide ? '準備好了！' : '做得好！';
+    msg = guide ? '接下來把手放在鍵盤上試一試。' : '繼續下一步。';
+    const nextStep = L.steps[state.stepIndex + 1];
+    state.maxReached = Math.max(state.maxReached, state.stepIndex + 1);
+    actions.push([`下一步：${nextStep.title}`, () => runStep(state.stepIndex + 1), true]);
+    if (!guide) actions.push(['再練一次', () => runStep(state.stepIndex), false]);
+  }
+
+  showPanel({ title, msg, stars: isTest ? stars : null, stats: statsList, actions });
+}
+
+function saveLessonDone(stars, stats) {
+  const { prev, next } = store.saveLessonResult(lang, lessonId, {
+    stars: stars ?? 0,
+    wpm: stats?.netWpm ?? 0,
+    accuracy: stats?.accuracy ?? 0,
+  });
+  if (stars && next.stars > prev.stars && prev.done) return `新紀錄：${next.stars} 粒星！`;
+  if (stars && stars < 3) return '想拿更多星星？可以再試一次，打得更準、更快。';
+  return '已解鎖下一課。';
+}
+
+function goLesson(id) {
+  const url = new URL(location.href);
+  url.searchParams.set('id', id);
+  url.searchParams.set('step', 1);
+  location.href = url.toString();
+}
+
+// ---------- 結果彈窗 ----------
+
+function showPanel({ title, msg, stars, stats, actions }) {
+  $('panel-title').textContent = title;
+  $('panel-msg').textContent = msg;
+  const starsEl = $('panel-stars');
+  starsEl.innerHTML = '';
+  if (stars !== null && stars !== undefined) {
+    for (let i = 1; i <= 3; i++) {
+      const s = document.createElement('span');
+      s.className = 'star' + (i <= stars ? ' on' : '');
+      s.textContent = '★';
+      starsEl.append(s);
+    }
+    starsEl.setAttribute('aria-label', `${stars} 粒星`);
+  }
+  const dl = $('panel-stats');
+  dl.innerHTML = stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  dl.hidden = stats.length === 0;
+
+  const box = $('panel-actions');
+  box.innerHTML = '';
+  actions.forEach(([label, fn, primary]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn' + (primary ? ' primary' : '');
+    b.textContent = label;
+    b.addEventListener('click', fn);
+    box.append(b);
+  });
+
+  $('overlay').hidden = false;
+  state.kb.setNext([]);
+  state.hands.setFinger([], '');
+  // 延遲一點才接受 Enter，避免學生打完最後一個字時誤按
+  setTimeout(() => {
+    box.querySelector('.primary')?.focus();
+    state.panelKey = (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); box.querySelector('.primary')?.click(); }
+    };
+    window.addEventListener('keydown', state.panelKey);
+  }, 400);
+}
+
+function hidePanel() {
+  $('overlay').hidden = true;
+  if (state.panelKey) window.removeEventListener('keydown', state.panelKey);
+  state.panelKey = null;
+}
+
+// ---------- 坐姿圖 ----------
+
+const POSTURE_SVG = `
+<svg viewBox="0 0 320 240" class="posture" role="img" aria-label="正確坐姿示意圖">
+  <line x1="10" y1="226" x2="310" y2="226" class="ground"/>
+  <rect x="190" y="138" width="120" height="8" rx="2" class="desk"/>
+  <line x1="300" y1="146" x2="300" y2="226" class="desk-leg"/>
+  <rect x="236" y="62" width="62" height="46" rx="4" class="screen"/>
+  <line x1="267" y1="108" x2="267" y2="138" class="desk-leg"/>
+  <rect x="196" y="132" width="44" height="6" rx="2" class="kbd"/>
+  <path d="M86 70 L86 150" class="chair"/>
+  <path d="M86 150 L150 150 M118 150 L118 226" class="chair"/>
+  <circle cx="112" cy="58" r="16" class="body"/>
+  <path d="M106 76 L106 146 L162 146 L162 222 L182 222" class="body"/>
+  <path d="M108 92 L134 124 L198 128" class="body"/>
+  <path d="M128 60 L236 60" class="guide-line"/>
+  <text x="150" y="52" class="note">視線平視螢幕上緣</text>
+  <text x="128" y="110" class="note">手肘約 90°</text>
+  <text x="60" y="200" class="note">雙腳平放</text>
+  <text x="18" y="112" class="note">背部挺直</text>
+</svg>`;

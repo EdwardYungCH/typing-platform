@@ -1,0 +1,135 @@
+{
+  "lessons": [
+    {
+      "id": 0,
+      "title": "坐姿與指法",
+      "subtitle": "認識基準位和十指分工",
+      "newKeys": [],
+      "pass": { "complete": true },
+      "steps": [
+        {
+          "type": "guide",
+          "title": "認識正確姿勢",
+          "slides": [
+            {
+              "title": "坐得正，打得久",
+              "points": [
+                "背部挺直，靠着椅背坐",
+                "雙腳平放地上",
+                "眼睛平視螢幕上緣，距離約一隻手臂",
+                "手肘彎成約 90 度，手腕不要壓在桌上"
+              ],
+              "show": "posture"
+            },
+            {
+              "title": "基準位：手指的「家」",
+              "points": [
+                "左手四隻手指放在 A S D F",
+                "右手四隻手指放在 J K L ;",
+                "兩隻拇指輕放在空白鍵上",
+                "每次按完鍵，手指都要回到基準位"
+              ],
+              "show": "keyboard",
+              "highlight": ["KeyA", "KeyS", "KeyD", "KeyF", "KeyJ", "KeyK", "KeyL", "Semicolon", "Space"]
+            },
+            {
+              "title": "F 和 J 上的小凸點",
+              "points": [
+                "F 鍵和 J 鍵上各有一條小凸起",
+                "不用看鍵盤，兩隻食指摸到凸點就找到基準位",
+                "現在試試閉上眼睛，用食指找出 F 和 J"
+              ],
+              "show": "keyboard",
+              "highlight": ["KeyF", "KeyJ"]
+            },
+            {
+              "title": "十指分工",
+              "points": [
+                "每隻手指負責一條斜行的鍵，顏色相同的鍵用同一隻手指",
+                "紫色：尾指　藍色：無名指　綠色：中指　橙色：食指",
+                "兩隻食指負責的鍵最多，各有兩行",
+                "空白鍵用拇指按"
+              ],
+              "show": "keyboard",
+              "fingers": true
+            },
+            {
+              "title": "盲打：不看鍵盤",
+              "points": [
+                "眼睛看螢幕，不看鍵盤",
+                "開始時會慢，這是正常的",
+                "先求準，再求快：準確率比速度重要",
+                "打錯了不用急，按回正確的鍵就可以"
+              ],
+              "show": "hands"
+            }
+          ]
+        },
+        {
+          "type": "drill",
+          "title": "找到基準位",
+          "hint": "把手放在基準位，跟着發光的鍵逐個按。",
+          "display": "big",
+          "text": "fj fj fj"
+        },
+        {
+          "type": "drill",
+          "title": "每隻手指試一次",
+          "hint": "由左手尾指開始，逐隻手指按一次，按完回到基準位。",
+          "display": "big",
+          "text": "a s d f j k l ;"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "title": "基準鍵",
+      "subtitle": "A S D F J K L ;",
+      "newKeys": ["KeyA", "KeyS", "KeyD", "KeyF", "KeyJ", "KeyK", "KeyL", "Semicolon"],
+      "pass": { "accuracy": 90 },
+      "steps": [
+        {
+          "type": "drill",
+          "title": "示範",
+          "hint": "看清楚每個鍵由哪隻手指負責，跟着發光的鍵按。",
+          "display": "big",
+          "text": "f j d k s l a ;"
+        },
+        {
+          "type": "drill",
+          "title": "單鍵",
+          "hint": "每組三下，用同一隻手指。按空白鍵用拇指。",
+          "text": "fff jjj ddd kkk sss lll aaa ;;; fff jjj ddd kkk sss lll aaa ;;;"
+        },
+        {
+          "type": "drill",
+          "title": "組合",
+          "hint": "混合基準鍵，記得每次按完都回到基準位。",
+          "gen": { "kind": "groups", "chars": "asdfjkl;", "groups": 16, "minLen": 2, "maxLen": 4 }
+        },
+        {
+          "type": "drill",
+          "title": "詞語",
+          "hint": "這些都是只用基準鍵就打到的英文詞。",
+          "gen": {
+            "kind": "words",
+            "words": ["a", "ad", "add", "adds", "ads", "alas", "all", "ask", "asks", "dad", "dads", "fad", "fads", "fall", "falls", "flask", "lad", "lads", "lass", "sad", "salad", "salads", "sass", "flak"],
+            "count": 18
+          }
+        },
+        {
+          "type": "test",
+          "title": "過關小測",
+          "hint": "45 秒內打得愈多愈好，準確率達 90% 即過關。",
+          "timeLimit": 45,
+          "pass": { "accuracy": 90 },
+          "gen": {
+            "kind": "words",
+            "words": ["a", "ad", "add", "adds", "ads", "alas", "all", "ask", "asks", "dad", "dads", "fad", "fads", "fall", "falls", "flask", "lad", "lads", "lass", "sad", "salad", "salads", "sass", "flak", "fdsa", "jkl;", "asdf", ";lkj"],
+            "count": 60
+          }
+        }
+      ]
+    }
+  ]
+}
