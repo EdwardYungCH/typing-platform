@@ -10,14 +10,16 @@
 2. Cloudflare Pages 會自動偵測並重新發佈，約 1 分鐘後生效。
 3. 在 Cloudflare 的 Workers & Pages → 這個項目 → Deployments，可以看到每次發佈的狀態；失敗時按入去看建置紀錄。
 
-### Cloudflare 建置設定
+### Cloudflare 設定
 
-| 欄位 | 現時 | 日後（啟用程式壓縮） |
-| --- | --- | --- |
-| Build command | 留空 | `npm run build` |
-| Build output directory | 留空 | `dist` |
+項目是 Cloudflare Workers 項目（名稱 `sphrc-typing-platform`）：
 
-留空時，Cloudflare 直接發佈儲存庫內的檔案；改為 `npm run build` 後，會先用 `build.mjs` 壓縮程式，再發佈 `dist/` 資料夾。
+| 欄位 | 設定 |
+| --- | --- |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+
+`npm run build` 用 `build.mjs` 壓縮程式並輸出到 `dist/`；`wrangler.jsonc` 指定只發佈 `dist/`。新增上線的資料夾時，要同時加入 `build.mjs` 的 `SITE_DIRS`。
 
 ## 在自己電腦試用
 

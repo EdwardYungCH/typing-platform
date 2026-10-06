@@ -1,0 +1,10 @@
+{
+  // Cloudflare Workers 設定：只發佈 npm run build 產生的 dist/ 資料夾。
+  // 名稱要與 Cloudflare 上的項目名稱一致。
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sphrc-typing-platform",
+  "compatibility_date": "2026-10-06",
+  "assets": {
+    "directory": "./dist"
+  }
+}
