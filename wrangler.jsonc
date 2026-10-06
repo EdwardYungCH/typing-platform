@@ -4,6 +4,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "sphrc-typing-platform",
   "compatibility_date": "2026-10-06",
+  // 開啟 xxx.workers.dev 網址；日後加學校網域時仍可保留
+  "workers_dev": true,
   "assets": {
     "directory": "./dist"
   }
