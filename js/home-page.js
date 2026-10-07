@@ -1,5 +1,5 @@
 import { getProgress } from './storage.js';
-import { loadCompanions, art, getChoice, getNick, summary, stageOf, nextGoal } from './companion.js';
+import { loadCompanions, art, getChoice, nickOf, summary, stageOf, nextGoal } from './companion.js';
 
 const data = await loadCompanions();
 const { lessons } = await fetch('data/en-lessons.json').then((r) => r.json());
@@ -17,7 +17,7 @@ for (const [w, info] of Object.entries(data.worlds)) {
   card.dataset.w = w;
 
   const pet = c
-    ? `<div class="pet-box"><img class="companion pet pet-float" width="120" height="120" src="${art(w, c.id, stage)}" alt="${c.name}"><div class="nm">${getNick(w, c.name)}</div><span class="badge">${data.stages[stage].name}</span></div>`
+    ? `<div class="pet-box"><img class="companion pet pet-float" width="120" height="120" src="${art(w, c.id, stage)}" alt="${c.name}"><div class="nm">${nickOf(w, c)}</div><span class="badge">${data.stages[stage].name}</span></div>`
     : `<a class="btn primary" href="pick.html?world=${w}">揀夥伴</a>`;
 
   const pct = Math.min(100, Math.round(((stage) / 4) * 100 + (goal ? Math.min(s.lessons / goal.stage.need.lessons, 1) * 25 : 0)));

@@ -1,5 +1,5 @@
 import { applyWorld } from './world.js';
-import { loadCompanions, art, getChoice, getNick, summary, stageOf, nextGoal } from './companion.js';
+import { loadCompanions, art, getChoice, nickOf, summary, stageOf, nextGoal } from './companion.js';
 
 const $ = (id) => document.getElementById(id);
 const data = await loadCompanions();
@@ -28,7 +28,7 @@ function render() {
   const mine = getChoice(world);
   $('list').innerHTML = data.companions.filter((c) => c.world === world).map((c) => `
     <section class="card detail">
-      <h2>${mine === c.id ? getNick(world, c.name) : c.name}
+      <h2>${mine === c.id ? nickOf(world, c) : c.name}
         <span class="badge">${c.kind}</span>${mine === c.id ? ' <span class="badge">我的夥伴</span>' : ''}</h2>
       <p class="muted" style="margin:4px 0 0">${c.intro}</p>
       <div class="evo">${data.stages.map((st) => `

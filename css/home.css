@@ -69,7 +69,7 @@
 .evo .lock img { filter: brightness(0) opacity(0.55); }
 .evo .lock figcaption::after { content: " 🔒"; }
 .name-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
-.name-row input {
+.name-row input, .name-row select {
   font: inherit; padding: 8px 12px; border-radius: 12px; min-width: 0; width: 10em;
   background: var(--surface-2); color: var(--ink); border: 1px solid var(--line);
 }

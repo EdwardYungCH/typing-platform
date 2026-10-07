@@ -1,5 +1,5 @@
 import { applyWorld } from './world.js';
-import { loadCompanions, art, getChoice, setChoice, getNick, setNick, summary, stageOf, isLocked } from './companion.js';
+import { loadCompanions, art, getChoice, setChoice, nickOf, setNick, summary, stageOf, isLocked, validNick } from './companion.js';
 
 const $ = (id) => document.getElementById(id);
 const data = await loadCompanions();
@@ -54,13 +54,13 @@ function renderDetail(c, locked) {
     </div>
     <div class="name-row">
       <label for="nick">夥伴名字</label>
-      <input id="nick" maxlength="8" value="${owned ? getNick(world, c.name) : c.name}">
-      <button class="btn primary" id="adopt" type="button">${owned ? (locked ? '儲存名字' : '已選這位 ✓') : '選擇' + c.name}</button>
+      <select id="nick">${c.names.map((n) => `<option${n === validNick(c, owned ? nickOf(world, c) : c.name) ? ' selected' : ''}>${n}</option>`).join('')}</select>
+      <button class="btn primary" id="adopt" type="button">${owned ? (locked ? '儲存' : '已選這位 ✓') : '選擇' + c.name}</button>
     </div>
-    ${locked ? '<p class="muted" style="margin:10px 0 0">🔒 夥伴已經孵化，這個學年不能再換，但可以改名字。需要重新選擇請找老師。</p>' : '<p class="muted" style="margin:10px 0 0">夥伴孵化（完成第 1 課）之前可以隨意換；孵化後就會鎖定，所以想清楚才選喔。</p>'}`;
+    ${locked ? '<p class="muted" style="margin:10px 0 0">🔒 夥伴已經孵化，這個學年不能再換，名字也只能從名單中揀。需要重新選擇請找老師。</p>' : '<p class="muted" style="margin:10px 0 0">夥伴孵化（完成第 1 課）之前可以隨意換；孵化後就會鎖定，所以想清楚才選喔。</p>'}`;
   $('adopt').onclick = () => {
     if (!locked) setChoice(world, c.id);
-    setNick(world, $('nick').value.trim() || c.name);
+    setNick(world, validNick(c, $('nick').value));
     location.href = 'index.html';
   };
 }

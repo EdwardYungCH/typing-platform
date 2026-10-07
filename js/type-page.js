@@ -450,7 +450,7 @@ function renderPanelPet() {
   if (!state.petId) return;
   const stage = currentStage();
   const c = state.petData.companions.find((x) => x.id === state.petId);
-  const nick = pet.getNick(state.world, c.name);
+  const nick = pet.nickOf(state.world, c);
   const stageName = state.petData.stages[stage].name;
   const evolved = state.evolvedFrom !== null && state.evolvedFrom !== undefined;
   box.innerHTML = evolved

@@ -1,28 +1,239 @@
 {
-  "_說明": "夥伴資料。stages 的門檻可按教學進度調整：lessons=已完成課數，wpm=最佳速度，acc=準確率。語言為 en 的世界用英文進度，zh 用速成進度。",
+  "_說明": "夥伴資料。stages 的門檻可按教學進度調整：lessons=已完成課數，wpm=最佳速度，acc=準確率。語言為 en 的世界用英文進度，zh 用速成進度。 names 是學生可揀的名字（不可自由輸入）；老師想加名字，直接在這裏加。",
   "worlds": {
-    "planet": { "lang": "en", "name": "鍵帽星系", "tagline": "英文打字・星際冒險", "totalLessons": 16 },
-    "magic":  { "lang": "zh", "name": "字根魔法學院", "tagline": "中文速成・魔法修行", "totalLessons": 16 }
+    "planet": {
+      "lang": "en",
+      "name": "鍵帽星系",
+      "tagline": "英文打字・星際冒險",
+      "totalLessons": 16
+    },
+    "magic": {
+      "lang": "zh",
+      "name": "字根魔法學院",
+      "tagline": "中文速成・魔法修行",
+      "totalLessons": 16
+    }
   },
   "stages": [
-    { "n": 0, "name": "蛋",   "need": { "lessons": 0,  "wpm": 0,  "acc": 0  }, "badge": null },
-    { "n": 1, "name": "幼年", "need": { "lessons": 1,  "wpm": 0,  "acc": 0  }, "badge": null },
-    { "n": 2, "name": "少年", "need": { "lessons": 6,  "wpm": 20, "acc": 90 }, "badge": "銅章" },
-    { "n": 3, "name": "成年", "need": { "lessons": 11, "wpm": 30, "acc": 90 }, "badge": "銀章" },
-    { "n": 4, "name": "傳說", "need": { "lessons": 16, "wpm": 40, "acc": 90 }, "badge": "金章" }
+    {
+      "n": 0,
+      "name": "蛋",
+      "need": {
+        "lessons": 0,
+        "wpm": 0,
+        "acc": 0
+      },
+      "badge": null
+    },
+    {
+      "n": 1,
+      "name": "幼年",
+      "need": {
+        "lessons": 1,
+        "wpm": 0,
+        "acc": 0
+      },
+      "badge": null
+    },
+    {
+      "n": 2,
+      "name": "少年",
+      "need": {
+        "lessons": 6,
+        "wpm": 20,
+        "acc": 90
+      },
+      "badge": "銅章"
+    },
+    {
+      "n": 3,
+      "name": "成年",
+      "need": {
+        "lessons": 11,
+        "wpm": 30,
+        "acc": 90
+      },
+      "badge": "銀章"
+    },
+    {
+      "n": 4,
+      "name": "傳說",
+      "need": {
+        "lessons": 16,
+        "wpm": 40,
+        "acc": 90
+      },
+      "badge": "金章"
+    }
   ],
   "companions": [
-    { "id": "bobo",   "world": "planet", "name": "波波", "kind": "星雲史萊姆", "intro": "軟綿綿的星雲精靈，最後會變成銀河巨靈。" },
-    { "id": "beep",   "world": "planet", "name": "嗶嗶", "kind": "小機械人",   "intro": "愛整潔的機械夥伴，最後會變成守護機神。" },
-    { "id": "rabbit", "world": "planet", "name": "星兔", "kind": "太空兔",     "intro": "戴着頭盔的小兔，最後會變成月之兔皇。" },
-    { "id": "comet",  "world": "planet", "name": "火球", "kind": "彗星鳥",     "intro": "熱血的小火球，最後會變成恆星鳳凰。" },
-    { "id": "gem",    "world": "planet", "name": "晶晶", "kind": "水晶精靈",   "intro": "一塊小水晶，最後會變成巨大的晶甲巨像。" },
-    { "id": "octo",   "world": "planet", "name": "章章", "kind": "外星章魚",   "intro": "好奇的小章魚，最後會變成宇宙章魚王。" },
-    { "id": "flame",  "world": "magic",  "name": "焰仔", "kind": "火龍",       "intro": "字根「火」的小龍，最後會長出烈焰之翼。" },
-    { "id": "wave",   "world": "magic",  "name": "浪浪", "kind": "水鯨",       "intro": "字根「水」的小鯨，最後會變成天空之鯨。" },
-    { "id": "sprout", "world": "magic",  "name": "芽芽", "kind": "木鹿",       "intro": "頭上有小芽的鹿，最後會長出生命之樹鹿角。" },
-    { "id": "owl",    "world": "magic",  "name": "咕咕", "kind": "金屬貓頭鷹", "intro": "愛讀書的貓頭鷹，最後會成為金翼大賢者。" },
-    { "id": "rock",   "world": "magic",  "name": "磐磐", "kind": "岩龜",       "intro": "字根「土」的小龜，最後會背着一座山。" },
-    { "id": "moon",   "world": "magic",  "name": "月月", "kind": "月狐",       "intro": "尾巴會越長越多，最後是九尾月狐。" }
+    {
+      "id": "bobo",
+      "world": "planet",
+      "name": "波波",
+      "kind": "星雲史萊姆",
+      "intro": "軟綿綿的星雲精靈，最後會變成銀河巨靈。",
+      "names": [
+        "波波",
+        "雲雲",
+        "啫喱",
+        "星星",
+        "小藍"
+      ]
+    },
+    {
+      "id": "beep",
+      "world": "planet",
+      "name": "嗶嗶",
+      "kind": "小機械人",
+      "intro": "愛整潔的機械夥伴，最後會變成守護機神。",
+      "names": [
+        "嗶嗶",
+        "零一",
+        "小鐵",
+        "阿機",
+        "閃閃"
+      ]
+    },
+    {
+      "id": "rabbit",
+      "world": "planet",
+      "name": "星兔",
+      "kind": "太空兔",
+      "intro": "戴着頭盔的小兔，最後會變成月之兔皇。",
+      "names": [
+        "星兔",
+        "月餅",
+        "雪糰",
+        "小星",
+        "跳跳"
+      ]
+    },
+    {
+      "id": "comet",
+      "world": "planet",
+      "name": "火球",
+      "kind": "彗星鳥",
+      "intro": "熱血的小火球，最後會變成恆星鳳凰。",
+      "names": [
+        "火球",
+        "小焰",
+        "流星",
+        "阿暖",
+        "閃電"
+      ]
+    },
+    {
+      "id": "gem",
+      "world": "planet",
+      "name": "晶晶",
+      "kind": "水晶精靈",
+      "intro": "一塊小水晶，最後會變成巨大的晶甲巨像。",
+      "names": [
+        "晶晶",
+        "水晶",
+        "小鑽",
+        "亮亮",
+        "冰糖"
+      ]
+    },
+    {
+      "id": "octo",
+      "world": "planet",
+      "name": "章章",
+      "kind": "外星章魚",
+      "intro": "好奇的小章魚，最後會變成宇宙章魚王。",
+      "names": [
+        "章章",
+        "阿章",
+        "粉粉",
+        "泡泡",
+        "小墨"
+      ]
+    },
+    {
+      "id": "flame",
+      "world": "magic",
+      "name": "焰仔",
+      "kind": "火龍",
+      "intro": "字根「火」的小龍，最後會長出烈焰之翼。",
+      "names": [
+        "焰仔",
+        "小炎",
+        "火火",
+        "阿龍",
+        "炭炭"
+      ]
+    },
+    {
+      "id": "wave",
+      "world": "magic",
+      "name": "浪浪",
+      "kind": "水鯨",
+      "intro": "字根「水」的小鯨，最後會變成天空之鯨。",
+      "names": [
+        "浪浪",
+        "小浪",
+        "藍藍",
+        "泡泡",
+        "海豆"
+      ]
+    },
+    {
+      "id": "sprout",
+      "world": "magic",
+      "name": "芽芽",
+      "kind": "木鹿",
+      "intro": "頭上有小芽的鹿，最後會長出生命之樹鹿角。",
+      "names": [
+        "芽芽",
+        "小芽",
+        "綠綠",
+        "草莓",
+        "阿鹿"
+      ]
+    },
+    {
+      "id": "owl",
+      "world": "magic",
+      "name": "咕咕",
+      "kind": "金屬貓頭鷹",
+      "intro": "愛讀書的貓頭鷹，最後會成為金翼大賢者。",
+      "names": [
+        "咕咕",
+        "小智",
+        "書書",
+        "阿梟",
+        "羽羽"
+      ]
+    },
+    {
+      "id": "rock",
+      "world": "magic",
+      "name": "磐磐",
+      "kind": "岩龜",
+      "intro": "字根「土」的小龜，最後會背着一座山。",
+      "names": [
+        "磐磐",
+        "小石",
+        "阿龜",
+        "慢慢",
+        "岩岩"
+      ]
+    },
+    {
+      "id": "moon",
+      "world": "magic",
+      "name": "月月",
+      "kind": "月狐",
+      "intro": "尾巴會越長越多，最後是九尾月狐。",
+      "names": [
+        "月月",
+        "小月",
+        "銀銀",
+        "雪雪",
+        "阿狐"
+      ]
+    }
   ]
 }

@@ -29,6 +29,11 @@ export function setNick(world, name) {
   setSetting(`companionNick:${world}`, String(name).slice(0, 8));
 }
 
+/** 只接受該夥伴名單內的名字，其他一律當作預設名。 */
+export function validNick(c, name) {
+  return c.names.includes(name) ? name : c.names[0];
+}
+
 /** 目前進度的摘要：完成課數、最佳速度、最佳準確率。 */
 export function summary(lang) {
   const list = Object.values(getProgress(lang));
@@ -65,4 +70,9 @@ export function nextGoal(stages, s) {
 /** 孵化前（仍是蛋）可隨意換；孵化後（幼年或以上）鎖定，只可改名字。 */
 export function isLocked(world, stages, lang) {
   return !!getChoice(world) && stageOf(stages, summary(lang)) >= 1;
+}
+
+/** 顯示用名字：已驗證，就算有人改了瀏覽器紀錄也只會顯示名單內的名字。 */
+export function nickOf(world, c) {
+  return validNick(c, getNick(world, c.name));
 }
