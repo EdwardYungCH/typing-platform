@@ -61,3 +61,8 @@ export function nextGoal(stages, s) {
   if (s.acc < nx.need.acc) need.push(`準確率達 ${nx.need.acc}%`);
   return { stage: nx, need };
 }
+
+/** 孵化前（仍是蛋）可隨意換；孵化後（幼年或以上）鎖定，只可改名字。 */
+export function isLocked(world, stages, lang) {
+  return !!getChoice(world) && stageOf(stages, summary(lang)) >= 1;
+}

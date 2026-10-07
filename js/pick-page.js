@@ -1,5 +1,5 @@
 import { applyWorld } from './world.js';
-import { loadCompanions, art, getChoice, setChoice, getNick, setNick, summary, stageOf } from './companion.js';
+import { loadCompanions, art, getChoice, setChoice, getNick, setNick, summary, stageOf, isLocked } from './companion.js';
 
 const $ = (id) => document.getElementById(id);
 const data = await loadCompanions();
@@ -20,6 +20,8 @@ function render() {
   }
   const list = data.companions.filter((c) => c.world === world);
   sel ??= getChoice(world) ?? list[0].id;
+  const locked = isLocked(world, data.stages, data.worlds[world].lang);
+  if (locked) sel = getChoice(world);
   const grid = $('grid');
   grid.innerHTML = '';
   for (const c of list) {
@@ -28,13 +30,14 @@ function render() {
     b.className = 'pick-card';
     b.setAttribute('aria-pressed', c.id === sel);
     b.innerHTML = `<img class="companion" src="${art(world, c.id, 1)}" alt="" width="160" height="160"><b>${c.name}</b><small>${c.kind}</small>`;
+    if (locked && c.id !== sel) { b.disabled = true; b.style.opacity = '0.35'; b.style.cursor = 'not-allowed'; }
     b.onclick = () => { sel = c.id; render(); };
     grid.append(b);
   }
-  renderDetail(list.find((c) => c.id === sel));
+  renderDetail(list.find((c) => c.id === sel), locked);
 }
 
-function renderDetail(c) {
+function renderDetail(c, locked) {
   const lang = data.worlds[world].lang;
   const cur = stageOf(data.stages, summary(lang));
   const d = $('detail');
@@ -52,10 +55,11 @@ function renderDetail(c) {
     <div class="name-row">
       <label for="nick">夥伴名字</label>
       <input id="nick" maxlength="8" value="${owned ? getNick(world, c.name) : c.name}">
-      <button class="btn primary" id="adopt" type="button">${owned ? '已選這位 ✓' : '選擇' + c.name}</button>
-    </div>`;
+      <button class="btn primary" id="adopt" type="button">${owned ? (locked ? '儲存名字' : '已選這位 ✓') : '選擇' + c.name}</button>
+    </div>
+    ${locked ? '<p class="muted" style="margin:10px 0 0">🔒 夥伴已經孵化，這個學年不能再換，但可以改名字。需要重新選擇請找老師。</p>' : '<p class="muted" style="margin:10px 0 0">夥伴孵化（完成第 1 課）之前可以隨意換；孵化後就會鎖定，所以想清楚才選喔。</p>'}`;
   $('adopt').onclick = () => {
-    setChoice(world, c.id);
+    if (!locked) setChoice(world, c.id);
     setNick(world, $('nick').value.trim() || c.name);
     location.href = 'index.html';
   };
