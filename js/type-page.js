@@ -8,6 +8,8 @@ import { computeStats, starsFor, fmt, fmtAcc } from './stats.js';
 import * as store from './storage.js';
 import { applyWorld, worldForLang } from './world.js';
 import * as pet from './companion.js';
+import { Fx } from './fx.js';
+import { setSoundEnabled } from './sound.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -54,6 +56,7 @@ async function init() {
   state.kb = new VirtualKeyboard($('keyboard'), { showFingers });
   state.hands = new Hands($('hands'));
   setupFingerToggle(showFingers);
+  setupFx();
 
   const L = state.lesson;
   document.title = `第 ${L.id} 課：${L.title}｜打字練習`;
@@ -65,6 +68,34 @@ async function init() {
   state.maxReached = startStep;
   renderSteps();
   runStep(startStep);
+}
+
+function setupFx() {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const level = store.getSetting('fxLevel', reduce ? 0 : 2);
+  const sound = store.getSetting('sound', CONFIG.defaults.sound);
+  setSoundEnabled(sound);
+  $('stage').classList.add('fx-host');
+  state.fx = new Fx({ host: $('stage'), pet: $('pet-top'), level, sound });
+  const names = ['關', '輕', '全'];
+  const paint = () => {
+    $('toggle-fx').textContent = `特效：${names[state.fx.level]}`;
+    $('toggle-sound').textContent = `音效：${state.fx.sound ? '開' : '關'}`;
+    $('toggle-sound').setAttribute('aria-pressed', String(state.fx.sound));
+  };
+  $('toggle-fx').addEventListener('click', (e) => {
+    state.fx.level = (state.fx.level + 1) % 3;
+    store.setSetting('fxLevel', state.fx.level);
+    if (!state.fx.level) state.fx.reset();
+    paint(); e.currentTarget.blur();
+  });
+  $('toggle-sound').addEventListener('click', (e) => {
+    state.fx.sound = !state.fx.sound;
+    setSoundEnabled(state.fx.sound);
+    store.setSetting('sound', state.fx.sound);
+    paint(); e.currentTarget.blur();
+  });
+  paint();
 }
 
 function setupFingerToggle(initial) {
@@ -123,10 +154,13 @@ function runStep(i) {
   $('step-hint').textContent = step.hint ?? '';
 
   // 課堂只教的鍵（第 0 課以外）：其他鍵變淡，令學生專注
-  const focus = state.lesson.newKeys?.length ? [...state.lesson.newKeys, 'Space'] : null;
-  state.kb.focusKeys(focus);
+  const focusKeys = state.lesson.newKeys?.length ? [...state.lesson.newKeys, 'Space'] : null;
+  state.kb.focusKeys(focusKeys);
 
   showTopPet(step.type !== 'test');
+  const focus = step.type === 'test';
+  state.fx.setFocus(focus);
+  document.body.classList.toggle('focus-mode', focus);
   if (step.type === 'guide') runGuide(step);
   else runTyping(step);
 }
@@ -220,6 +254,7 @@ function runTyping(step) {
     onKey: (e, eng) => {
       $('start-hint').hidden = true;
       state.kb.press(eng.lastKey.code, eng.lastKey.ok);
+      state.fx.key(eng.lastKey.ok);
       paint(spans, eng);
       updateMeters(eng, step);
       if (!eng.lastKey.ok) flashError(spans[eng.errorMode === 'block' ? eng.pos : eng.pos - 1]);
@@ -392,6 +427,8 @@ function finishStep({ stats, stars, step, rest, guide }) {
   }
 
   renderPanelPet();
+  state.fx.setFocus(false);
+  state.fx.finish({ stars: stars ?? 0, evolved: state.evolvedFrom !== null && state.evolvedFrom !== undefined });
   showPanel({ title, msg, stars: isTest ? stars : null, stats: statsList, actions });
   state.evolvedFrom = null;
 }

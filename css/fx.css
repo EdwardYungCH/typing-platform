@@ -1,0 +1,48 @@
+/* 特效樣式。系統設定「減少動態效果」時自動關掉動畫。 */
+.text-wrap { position: relative; }
+.fx-host { position: relative; }
+
+.combo {
+  position: absolute; right: 18px; bottom: 12px; z-index: 3; pointer-events: none;
+  padding: 2px 14px; border-radius: 999px; font-weight: 800; letter-spacing: 0.03em;
+  background: var(--surface-2); color: var(--accent); border: 1px solid var(--accent);
+  box-shadow: 0 0 0 0 rgb(var(--glow, 91 155 255) / 0.5);
+}
+.combo[data-tier="1"] { box-shadow: 0 0 14px rgb(var(--glow, 91 155 255) / 0.5); }
+.combo[data-tier="2"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 20px rgb(var(--glow, 91 155 255) / 0.7); }
+.combo[data-tier="3"] { background: linear-gradient(90deg, var(--star), var(--accent)); color: #14182e; box-shadow: 0 0 28px rgb(var(--glow, 91 155 255) / 0.9); }
+.combo.bump { animation: combo-bump 0.18s ease-out; }
+@keyframes combo-bump { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+.spark {
+  position: absolute; z-index: 4; pointer-events: none; font-size: 16px; line-height: 1;
+  animation: spark 0.8s ease-out forwards;
+}
+@keyframes spark {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2); opacity: 0; }
+}
+
+#pet-top.cheer { animation: pet-cheer 0.6s ease-out; }
+@keyframes pet-cheer {
+  0% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-10px) scale(1.25) rotate(-6deg); }
+  60% { transform: translateY(0) scale(1.1) rotate(5deg); }
+  100% { transform: none; }
+}
+
+/* 星星逐粒彈出 */
+.panel .star.on { animation: star-pop 0.5s cubic-bezier(.2,1.6,.4,1) both; }
+.panel .star.on:nth-child(2) { animation-delay: 0.15s; }
+.panel .star.on:nth-child(3) { animation-delay: 0.3s; }
+@keyframes star-pop { from { transform: scale(0) rotate(-40deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* 評測專注模式 */
+body.focus-mode .focus-tag { display: inline-flex; }
+.focus-tag { display: none; padding: 2px 12px; border-radius: 999px; font-size: 13px; font-weight: 700;
+  border: 1px solid var(--line); color: var(--ink-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .combo.bump, .spark, #pet-top.cheer, .panel .star.on { animation: none; }
+  .spark { display: none; }
+}
