@@ -80,3 +80,7 @@ python -m http.server 8000
 6. 第二年：高中二周目、課堂比賽模式
 
 詳細規劃見「打字練習平台 — 功能規劃」文件。
+
+## 英文課文來源
+
+第 2–16 課由 `tools/gen_en_lessons.py` 產生，詞語取自開源的 google-10000-english（已排除不雅詞和網站縮寫），句子和段落為原創。重新產生：`python3 tools/gen_en_lessons.py <詞表檔路徑>`（第 0、1 課不受影響）。
