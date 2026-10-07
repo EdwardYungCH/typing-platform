@@ -37,17 +37,26 @@ for (const [w, info] of Object.entries(data.worlds)) {
     const prog = getProgress('en');
     const ul = document.createElement('ul');
     ul.className = 'map';
+    const unlockAll = new URLSearchParams(location.search).has('unlock'); // 老師預覽用
+    let firstOpen = true;
     for (const l of lessons) {
       const p = prog[l.id];
+      const open = unlockAll || l.id === 0 || prog[l.id - 1]?.done;
       const li = document.createElement('li');
-      li.innerHTML = `<a class="node${p?.done ? ' done' : ''}" href="type.html?lang=en&mode=lesson&id=${l.id}">
-        <span class="num">${p?.done ? '✓' : l.id}</span>
+      const a = document.createElement(open ? 'a' : 'div');
+      const isNext = open && !p?.done && firstOpen;
+      if (isNext) firstOpen = false;
+      a.className = 'node' + (p?.done ? ' done' : '') + (open ? '' : ' locked') + (isNext ? ' next' : '');
+      if (open) a.href = `type.html?lang=en&mode=lesson&id=${l.id}`;
+      else a.setAttribute('aria-disabled', 'true');
+      a.innerHTML = `
+        <span class="num">${p?.done ? '✓' : open ? l.id : '🔒'}</span>
         <span class="t"><b>第 ${l.id} 課：${l.title}</b><span>${l.subtitle}</span></span>
-        <span class="s" aria-label="${p?.stars ?? 0} 粒星">${p?.stars ? '★'.repeat(p.stars) : ''}</span></a>`;
+        <span class="s" aria-label="${p?.stars ?? 0} 粒星">${p?.stars ? '★'.repeat(p.stars) : isNext ? '開始 ➜' : ''}</span>`;
+      li.append(a);
       ul.append(li);
     }
     card.append(ul);
-    card.insertAdjacentHTML('beforeend', '<p class="soon">第 2 至 16 課即將推出。</p>');
   } else {
     card.insertAdjacentHTML('beforeend', '<p class="soon">速成課堂即將推出。建議先完成英文第 0、1 課，熟習十指基準位。</p>');
   }

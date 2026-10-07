@@ -73,3 +73,8 @@
   font: inherit; padding: 8px 12px; border-radius: 12px; min-width: 0; width: 10em;
   background: var(--surface-2); color: var(--ink); border: 1px solid var(--line);
 }
+.node.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.4); }
+.node.locked:hover { filter: grayscale(0.4); }
+.node.next { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(var(--glow) / 0.25); }
+.node.next .s { color: var(--accent); font-weight: 800; }
+.worlds { align-items: start; }
