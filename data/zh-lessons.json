@@ -1,0 +1,153 @@
+{
+  "lessons": [
+    {
+      "id": 0,
+      "title": "認識速成",
+      "subtitle": "首尾取碼和選字窗",
+      "newKeys": [],
+      "pass": { "complete": true },
+      "steps": [
+        {
+          "type": "guide",
+          "title": "速成是甚麼",
+          "slides": [
+            {
+              "title": "速成：倉頡的快捷版",
+              "points": [
+                "每個中文字都可以拆成「字根」，每個字根住在一個英文字母鍵上",
+                "倉頡要打齊全部碼（最多 5 個）；速成只打第一碼和最後一碼",
+                "所以速成每個字最多按 2 個字母，再揀字",
+                "英文打字的指法同樣適用：手指放在基準位，不看鍵盤"
+              ],
+              "show": "keyboard",
+              "rootLabels": true
+            },
+            {
+              "title": "24 個字根，加一個難字鍵",
+              "points": [
+                "哲理類：日 月 金 木 水 火 土（A 至 G）",
+                "筆畫類：竹 戈 十 大 中 一 弓（H 至 N）",
+                "人體類：人 心 手 口（O 至 R）",
+                "字形類：尸 廿 山 女 田 卜（S 至 W、Y）；X 是難字鍵"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "fingers": true
+            },
+            {
+              "title": "首尾取碼：明",
+              "points": [
+                "「明」由「日」和「月」組成",
+                "第一碼是日（A），最後一碼是月（B）",
+                "所以「明」的速成碼是 A B"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "明",
+              "highlight": ["KeyA", "KeyB"]
+            },
+            {
+              "title": "首尾取碼：想",
+              "points": [
+                "「想」的倉頡碼是 木 山 心（D U P）",
+                "速成只要第一碼木（D）和最後一碼心（P）",
+                "中間的山（U）不用打"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "想",
+              "highlight": ["KeyD", "KeyP"]
+            },
+            {
+              "title": "選字窗",
+              "points": [
+                "很多字的速成碼相同，打完碼後會出現候選字",
+                "要的字排第 1 個：按空白鍵",
+                "排第 2 至 9 個：按對應的數字鍵",
+                "常用字大多在第一頁，很少要翻頁"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "imeDemo": "想",
+              "highlight": ["KeyD", "KeyP", "Digit3"]
+            },
+            {
+              "title": "在這裏練習時用英文輸入",
+              "points": [
+                "這個網站內置了速成選字窗，練習時請先切換到英文輸入",
+                "在 Windows 用 Win＋空白鍵切換輸入法，或按 Shift 切換中英",
+                "日後在 Word、電郵等地方打中文，就開啟 Windows 的「微軟速成」",
+                "網站的選字次序跟微軟速成一樣，學到的可以直接用"
+              ],
+              "show": "keyboard",
+              "rootLabels": true
+            }
+          ]
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第一次打速成",
+          "hint": "跟着提示打碼，再按空白鍵上屏。",
+          "display": "big",
+          "text": "日月明"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "試試揀字",
+          "hint": "「林」排第 2 個，打完 D D 後按數字 2。",
+          "display": "big",
+          "text": "木林李"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "title": "哲理類字根",
+      "subtitle": "日 月 金 木 水 火 土",
+      "newKeys": ["KeyA", "KeyB", "KeyC", "KeyD", "KeyE", "KeyF", "KeyG", "Digit2", "Digit3"],
+      "pass": { "accuracy": 90 },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "示範",
+          "hint": "日月金木水火土住在 A 至 G。看字根，按對應的鍵。",
+          "display": "big",
+          "text": "abcdefg"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "單鍵",
+          "hint": "每個字根三次，記住它的位置。",
+          "text": "aaabbbcccdddeeefffgggaaabbbcccdddeeefffggg"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "組合",
+          "hint": "字根隨機出現。先看清楚，再按鍵。",
+          "gen": { "kind": "roots", "keys": "abcdefg", "count": 40 }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "打字",
+          "hint": "這些字只用日月金木水火土就打到。跟着選字窗的提示揀字。",
+          "gen": { "kind": "chars", "chars": "日月金木水火土明林朋炎昌晶李杯米景皮貝沒地涼受曾最量注堂池", "count": 20 }
+        },
+        {
+          "type": "test",
+          "mode": "roots",
+          "title": "過關小測",
+          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "timeLimit": 45,
+          "pass": { "accuracy": 90 },
+          "gen": { "kind": "roots", "keys": "abcdefg", "count": 90 }
+        }
+      ]
+    }
+  ]
+}

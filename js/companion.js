@@ -38,10 +38,16 @@ export function validNick(c, name) {
 export function summary(lang) {
   const list = Object.values(getProgress(lang));
   return {
+    lang,
     lessons: list.filter((p) => p.done).length,
     wpm: Math.max(0, ...list.map((p) => p.bestWpm ?? 0)),
     acc: Math.max(0, ...list.map((p) => p.bestAccuracy ?? 0)),
   };
+}
+
+/** 中文用「字／分鐘」門檻，英文用 WPM。 */
+function speedNeed(need, s) {
+  return s.lang === 'zh' ? (need.cpm ?? need.wpm) : need.wpm;
 }
 
 /** 按進度算出階段（0 至 4）。 */
@@ -49,7 +55,7 @@ export function stageOf(stages, s) {
   let cur = 0;
   for (const st of stages) {
     const n = st.need;
-    if (s.lessons >= n.lessons && s.wpm >= n.wpm && s.acc >= n.acc) cur = st.n;
+    if (s.lessons >= n.lessons && s.wpm >= speedNeed(n, s) && s.acc >= n.acc) cur = st.n;
     else break;
   }
   return cur;
@@ -62,7 +68,8 @@ export function nextGoal(stages, s) {
   if (!nx) return null;
   const need = [];
   if (s.lessons < nx.need.lessons) need.push(`完成 ${nx.need.lessons} 課（現在 ${s.lessons}）`);
-  if (s.wpm < nx.need.wpm) need.push(`速度達 ${nx.need.wpm} WPM`);
+  const sp = speedNeed(nx.need, s);
+  if (s.wpm < sp) need.push(s.lang === 'zh' ? `速度達每分鐘 ${sp} 字` : `速度達 ${sp} WPM`);
   if (s.acc < nx.need.acc) need.push(`準確率達 ${nx.need.acc}%`);
   return { stage: nx, need };
 }

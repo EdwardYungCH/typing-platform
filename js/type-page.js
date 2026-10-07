@@ -10,6 +10,9 @@ import { applyWorld, worldForLang } from './world.js';
 import * as pet from './companion.js';
 import { Fx } from './fx.js';
 import { setSoundEnabled } from './sound.js';
+import { QuickEngine, computeZhStats, PAGE } from './quick-engine.js';
+import { loadZh, ROOTS } from './zh-codes.js';
+import { generateZh } from './zh-gen.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -49,6 +52,7 @@ async function init() {
   }
 
   applyWorld(worldForLang(lang));
+  if (lang === 'zh') state.zh = await loadZh();
   state.world = worldForLang(lang);
   state.petData = await pet.loadCompanions();
   state.petId = pet.getChoice(state.world);
@@ -157,6 +161,14 @@ function runStep(i) {
   const focusKeys = state.lesson.newKeys?.length ? [...state.lesson.newKeys, 'Space'] : null;
   state.kb.focusKeys(focusKeys);
 
+  // 速成課：鍵盤顯示字根（評測時隱藏，免得變成「看鍵盤找字根」）
+  state.kb.setRootLabels(lang === 'zh' && step.type !== 'test' && !step.hideRoots ? ROOTS : null);
+  $('ime').hidden = true;
+  state.mode = step.mode ?? (lang === 'zh' ? 'roots' : 'en');
+  state.unit = { quick: '字/分', roots: '個/分', en: 'WPM' }[state.mode] ?? 'WPM';
+  $('m-unit').textContent = ` ${state.unit}`;
+  // 速成評測不提示下一個鍵（否則變成跟住發光的鍵按）
+  state.hideNext = lang === 'zh' && step.type === 'test';
   showTopPet(step.type !== 'test');
   const focus = step.type === 'test';
   state.fx.setFocus(focus);
@@ -182,7 +194,7 @@ function runGuide(step) {
           <h3>${s.title}</h3>
           <ul>${s.points.map((p) => `<li>${p}</li>`).join('')}</ul>
         </div>
-        <div class="slide-visual">${s.show === 'posture' ? POSTURE_SVG : ''}</div>
+        <div class="slide-visual">${s.show === 'posture' ? POSTURE_SVG : ''}${s.example ? exampleHtml(s.example, s.exampleCode) : ''}${s.imeDemo ? imeDemoHtml(s.imeDemo) : ''}</div>
       </div>
       <div class="slide-nav">
         <button class="btn" type="button" data-nav="prev" ${idx === 0 ? 'disabled' : ''}>上一頁</button>
@@ -194,6 +206,7 @@ function runGuide(step) {
     $('keyboard').hidden = s.show === 'hands';
     state.kb.setFingers(s.fingers ? true : store.getSetting('showFingers', CONFIG.defaults.showFingers));
     state.kb.setNext(s.highlight ?? []);
+    state.kb.setRootLabels(s.rootLabels ? ROOTS : null);
     if (s.show === 'hands') state.hands.setFinger(['L2', 'R2'], '兩隻食指放在 F 和 J 的凸點上');
     else state.hands.setFinger([], '');
   };
@@ -233,15 +246,34 @@ function runGuide(step) {
 
 // ---------- 打字練習和小測 ----------
 
+function makeText(step) {
+  if (step.text) return step.text;
+  if (step.gen.kind === 'roots' || step.gen.kind === 'chars') return generateZh(step.gen, makeRng());
+  return generateText(step.gen, makeRng());
+}
+
+function statsOf(eng) {
+  if (state.mode === 'quick') return computeZhStats(eng);
+  const st = computeStats(eng);
+  if (state.mode === 'roots') {
+    const per = st.seconds > 0 ? st.correctKeys / (st.seconds / 60) : 0;
+    st.netWpm = per;
+    st.grossWpm = per;
+  }
+  return st;
+}
+
 function runTyping(step) {
   showTypingUI(true);
+  if (state.mode === 'quick') return runQuick(step);
 
-  const text = step.text ?? generateText(step.gen, makeRng());
+  const text = makeText(step);
   const textEl = $('text');
-  textEl.className = 'text' + (step.display === 'big' ? ' big' : '');
+  const extra = state.mode === 'roots' ? ' roots' : '';
+  textEl.className = 'text' + (step.display === 'big' ? ' big' : '') + extra;
   $('text-wrap').className = 'text-wrap' + (step.display === 'big' ? ' big' : '');
   $('text-wrap').scrollTop = 0;
-  const spans = renderText(textEl, text);
+  const spans = renderText(textEl, text, state.mode === 'roots' ? ROOTS : null);
 
   $('start-hint').hidden = false;
   $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
@@ -267,16 +299,91 @@ function runTyping(step) {
   engine.attach();
 }
 
+// ---------- 速成（內置選字窗）----------
+
+const zcap = (k, cls = '') => `<span class="zcap ${cls}"><b>${ROOTS[k] ?? k}</b><small>${k}</small></span>`;
+
+function pickHint(ch) {
+  const code = state.zh.quickOf(ch);
+  const idx = state.zh.candidates(code).indexOf(ch);
+  if (idx === 0) return '按空白鍵';
+  if (idx < PAGE) return `按 ${idx + 1}`;
+  return `按 PageDown 翻到第 ${Math.floor(idx / PAGE) + 1} 頁，再按 ${(idx % PAGE) + 1}`;
+}
+
+function runQuick(step) {
+  const text = makeText(step);
+  const textEl = $('text');
+  textEl.className = 'text zh' + (step.display === 'big' ? ' big' : '');
+  $('text-wrap').className = 'text-wrap' + (step.display === 'big' ? ' big' : '');
+  $('text-wrap').scrollTop = 0;
+  const spans = renderText(textEl, text, null, true);
+  const isTest = step.type === 'test';
+  $('ime').hidden = false;
+  $('start-hint').hidden = false;
+  $('start-hint').textContent = '請先切換到英文輸入（不要開系統的速成），網站內置了速成選字窗。';
+  $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
+  updateMeters(null, step);
+
+  let imeWarn = false;
+  const engine = new QuickEngine({
+    text,
+    zh: state.zh,
+    errorMode: isTest ? 'continue' : 'block',
+    timeLimit: step.timeLimit ?? 0,
+    onIme: () => { imeWarn = true; renderIme(engine, isTest, true); },
+    onKey: (e, eng) => {
+      imeWarn = false;
+      $('start-hint').hidden = true;
+      state.kb.press(eng.lastKey.code, eng.lastKey.ok !== false);
+      if (eng.lastKey.ok !== null) state.fx.key(eng.lastKey.ok);
+      paint(spans, eng);
+      renderIme(eng, isTest, imeWarn);
+      updateMeters(eng, step);
+      if (eng.lastKey.ok === false) flashError(spans[eng.errorMode === 'block' ? eng.pos : Math.max(0, eng.pos - 1)]);
+    },
+    onTick: (eng) => updateMeters(eng, step),
+    onFinish: (eng) => { $('ime').hidden = true; onTypingDone(step, eng); },
+  });
+  state.engine = engine;
+  paint(spans, engine);
+  renderIme(engine, isTest, false);
+  engine.attach();
+}
+
+function renderIme(eng, isTest, warn) {
+  const ch = eng.expectedChar;
+  const comp = eng.comp
+    ? [...eng.comp].map((k) => zcap(k, 'key')).join('')
+    : '<span class="empty">組字框</span>';
+  const items = eng.pageItems;
+  const pages = Math.ceil(eng.candidates.length / PAGE);
+  const cands = items.map((c, i) => `<span class="${!isTest && c === ch ? 'want' : ''}"><i>${i + 1}</i>${c}</span>`).join('');
+  let hint = '';
+  if (!isTest && ch) {
+    const code = state.zh.quickOf(ch) ?? '';
+    hint = `<span class="hint">「${ch}」＝ ${[...code].map((k) => `${ROOTS[k]} ${k.toUpperCase()}`).join(' ＋ ')}，${pickHint(ch)}</span>`;
+  }
+  $('ime').innerHTML = `
+    <div class="comp">${comp}</div>
+    <div class="cands">${cands}</div>
+    ${pages > 1 ? `<span class="pg">${eng.page + 1} / ${pages} 頁</span>` : ''}
+    ${hint}
+    ${warn ? '<span class="warn">偵測到系統中文輸入法：請按 Shift 或 Win＋空白鍵切換回英文，再打一次。</span>' : ''}`;
+}
+
 function showTypingUI(on) {
   $('text-wrap').hidden = !on;
   $('meters').hidden = !on;
   $('start-hint').hidden = !on;
   document.querySelector('.progress').hidden = !on;
   $('guide').hidden = on;
+  if (!on) $('ime').hidden = true;
+  $('start-hint').textContent = '雙手放在基準位，準備好就直接打第一個字。';
 }
 
 /** 文字逐字放入 span；每個詞連同後面的空格包成一組，令換行只發生在詞與詞之間。 */
-function renderText(el, text) {
+function renderText(el, text, display = null, eachWord = false) {
   el.innerHTML = '';
   const spans = [];
   let word = document.createElement('span');
@@ -284,10 +391,10 @@ function renderText(el, text) {
   [...text].forEach((ch, i) => {
     const s = document.createElement('span');
     s.className = 'ch' + (ch === ' ' ? ' space' : '');
-    s.textContent = ch === ' ' ? ' ' : ch;
+    s.textContent = ch === ' ' ? ' ' : (display?.[ch] ?? ch);
     spans.push(s);
     word.append(s);
-    if (ch === ' ' || i === text.length - 1) {
+    if (ch === ' ' || eachWord || display || i === text.length - 1) {
       el.append(word);
       word = document.createElement('span');
       word.className = 'word';
@@ -306,7 +413,7 @@ function paint(spans, eng) {
   });
   const cur = spans[eng.pos];
   if (cur) keepInView(cur);
-  showNextKey(eng.text[eng.pos]);
+  showNextKey(eng.nextKey ? eng.nextKey() : eng.text[eng.pos]);
   $('m-progress').style.width = `${(eng.pos / eng.text.length) * 100}%`;
 }
 
@@ -320,7 +427,22 @@ function keepInView(span) {
 }
 
 function showNextKey(ch) {
-  if (ch === undefined) {
+  if (state.hideNext) {
+    state.kb.setNext([]);
+    state.hands.setFinger([], '');
+    return;
+  }
+  if (ch === 'Backspace') {
+    state.kb.setNext(['Backspace']);
+    state.hands.setFinger(['R5'], '碼打錯了：用右手尾指按 Backspace 刪除');
+    return;
+  }
+  if (ch === 'PageDown' || ch === 'PageUp') {
+    state.kb.setNext([]);
+    state.hands.setFinger([], `要找的字不在這一頁：按 ${ch} 翻頁`);
+    return;
+  }
+  if (ch === undefined || ch === null) {
     state.kb.setNext([]);
     state.hands.setFinger([], '');
     return;
@@ -336,6 +458,9 @@ function showNextKey(ch) {
   state.kb.setNext(codes);
   const keyText = ch === ' ' ? '空白鍵' : ch.toUpperCase();
   let label = `用${fingerName(info.finger)}按 ${keyText}`;
+  if (lang === 'zh' && ROOTS[ch] && state.kb.root.classList.contains('roots')) label += `（${ROOTS[ch]}）`;
+  if (lang === 'zh' && /^[2-9]$/.test(ch)) label = `用${fingerName(info.finger)}按 ${ch} 揀字`;
+  if (lang === 'zh' && ch === ' ') label = '用拇指按空白鍵揀第 1 個字';
   if (info.finger === 'TH') label = '用拇指按空白鍵';
   if (info.shiftFinger) label = `${fingerName(info.shiftFinger)}按住 Shift，${fingerName(info.finger)}按 ${ch}`;
   state.hands.setFinger(fingers, label);
@@ -355,7 +480,7 @@ function updateMeters(eng, step) {
     $('m-time').textContent = step.timeLimit ? clock(step.timeLimit) : '0:00';
     return;
   }
-  const st = computeStats(eng);
+  const st = statsOf(eng);
   $('m-wpm').textContent = fmt(st.netWpm);
   $('m-acc').textContent = fmtAcc(st.accuracy);
   $('m-time').textContent = step.timeLimit ? clock(eng.remainingSec()) : clock(st.seconds);
@@ -369,7 +494,7 @@ function clock(sec) {
 // ---------- 完成步驟 ----------
 
 function onTypingDone(step, eng) {
-  const stats = computeStats(eng);
+  const stats = statsOf(eng);
   const typingTotal = store.addTypingTime(stats.seconds);
   let stars = null;
   if (step.type === 'test') {
@@ -394,7 +519,7 @@ function finishStep({ stats, stars, step, rest, guide }) {
   const actions = [];
   const statsList = [];
   if (stats) {
-    statsList.push(['速度', `${fmt(stats.netWpm)} WPM`]);
+    statsList.push(['速度', `${fmt(stats.netWpm)} ${state.unit}`]);
     statsList.push(['準確率', `${fmtAcc(stats.accuracy)}%`]);
     statsList.push(['用時', clock(stats.seconds)]);
     statsList.push(['打錯', `${stats.errors} 次`]);
@@ -462,7 +587,7 @@ function renderPanelPet() {
 function saveLessonDone(stars, stats) {
   const { prev, next } = store.saveLessonResult(lang, lessonId, {
     stars: stars ?? 0,
-    wpm: stats?.netWpm ?? 0,
+    wpm: state.mode === 'roots' ? 0 : (stats?.netWpm ?? 0),  // 字根練習的「個/分」不算打字速度
     accuracy: stats?.accuracy ?? 0,
   });
   if (stars && next.stars > prev.stars && prev.done) return `新紀錄：${next.stars} 粒星！`;
@@ -525,6 +650,30 @@ function hidePanel() {
   $('overlay').hidden = true;
   if (state.panelKey) window.removeEventListener('keydown', state.panelKey);
   state.panelKey = null;
+}
+
+// ---------- 速成導覽的例子 ----------
+
+function exampleHtml(ch) {
+  const zh = state.zh;
+  const q = zh.quickOf(ch);
+  const cj = zh.cjOf(ch) ?? q;
+  return `<div class="zh-ex">
+    <div class="big" lang="zh-Hant-HK">${ch}</div>
+    <div class="row"><span class="lbl">倉頡全碼</span>${[...cj].map((k, i) => zcap(k, i === 0 || i === cj.length - 1 ? 'key' : 'dim')).join('')}</div>
+    <div class="row"><span class="lbl">速成</span>${[...q].map((k) => zcap(k, 'key')).join('<span>＋</span>')}<span class="muted">只打首尾兩碼</span></div>
+  </div>`;
+}
+
+function imeDemoHtml(ch) {
+  const zh = state.zh;
+  const q = zh.quickOf(ch);
+  const list = zh.candidates(q).slice(0, PAGE);
+  return `<div class="zh-ex"><div class="ime" style="margin:0">
+    <div class="comp">${[...q].map((k) => zcap(k, 'key')).join('')}</div>
+    <div class="cands">${list.map((c, i) => `<span class="${c === ch ? 'want' : ''}"><i>${i + 1}</i>${c}</span>`).join('')}</div>
+    <span class="hint">打「${ch}」：先按 ${[...q].map((k) => k.toUpperCase()).join('、')}，再${pickHint(ch)}</span>
+  </div></div>`;
 }
 
 // ---------- 坐姿圖 ----------

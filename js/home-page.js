@@ -2,7 +2,8 @@ import { getProgress } from './storage.js';
 import { loadCompanions, art, getChoice, nickOf, summary, stageOf, nextGoal } from './companion.js';
 
 const data = await loadCompanions();
-const { lessons } = await fetch('data/en-lessons.json').then((r) => r.json());
+const [en, zhL] = await Promise.all(['en', 'zh'].map((l) => fetch(`data/${l}-lessons.json`).then((r) => r.json())));
+const lessonsOf = { en: en.lessons, zh: zhL.lessons };
 const root = document.getElementById('worlds');
 
 for (const [w, info] of Object.entries(data.worlds)) {
@@ -33,36 +34,25 @@ for (const [w, info] of Object.entries(data.worlds)) {
       ${pet}
     </div>${growth}`;
 
-  if (w === 'planet') {
-    const prog = getProgress('en');
-    const ul = document.createElement('ul');
-    ul.className = 'map';
-    const unlockAll = new URLSearchParams(location.search).has('unlock'); // 老師預覽用
-    let firstOpen = true;
-    for (const l of lessons) {
-      const p = prog[l.id];
-      const open = unlockAll || l.id === 0 || prog[l.id - 1]?.done;
-      const li = document.createElement('li');
-      const a = document.createElement(open ? 'a' : 'div');
-      const isNext = open && !p?.done && firstOpen;
-      if (isNext) firstOpen = false;
-      a.className = 'node' + (p?.done ? ' done' : '') + (open ? '' : ' locked') + (isNext ? ' next' : '');
-      if (open) a.href = `type.html?lang=en&mode=lesson&id=${l.id}`;
-      else a.setAttribute('aria-disabled', 'true');
-      a.innerHTML = `
-        <span class="num">${p?.done ? '✓' : open ? l.id : '🔒'}</span>
-        <span class="t"><b>第 ${l.id} 課：${l.title}</b><span>${l.subtitle}</span></span>
-        <span class="s" aria-label="${p?.stars ?? 0} 粒星">${p?.stars ? '★'.repeat(p.stars) : isNext ? '開始 ➜' : ''}</span>`;
-      li.append(a);
-      ul.append(li);
-    }
-    card.append(ul);
-  } else {
+  const prog = getProgress(info.lang);
+  const ul = document.createElement('ul');
+  ul.className = 'map';
+  for (const l of lessonsOf[info.lang]) {
+    const p = prog[l.id];
+    const li = document.createElement('li');
+    li.innerHTML = `<a class="node${p?.done ? ' done' : ''}" href="type.html?lang=${info.lang}&mode=lesson&id=${l.id}">
+      <span class="num">${p?.done ? '✓' : l.id}</span>
+      <span class="t"><b>第 ${l.id} 課：${l.title}</b><span>${l.subtitle}</span></span>
+      <span class="s" aria-label="${p?.stars ?? 0} 粒星">${p?.stars ? '★'.repeat(p.stars) : ''}</span></a>`;
+    ul.append(li);
+  }
+  card.append(ul);
+  if (info.lang === 'zh') {
     card.insertAdjacentHTML('beforeend', `
       <ul class="map"><li><a class="node" href="zh/lookup.html">
         <span class="num">查</span>
         <span class="t"><b>速成查碼</b><span>任何字的速成碼、拆字圖解和選字位置</span></span></a></li></ul>
-      <p class="soon">速成課堂即將推出。建議先完成英文第 0、1 課，熟習十指基準位。</p>`);
+      <p class="soon">第 2 至 15 課製作中。建議先完成英文第 0、1 課，熟習十指基準位。</p>`);
   }
   root.append(card);
 }

@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/type.css">
   <link rel="stylesheet" href="css/world.css">
   <link rel="stylesheet" href="css/fx.css">
+  <link rel="stylesheet" href="css/zh.css">
 </head>
 <body>
   <div class="page">
@@ -40,7 +41,7 @@
           <p class="muted" id="step-hint"></p>
         </div>
         <dl class="meters" id="meters">
-          <div><dt>速度</dt><dd><span id="m-wpm">0</span><small> WPM</small></dd></div>
+          <div><dt>速度</dt><dd><span id="m-wpm">0</span><small id="m-unit"> WPM</small></dd></div>
           <div><dt>準確率</dt><dd><span id="m-acc">100</span><small>%</small></dd></div>
           <div><dt id="m-time-label">時間</dt><dd><span id="m-time">0:00</span></dd></div>
         </dl>
@@ -49,6 +50,7 @@
       <div class="text-wrap" id="text-wrap">
         <div class="text" id="text"></div>
       </div>
+      <div class="ime" id="ime" hidden></div>
       <p class="start-hint muted" id="start-hint">雙手放在基準位，準備好就直接打第一個字。</p>
       <div class="guide" id="guide" hidden></div>
     </section>

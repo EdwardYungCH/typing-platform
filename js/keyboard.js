@@ -93,6 +93,22 @@ export class VirtualKeyboard {
     this.setFingers(this.showFingers);
   }
 
+  /** 在字母鍵上顯示速成字根（map：字母 → 字根）；傳入 null 取消。 */
+  setRootLabels(map) {
+    this.root.classList.toggle('roots', !!map);
+    for (const [code, el] of Object.entries(this.keys)) {
+      el.querySelector('.root')?.remove();
+      const m = /^Key([A-Z])$/.exec(code);
+      if (!map || !m) continue;
+      const g = map[m[1].toLowerCase()];
+      if (!g) continue;
+      const r = document.createElement('span');
+      r.className = 'root';
+      r.textContent = g;
+      el.prepend(r);
+    }
+  }
+
   setFingers(on) {
     this.showFingers = on;
     this.root.classList.toggle('show-fingers', on);

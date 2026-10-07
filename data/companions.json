@@ -1,5 +1,5 @@
 {
-  "_說明": "夥伴資料。stages 的門檻可按教學進度調整：lessons=已完成課數，wpm=最佳速度，acc=準確率。語言為 en 的世界用英文進度，zh 用速成進度。 names 是學生可揀的名字（不可自由輸入）；老師想加名字，直接在這裏加。",
+  "_說明": "夥伴資料。stages 的門檻可按教學進度調整：lessons=已完成課數，wpm=英文最佳速度（WPM），cpm=中文最佳速度（字／分鐘，約英文六成），acc=準確率。語言為 en 的世界用英文進度，zh 用速成進度。 names 是學生可揀的名字（不可自由輸入）；老師想加名字，直接在這裏加。",
   "worlds": {
     "planet": {
       "lang": "en",
@@ -21,7 +21,8 @@
       "need": {
         "lessons": 0,
         "wpm": 0,
-        "acc": 0
+        "acc": 0,
+        "cpm": 0
       },
       "badge": null
     },
@@ -31,7 +32,8 @@
       "need": {
         "lessons": 1,
         "wpm": 0,
-        "acc": 0
+        "acc": 0,
+        "cpm": 0
       },
       "badge": null
     },
@@ -41,7 +43,8 @@
       "need": {
         "lessons": 6,
         "wpm": 20,
-        "acc": 90
+        "acc": 90,
+        "cpm": 12
       },
       "badge": "銅章"
     },
@@ -51,7 +54,8 @@
       "need": {
         "lessons": 11,
         "wpm": 30,
-        "acc": 90
+        "acc": 90,
+        "cpm": 18
       },
       "badge": "銀章"
     },
@@ -61,7 +65,8 @@
       "need": {
         "lessons": 16,
         "wpm": 40,
-        "acc": 90
+        "acc": 90,
+        "cpm": 24
       },
       "badge": "金章"
     }
