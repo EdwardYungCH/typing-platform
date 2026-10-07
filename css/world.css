@@ -1,0 +1,109 @@
+/* 兩個世界的外觀：英文＝鍵帽星系（planet），中文＝字根魔法學院（magic）。
+   放在 base.css 之後載入，只覆寫顏色和裝飾，版面不變。 */
+
+:root[data-world] {
+  color-scheme: dark;
+  --ink: #eef1ff;
+  --ink-2: #b7bfe6;
+  --ink-3: #8089b8;
+  --ok: #5be08a;
+  --ok-bg: rgb(91 224 138 / 0.16);
+  --bad: #ff7d8a;
+  --bad-bg: rgb(255 125 138 / 0.16);
+  --star: #ffd23c;
+  --f-violet: #c4a6ff; --f-violet-bg: rgb(160 120 255 / 0.2);
+  --f-blue: #7fc0ff;   --f-blue-bg: rgb(90 160 255 / 0.2);
+  --f-green: #6ee795;  --f-green-bg: rgb(80 220 130 / 0.2);
+  --f-orange: #ffae66; --f-orange-bg: rgb(255 150 70 / 0.2);
+  --f-gray: #aab3d6;   --f-gray-bg: rgb(170 180 220 / 0.14);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --font: "Baloo 2", "Huninn", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+}
+
+:root[data-world="planet"] {
+  --bg: #121634;
+  --surface: #1c2150;
+  --surface-2: #262d68;
+  --line: #3a4390;
+  --accent: #5b9bff;
+  --accent-ink: #081030;
+  --glow: 91 155 255;
+  --world-grad: radial-gradient(1200px 600px at 80% -10%, #2b3a9c55, transparent 60%),
+                radial-gradient(900px 500px at 0% 30%, #6a3fd444, transparent 60%);
+}
+
+:root[data-world="magic"] {
+  --bg: #2a1b3d;
+  --surface: #3a2754;
+  --surface-2: #4a3369;
+  --line: #6a4d96;
+  --accent: #ffb84d;
+  --accent-ink: #2a1b3d;
+  --glow: 255 184 77;
+  --world-grad: radial-gradient(1100px 600px at 20% -10%, #8e4fd055, transparent 60%),
+                radial-gradient(900px 500px at 100% 40%, #ffb84d22, transparent 60%);
+}
+
+html[data-world] body {
+  background-color: var(--bg);
+  background-image:
+    var(--world-grad),
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff9, transparent 60%),
+    radial-gradient(1.5px 1.5px at 78% 12%, #fff8, transparent 60%),
+    radial-gradient(1px 1px at 40% 70%, #fff7, transparent 60%),
+    radial-gradient(1.5px 1.5px at 90% 80%, #fff8, transparent 60%),
+    radial-gradient(1px 1px at 25% 90%, #fff6, transparent 60%);
+  background-attachment: fixed;
+}
+
+html[data-world] .topbar { border-bottom-color: var(--line); }
+html[data-world] .topbar .brand { color: var(--ink); font-size: 18px; }
+
+/* 鍵帽按鈕：按下時會「壓」下去 */
+html[data-world] .btn {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-bottom-width: 4px;
+  border-radius: 12px;
+  transition: transform 0.08s ease, border-bottom-width 0.08s ease, filter 0.15s;
+}
+html[data-world] .btn:hover { background: var(--surface-2); filter: brightness(1.15); }
+html[data-world] .btn:active { transform: translateY(3px); border-bottom-width: 1px; }
+html[data-world] .btn.primary {
+  background: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 60%, #000);
+  color: var(--accent-ink);
+}
+html[data-world] .btn.ghost { border-color: transparent; background: transparent; }
+
+html[data-world] .card {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #fff) 0%, var(--surface) 100%);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* 夥伴 */
+.companion { display: block; width: 100%; height: auto; }
+.pet-float { animation: pet-float 3.2s ease-in-out infinite; }
+@keyframes pet-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .pet-float { animation: none; } }
+
+.badge {
+  display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  background: rgb(var(--glow) / 0.18); color: var(--accent); border: 1px solid rgb(var(--glow) / 0.4);
+}
+
+/* 打字頁：頂欄夥伴、結果彈窗夥伴 */
+#pet-top { width: 44px; height: 44px; }
+.panel-pet { width: 140px; margin: -4px auto 0; text-align: center; }
+.panel-pet img { width: 130px; height: 130px; margin: 0 auto; }
+.panel-pet .pet-say { margin: 0; font-weight: 800; color: var(--accent); }
+.panel-pet { width: auto; }
+.evolve { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.evolve img { width: 110px; height: 110px; }
+.evolve .before { filter: brightness(0.7) saturate(0.7); }
+.evolve .after { animation: evo-pop 0.9s cubic-bezier(.2,1.4,.4,1) both 0.3s; width: 150px; height: 150px; }
+.evolve .arrow { font-size: 28px; color: var(--accent); }
+@keyframes evo-pop { from { transform: scale(0.3) rotate(-10deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .evolve .after { animation: none; } }

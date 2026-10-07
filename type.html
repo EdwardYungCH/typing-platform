@@ -1,14 +1,15 @@
 <!doctype html>
-<html lang="zh-Hant-HK">
+<html lang="zh-Hant-HK" data-world="planet">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>打字練習</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/type.css">
+  <link rel="stylesheet" href="css/world.css">
 </head>
 <body>
   <div class="page">
@@ -16,6 +17,7 @@
       <a class="brand" href="index.html">打字練習平台</a>
       <span class="crumb muted" id="crumb"></span>
       <span class="spacer"></span>
+      <img id="pet-top" class="companion" width="44" height="44" alt="" hidden>
       <button class="btn ghost" id="toggle-fingers" type="button" aria-pressed="true">手指顏色：開</button>
     </header>
 
@@ -55,6 +57,7 @@
 
   <div class="overlay" id="overlay" hidden>
     <div class="panel card" role="dialog" aria-modal="true" aria-labelledby="panel-title">
+      <div id="panel-pet" class="panel-pet" hidden></div>
       <div class="stars" id="panel-stars" aria-hidden="true"></div>
       <h2 id="panel-title"></h2>
       <p class="muted" id="panel-msg"></p>

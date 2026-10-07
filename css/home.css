@@ -1,0 +1,75 @@
+/* 首頁、揀夥伴頁 */
+.hero { display: grid; gap: 20px; align-items: center; padding: 8px 0 12px; }
+@media (min-width: 760px) { .hero { grid-template-columns: 1fr 220px; } }
+.hero h1 { margin: 0; font-size: clamp(28px, 4.4vw, 44px); line-height: 1.15; }
+.hero p { margin: 8px 0 0; font-size: 18px; }
+
+.worlds { display: grid; gap: 18px; margin-top: 18px; }
+@media (min-width: 820px) { .worlds { grid-template-columns: 1fr 1fr; } }
+.world-card { position: relative; padding: 22px; overflow: hidden; }
+.world-card::before {
+  content: ""; position: absolute; inset: 0; opacity: 0.9; pointer-events: none;
+  background: radial-gradient(520px 260px at 100% 0%, rgb(var(--wg) / 0.28), transparent 70%);
+}
+.world-card > * { position: relative; }
+.world-card[data-w="planet"] { --wg: 91 155 255; }
+.world-card[data-w="magic"] { --wg: 255 184 77; }
+.world-card .tag { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; color: rgb(var(--wg)); }
+.world-card h2 { margin: 2px 0 0; font-size: 26px; }
+.world-card .pet { width: 120px; flex: none; }
+.world-top { display: flex; gap: 14px; align-items: center; justify-content: space-between; }
+.pet-box { text-align: center; }
+.pet-box .nm { font-weight: 800; margin-top: 2px; }
+.pet-box a { font-size: 13px; }
+.growth { margin: 14px 0 0; }
+.growth .bar { height: 10px; border-radius: 999px; background: rgb(255 255 255 / 0.1); overflow: hidden; }
+.growth .bar > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgb(var(--wg)), #fff); }
+.growth small { color: var(--ink-2); }
+
+/* 學習地圖 */
+.map { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+.node {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border: 1px solid var(--line); border-bottom-width: 4px; border-radius: 14px;
+  background: var(--surface-2); color: var(--ink); text-decoration: none;
+  transition: transform 0.08s, border-bottom-width 0.08s, filter 0.15s;
+}
+.node:hover { filter: brightness(1.15); }
+.node:active { transform: translateY(3px); border-bottom-width: 1px; }
+.node .num {
+  flex: none; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+  font-weight: 800; background: var(--surface); border: 1px solid var(--line); border-bottom-width: 3px;
+}
+.node.done .num { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.node .t { flex: 1; min-width: 0; }
+.node .t b { display: block; }
+.node .t span { font-size: 14px; color: var(--ink-2); }
+.node .s { color: var(--star); letter-spacing: 2px; white-space: nowrap; }
+.soon { margin: 12px 0 0; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 12px; color: var(--ink-2); }
+.note { margin-top: 24px; font-size: 14px; }
+
+/* 揀夥伴 */
+.tabs { display: flex; gap: 8px; margin: 8px 0 16px; flex-wrap: wrap; }
+.pick-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 640px) { .pick-grid { grid-template-columns: repeat(3, 1fr); } }
+.pick-card {
+  padding: 12px; text-align: center; cursor: pointer; font: inherit; color: var(--ink);
+  border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; background: var(--surface);
+  transition: transform 0.08s, border-color 0.15s, filter 0.15s;
+}
+.pick-card:hover { filter: brightness(1.12); }
+.pick-card[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(var(--glow) / 0.28); }
+.pick-card b { display: block; font-size: 18px; }
+.pick-card small { color: var(--ink-2); }
+.detail { margin-top: 18px; padding: 18px; }
+.detail h2 { margin: 0; font-size: 24px; }
+.evo { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 14px 0; }
+.evo figure { margin: 0; text-align: center; font-size: 12px; color: var(--ink-2); }
+.evo img { width: 100%; height: auto; display: block; }
+.evo .lock img { filter: brightness(0) opacity(0.55); }
+.evo .lock figcaption::after { content: " 🔒"; }
+.name-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.name-row input {
+  font: inherit; padding: 8px 12px; border-radius: 12px; min-width: 0; width: 10em;
+  background: var(--surface-2); color: var(--ink); border: 1px solid var(--line);
+}

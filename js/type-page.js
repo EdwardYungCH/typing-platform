@@ -6,6 +6,8 @@ import { TypingEngine, generateText, makeRng } from './engine.js';
 import { VirtualKeyboard, Hands, loadFingers, keyForChar, fingerName } from './keyboard.js';
 import { computeStats, starsFor, fmt, fmtAcc } from './stats.js';
 import * as store from './storage.js';
+import { applyWorld, worldForLang } from './world.js';
+import * as pet from './companion.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -44,6 +46,10 @@ async function init() {
     return;
   }
 
+  applyWorld(worldForLang(lang));
+  state.world = worldForLang(lang);
+  state.petData = await pet.loadCompanions();
+  state.petId = pet.getChoice(state.world);
   const showFingers = store.getSetting('showFingers', CONFIG.defaults.showFingers);
   state.kb = new VirtualKeyboard($('keyboard'), { showFingers });
   state.hands = new Hands($('hands'));
@@ -120,6 +126,7 @@ function runStep(i) {
   const focus = state.lesson.newKeys?.length ? [...state.lesson.newKeys, 'Space'] : null;
   state.kb.focusKeys(focus);
 
+  showTopPet(step.type !== 'test');
   if (step.type === 'guide') runGuide(step);
   else runTyping(step);
 }
@@ -366,7 +373,9 @@ function finishStep({ stats, stars, step, rest, guide }) {
     actions.push(['再試一次', () => runStep(state.stepIndex), true]);
     actions.push(['回到練習', () => runStep(Math.max(0, state.stepIndex - 1)), false]);
   } else if (isLast) {
+    const before = currentStage();
     const best = saveLessonDone(stars, stats);
+    state.evolvedFrom = currentStage() > before ? before : null;
     title = isTest ? '過關！' : '完成這一課！';
     msg = best;
     const next = state.lessons.find((l) => l.id === L.id + 1);
@@ -382,7 +391,35 @@ function finishStep({ stats, stars, step, rest, guide }) {
     if (!guide) actions.push(['再練一次', () => runStep(state.stepIndex), false]);
   }
 
+  renderPanelPet();
   showPanel({ title, msg, stars: isTest ? stars : null, stats: statsList, actions });
+  state.evolvedFrom = null;
+}
+
+function currentStage() {
+  return pet.stageOf(state.petData.stages, pet.summary(lang));
+}
+
+function showTopPet(on) {
+  const img = $('pet-top');
+  if (!state.petId || !on) { img.hidden = true; return; }
+  img.src = pet.art(state.world, state.petId, currentStage());
+  img.hidden = false;
+}
+
+function renderPanelPet() {
+  const box = $('panel-pet');
+  box.hidden = true;
+  if (!state.petId) return;
+  const stage = currentStage();
+  const c = state.petData.companions.find((x) => x.id === state.petId);
+  const nick = pet.getNick(state.world, c.name);
+  const stageName = state.petData.stages[stage].name;
+  const evolved = state.evolvedFrom !== null && state.evolvedFrom !== undefined;
+  box.innerHTML = evolved
+    ? `<div class="evolve"><img class="companion before" src="${pet.art(state.world, c.id, state.evolvedFrom)}" alt=""><span class="arrow">➜</span><img class="companion after" src="${pet.art(state.world, c.id, stage)}" alt="${nick}"></div><p class="pet-say">${nick} 進化成「${stageName}」了！</p>`
+    : `<img class="companion pet-float" src="${pet.art(state.world, c.id, stage)}" alt="${nick}"><p class="pet-say">${nick}為你加油！</p>`;
+  box.hidden = false;
 }
 
 function saveLessonDone(stars, stats) {
