@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>打字練習平台</title>
+  <title>夥伴之家</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,20 +16,14 @@
     <header class="topbar">
       <a class="brand" href="index.html">打字練習平台</a>
       <span class="spacer"></span>
-      <a class="btn ghost" href="companion-home.html">夥伴之家</a>
-      <a class="btn ghost" href="pick.html">揀夥伴</a>
+      <a class="btn ghost" href="pick.html">換夥伴</a>
+      <a class="btn ghost" href="index.html">回首頁</a>
     </header>
-
-    <section class="hero">
-      <div>
-        <h1>兩個世界，一對靈活的手指</h1>
-        <p class="muted">英文去星球冒險，中文進魔法學院。每課 5 至 10 分鐘：先學、再練、後測。準確比快更重要。</p>
-      </div>
-    </section>
-
-    <section class="worlds" id="worlds"></section>
-    <p class="note muted">目前為試用版：紀錄只存在這部電腦的瀏覽器內。</p>
+    <h1 style="margin:0">夥伴之家</h1>
+    <p class="muted" id="lead"></p>
+    <div class="tabs" id="tabs"></div>
+    <div id="list"></div>
   </div>
-  <script type="module" src="js/home-page.js"></script>
+  <script type="module" src="js/companion-home-page.js"></script>
 </body>
 </html>

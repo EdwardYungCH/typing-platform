@@ -10,7 +10,7 @@ const OUT = 'dist';
 
 // 只有這些資料夾和檔案會上線；工具、資料庫腳本和設定檔不會發佈。
 const SITE_DIRS = ['css', 'js', 'data', 'assets', 'en', 'zh', 'games', 'teacher', 'plus'];
-const SITE_FILES = ['index.html', 'type.html', 'pick.html', 'login.html', 'me.html', '_headers'];
+const SITE_FILES = ['index.html', 'type.html', 'pick.html', 'companion-home.html', 'login.html', 'me.html', '_headers'];
 
 async function exists(path) {
   try { await stat(path); return true; } catch { return false; }
