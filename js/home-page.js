@@ -58,7 +58,11 @@ for (const [w, info] of Object.entries(data.worlds)) {
     }
     card.append(ul);
   } else {
-    card.insertAdjacentHTML('beforeend', '<p class="soon">速成課堂即將推出。建議先完成英文第 0、1 課，熟習十指基準位。</p>');
+    card.insertAdjacentHTML('beforeend', `
+      <ul class="map"><li><a class="node" href="zh/lookup.html">
+        <span class="num">查</span>
+        <span class="t"><b>速成查碼</b><span>任何字的速成碼、拆字圖解和選字位置</span></span></a></li></ul>
+      <p class="soon">速成課堂即將推出。建議先完成英文第 0、1 課，熟習十指基準位。</p>`);
   }
   root.append(card);
 }

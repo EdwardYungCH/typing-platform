@@ -84,3 +84,11 @@ python -m http.server 8000
 ## 英文課文來源
 
 第 2–16 課由 `tools/gen_en_lessons.py` 產生，詞語取自開源的 google-10000-english（已排除不雅詞和網站縮寫），句子和段落為原創。重新產生：`python3 tools/gen_en_lessons.py <詞表檔路徑>`（第 0、1 課不受影響）。
+
+## 中文碼表來源
+
+`data/zh-codes.json` 由 `tools/build_zh_codes.py` 產生：
+
+- 速成碼與選字次序：[rime-ms-quick](https://github.com/kanzaki1201/rime-ms-quick)（依 Windows 微軟速成整理；該儲存庫未附授權條款，正式推出前需向作者確認或改用其他來源）
+- 倉頡全碼（拆字圖解）：[rime-cangjie](https://github.com/rime/rime-cangjie)，LGPL-3.0
+- 字頻（常用字排序）：[rime-essay](https://github.com/rime/rime-essay)，LGPL-3.0

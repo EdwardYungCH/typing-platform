@@ -1,0 +1,48 @@
+/* 速成查碼頁 */
+.lk-title { margin: 0; font-size: clamp(26px, 4vw, 38px); }
+.lk-form { display: flex; gap: 10px; margin: 14px 0 18px; }
+.lk-input {
+  flex: 1; min-width: 0; font: inherit; font-size: 24px; padding: 10px 14px;
+  border-radius: 14px; border: 1px solid var(--line); border-bottom-width: 4px;
+  background: var(--surface-2); color: var(--ink);
+}
+.lk-input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.lk-results { display: grid; gap: 14px; }
+@media (min-width: 760px) { .lk-results { grid-template-columns: 1fr 1fr; } }
+
+.lk-card { padding: 16px 18px; display: grid; grid-template-columns: 92px 1fr; gap: 14px 18px; align-items: start; }
+.lk-char {
+  font-size: 68px; line-height: 1; width: 92px; height: 92px; display: grid; place-items: center;
+  border-radius: 18px; background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 5px;
+}
+.lk-body h3 { margin: 0 0 6px; font-size: 14px; color: var(--ink-2); font-weight: 600; }
+.lk-row { margin-bottom: 10px; }
+.caps { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.cap {
+  display: inline-grid; place-items: center; min-width: 44px; height: 50px; padding: 2px 6px;
+  border-radius: 10px; border: 1px solid var(--line); border-bottom-width: 4px; background: var(--surface);
+  line-height: 1.05; text-align: center;
+}
+.cap b { font-size: 20px; }
+.cap small { font-size: 12px; color: var(--ink-2); font-family: var(--mono); text-transform: uppercase; }
+.cap.key { border-color: var(--accent); background: rgb(var(--glow) / 0.16); }
+.cap.key small { color: var(--accent); }
+.cap.dim { opacity: 0.45; }
+.arrow { color: var(--ink-3); padding: 0 2px; }
+.pick { font-size: 15px; }
+.pick b { color: var(--accent); }
+.same { display: flex; flex-wrap: wrap; gap: 4px; font-size: 20px; }
+.same span { min-width: 34px; text-align: center; padding: 2px 4px; border-radius: 8px; background: var(--surface-2); }
+.same span.me { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.same span i { display: block; font-style: normal; font-size: 10px; color: var(--ink-3); line-height: 1; }
+.same span.me i { color: var(--accent-ink); }
+.lk-miss { padding: 14px 18px; color: var(--ink-2); }
+
+.lk-roots { margin-top: 22px; padding: 18px; }
+.lk-roots h2 { margin: 0 0 10px; font-size: 20px; }
+.root-group { margin-bottom: 10px; }
+.root-group h3 { margin: 0 0 6px; font-size: 14px; color: var(--ink-2); }
+@media (max-width: 520px) {
+  .lk-card { grid-template-columns: 1fr; }
+  .lk-char { width: 80px; height: 80px; font-size: 56px; }
+}
