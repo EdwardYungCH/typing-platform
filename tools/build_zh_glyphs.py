@@ -67,7 +67,7 @@ def strokes_of_child(matches, path, depth_idx):
 
 # 部分部件：只有前幾筆才是該字根（例如 ⺮ 的左半是竹、夕 的頭兩筆是弓的輔助字形）
 UNKNOWN_OK = set('左右有友灰刀己畏')
-PARTIAL = {('⺮', 'h', 'f'): 3, ('夕', 'n', 'f'): 2}
+PARTIAL = {('⺮', 'h', 'f'): 3, ('夕', 'n', 'f'): 2, ('幺', 'v', 'f'): 1}
 
 def unknown(decomp, idxs, matches, want, side, char):
     """分解式只有一個「？」部件（例如 左 ＝ ⿸？工）時，「？」的筆畫就是 matches 為空的筆畫。

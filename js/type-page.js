@@ -210,7 +210,7 @@ function runGuide(step) {
     if (s.example && glyphNow(s.example) === null && !s._loaded) { s._loaded = true; glyphData(s.example).then(render); }
     if (s.shapeKey && !s._loaded) {
       s._loaded = true;
-      const chars = Object.entries(state.chartInfo).filter(([img]) => img[0] === s.shapeKey).flatMap(([, v]) => v.examples.map((e) => e[0]));
+      const chars = Object.entries(state.chartInfo).filter(([img]) => img[0] === s.shapeKey).flatMap(([, v]) => v.examples.filter((e) => e[2]).map((e) => e[0]));
       preloadGlyphs(chars).then(() => Promise.all(chars.map((c) => glyphData(c)))).then(render);
     }
     box.innerHTML = `
@@ -279,7 +279,8 @@ function makeText(step) {
     // 字形練習：只出這一課的輔助字形（字根表圖片），學生按它所屬的鍵
     const rng = makeRng();
     const items = [];
-    for (const k of step.gen.keys) for (let i = 0; i < (state.chart?.[k] ?? 0); i++) items.push([k, i]);
+    for (const k of step.gen.keys) for (let i = 0; i < (state.chart?.[k] ?? 0); i++) if (state.chartInfo[`${k}-${i}`]) items.push([k, i]);
+    if (!items.length) for (const k of step.gen.keys) items.push([k, 0]);
     const out = [];
     for (let n = 0; n < step.gen.count; n++) {
       let it;
@@ -902,21 +903,19 @@ function shapeLessonHtml(k) {
   const rows = [];
   for (let i = 0; i < n; i++) {
     const info = state.chartInfo[`${k}-${i}`];
+    if (!info) continue;   // 不會出現在首尾碼的字形不教
     const img = `<span class="shape-img">${chartGlyphs(k, 1).replace(`${k}-0.png`, `${k}-${i}.png`)}</span>`;
-    let ex = '';
-    if (info) {
-      ex += info.examples.map(([c, side]) => {
-        const g = glyphNow(c);
-        return `<figure class="sx">${g ? glyphSvg(g, side) : `<span class="sx-t">${c}</span>`}<figcaption>${c}</figcaption></figure>`;
-      }).join('');
-      ex += (info.text ?? []).map(([c, p]) => {
-        const cj = state.zh.cjOf(c) ?? '';
-        return `<figure class="sx"><span class="sx-t">${c}</span><figcaption>${[...cj].map((x, j) => j === p ? `<b class="c-first">${ROOTS[x]}</b>` : ROOTS[x]).join('')}</figcaption></figure>`;
-      }).join('');
-    }
-    rows.push(`<div class="shape-row2">${img}<div class="sx-name">${info?.name ?? '輔助字形'}</div><div class="sx-list">${ex || '<small class="muted">較少見，暫未有例字</small>'}</div></div>`);
+    const ex = info.examples.map(([c, side, has]) => {
+      const g = has ? glyphNow(c) : null;
+      const cj = state.zh.cjOf(c) ?? '';
+      const tag = side === 'f' ? '<b class="c-first">首碼</b>' : '<b class="c-last">尾碼</b>';
+      if (g) return `<figure class="sx">${glyphSvg(g, side)}<figcaption>${c}・${tag}</figcaption></figure>`;
+      const mark = side === 'f' ? 0 : cj.length - 1;
+      return `<figure class="sx"><span class="sx-t">${c}</span><figcaption>${[...cj].map((x, j) => j === mark ? `<b class="${side === 'f' ? 'c-first' : 'c-last'}">${ROOTS[x]}</b>` : ROOTS[x]).join('')}</figcaption></figure>`;
+    }).join('');
+    rows.push(`<div class="shape-row2">${img}<div class="sx-name">${info.name}</div><div class="sx-list">${ex}</div></div>`);
   }
-  return `<div class="shape-lesson"><div class="shape-head">${zcap(k, 'key')}<span>字根「${ROOTS[k]}」的輔助字形（${n} 個）：例字中<b class="c-first">紅色</b>（首碼）或<b class="c-last">藍色</b>（尾碼）部分就是這個字形；沒有圖的例字，倉頡碼中標紅的就是它。</span></div>${rows.join('')}</div>`;
+  return `<div class="shape-lesson"><div class="shape-head">${zcap(k, 'key')}<span>字根「${ROOTS[k]}」的輔助字形：例字中<b class="c-first">紅色</b>是作首碼的位置，<b class="c-last">藍色</b>是作尾碼的位置。</span></div>${rows.join('') || '<p class="muted">這個字根沒有輔助字形，認住字根本身就可以。</p>'}</div>`;
 }
 
 function shapesHtml(keys) {
