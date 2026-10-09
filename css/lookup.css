@@ -46,3 +46,9 @@
   .lk-card { grid-template-columns: 1fr; }
   .lk-char { width: 80px; height: 80px; font-size: 56px; }
 }
+.shape-rows { display: grid; gap: 8px; }
+.shape-row { display: flex; gap: 10px; align-items: flex-start; }
+.shape-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.shape-item { display: flex; gap: 6px; align-items: center; padding: 4px 8px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
+.shape-item b { font-size: 22px; min-width: 1.1em; text-align: center; }
+.shape-item small { font-size: 11px; color: var(--ink-2); line-height: 1.3; }

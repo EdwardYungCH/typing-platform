@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""產生中文速成第 2–15 課，併入 data/zh-lessons.json（第 0、1 課保持不變）。
+"""產生中文速成第 1–15 課，併入 data/zh-lessons.json（第 0 課導覽保持不變）。
 需要先有 data/zh-codes.json（見 tools/build_zh_codes.py）。詞語和句子為原創。
 用法：python3 tools/gen_zh_lessons.py /path/to/essay.txt（詞頻表目前只用作備用，可省略）
 """
@@ -17,6 +17,7 @@ EXCLUDE = set('呵喫縣臺爾啦')  # 詞頻表帶來、但不適合香港初�
 COMMON = ''.join(c for c in Z['common'] if c not in EXCLUDE)
 RANK = {c: i for i, c in enumerate(COMMON)}
 PUNCT = set('，。；：？！「」、')
+SHAPES = json.load(open('data/zh-shapes.json', encoding='utf-8'))['keys']
 
 def idx(ch):
     q = first[ch]
@@ -39,12 +40,26 @@ def code_keys(chars):
         if ch in PUNCT:
             continue
         i = idx(ch)
-        if 2 <= i <= 9:
+        if 1 <= i <= 9:
             ks.add(f'Digit{i}')
     return sorted(ks)
 
 def keycodes(letters):
     return [f'Key{k.upper()}' for k in letters]
+
+def guide(title, slides):
+    return {'type': 'guide', 'title': title, 'slides': slides}
+
+def shape_slides(keys):
+    groups = [keys[i:i + 4] for i in range(0, len(keys), 4)]
+    out = []
+    for g in groups:
+        out.append({'title': '輔助字形：' + '、'.join(ROOTS[k] for k in g),
+                    'points': ['同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）',
+                               '看到這些部件，都按同一個鍵',
+                               '注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E'],
+                    'shapes': g})
+    return out
 
 def roots_lesson(lid, title, new, learned, extra_hint):
     chars = pool(learned, new)
@@ -59,15 +74,18 @@ def roots_lesson(lid, title, new, learned, extra_hint):
              'hint': f'{names}：{extra_hint}看字根，按對應的鍵。', 'text': new * 2},
             {'type': 'drill', 'mode': 'roots', 'title': '單鍵',
              'hint': '每個字根三次，記住它的位置。', 'text': ''.join(k * 3 for k in new) * 3},
-            {'type': 'drill', 'mode': 'roots', 'title': '組合',
-             'hint': '新字根和學過的字根一起出現。', 'gen': {'kind': 'roots', 'keys': weighted, 'count': 45}},
+            guide('輔助字形', shape_slides(new)),
+            {'type': 'drill', 'mode': 'shapes', 'title': '認字形',
+             'hint': '字根和它的輔助字形會隨機出現：看到哪個部件，就按它所屬的鍵。', 'gen': {'kind': 'shapes', 'keys': new, 'count': 30}},
+            {'type': 'drill', 'mode': 'shapes', 'title': '組合',
+             'hint': '新學和學過的字根、輔助字形一起出現。', 'gen': {'kind': 'shapes', 'keys': weighted, 'count': 45}},
             {'type': 'drill', 'mode': 'quick', 'title': '打字',
              'hint': '這些字只用學過的字根就打到。跟着選字窗的提示揀字。',
              'gen': {'kind': 'chars', 'chars': chars, 'count': 20}},
-            {'type': 'test', 'mode': 'roots', 'title': '過關小測',
-             'hint': '45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。',
+            {'type': 'test', 'mode': 'shapes', 'title': '過關小測',
+             'hint': '45 秒內看字根或輔助字形按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。',
              'timeLimit': 45, 'pass': {'accuracy': 90},
-             'gen': {'kind': 'roots', 'keys': weighted, 'count': 90}},
+             'gen': {'kind': 'shapes', 'keys': weighted, 'count': 90}},
         ],
     }
 
@@ -82,7 +100,7 @@ def quick_lesson(lid, title, subtitle, chars, hint, test_pass, guide=None, count
         {'type': 'test', 'mode': 'quick', 'title': '過關小測', 'timeLimit': limit, 'pass': test_pass,
          'hint': f'{limit} 秒內打得愈多愈好。{pass_text(test_pass)}', 'gen': {'kind': 'chars', 'chars': chars, 'count': test_count}},
     ]
-    return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': keycodes(allk) + code_keys(chars),
+    return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': [],
             'pass': test_pass, 'steps': steps}
 
 def pass_text(p):
@@ -98,14 +116,14 @@ def text_lesson(lid, title, subtitle, texts, hint, test_pass, limit=90, unit='�
               'hint': hint, 'text': t} for i, t in enumerate(texts[:-1])]
     steps.append({'type': 'test', 'mode': 'quick', 'title': '過關小測', 'timeLimit': limit, 'pass': test_pass,
                   'hint': f'{limit} 秒內打得愈多愈好。{pass_text(test_pass)}', 'text': texts[-1]})
-    return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': keycodes(allk), 'pass': test_pass, 'steps': steps}
+    # 綜合課：全部鍵都會用到（字母、數字揀字、空白鍵翻頁、標點），不把任何鍵變淡
+    return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': [], 'pass': test_pass, 'steps': steps}
 
-def guide(title, slides):
-    return {'type': 'guide', 'title': title, 'slides': slides}
 
 L = []
-learned = 'abcdefg'
+learned = ''
 for lid, title, new, tip in [
+    (1, '哲理類字根', 'abcdefg', '日月金木水火土住在 A 至 G。'),
     (2, '筆畫類字根（上）', 'hijk', '竹戈十大住在 H 至 K，由右手食指和中指負責。'),
     (3, '筆畫類字根（下）', 'lmn', '中一弓住在 L、M、N。'),
     (4, '人體類字根', 'opqr', '人心手口住在 O 至 R。'),
@@ -122,68 +140,76 @@ l7 = roots_lesson(7, '難字鍵與總複習', 'x', learned, '難字鍵 X 用於�
 l7['subtitle'] = '難 X ＋ 全部字根'
 l7['steps'][0]['text'] = 'xxx'
 l7['steps'][1]['text'] = 'xxxxxx'
-l7['steps'][2]['gen']['keys'] = 'abcdefghijklmnopqrstuvwyx'
-l7['steps'][3]['gen']['chars'] = x_chars
-l7['steps'][4]['gen']['keys'] = 'abcdefghijklmnopqrstuvwyx'
+ALL = 'abcdefghijklmnopqrstuvwyx'
+l7['steps'][2] = guide('總複習', shape_slides('abcdefg') + shape_slides('hijklmn') + shape_slides('opqrstuvwy'))
+l7['steps'][3]['gen']['keys'] = ALL
+l7['steps'][3]['hint'] = '全部字根和輔助字形隨機出現。'
+l7['steps'][4]['gen']['keys'] = ALL
+l7['steps'][5]['gen']['chars'] = x_chars
+l7['steps'][6]['gen']['keys'] = ALL
 l7['newKeys'] = keycodes('abcdefghijklmnopqrstuvwyx') + code_keys(x_chars)
 L.append(l7)
 
-# 第 8 課：單碼字
+def split_lesson(lid, title, subtitle, slides, chars, hint, test_pass={'accuracy': 85}, n=20):
+    return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': keycodes(ALL), 'pass': test_pass,
+            'steps': [guide(title, slides),
+                      {'type': 'drill', 'mode': 'split', 'title': '拆字練習', 'hint': hint, 'gen': {'kind': 'chars', 'chars': chars, 'count': n}},
+                      {'type': 'drill', 'mode': 'split', 'title': '再拆一次', 'hint': hint, 'gen': {'kind': 'chars', 'chars': chars, 'count': n}},
+                      {'type': 'test', 'mode': 'split', 'title': '過關小測', 'timeLimit': 60, 'pass': test_pass,
+                       'hint': f'60 秒內拆得愈多愈好，沒有提示。{pass_text(test_pass)}', 'gen': {'kind': 'chars', 'chars': chars, 'count': 80}}]}
+
+# 第 8 課：單碼字與取碼次序
 singles = ''.join(c for c in COMMON[:3000] if len(first[c]) == 1 and idx(c) == 1)
-L.append(quick_lesson(8, '單碼字', '一個碼就打到的字', singles,
-    '這些字只有一個字根：按一個鍵，再按空白鍵。', {'accuracy': 90},
-    guide('單碼字', [{'title': '一個鍵就打到的字', 'points': [
-        '有些字本身就是一個字根，例如 日、月、木、口、人',
-        '這些字只要按一個鍵，再按空白鍵上屏',
-        '它們是最常用的字，熟練後可以打得很快'], 'show': 'keyboard', 'rootLabels': True, 'example': '人'}])))
+two = ''.join(c for c in COMMON[:800] if len(Z['cj'].get(c, '')) == 2)[:30]
+L.append({'id': 8, 'title': '單碼字與取碼次序', 'subtitle': '上至下、左至右、外至內', 'newKeys': keycodes(ALL), 'pass': {'accuracy': 85},
+    'steps': [
+        guide('取碼次序', [
+            {'title': '一個鍵就打到的字', 'points': ['字本身就是一個字根，例如 日、月、木、口、人', '按一個鍵就可以'], 'show': 'keyboard', 'rootLabels': True, 'example': '人'},
+            {'title': '取碼的次序', 'points': ['由上至下：例如 昌 ＝ 日（上）…日（下）', '由左至右：例如 林 ＝ 木（左）…木（右）', '由外至內：例如 回 ＝ 田字框（外）…口（內）', '一個字可以同時用到幾個次序'], 'show': 'keyboard', 'rootLabels': True, 'example': '回'},
+            {'title': '兩個部件的字', 'points': ['先把字分成兩部分，再按次序取碼', '明 ＝ 日＋月，林 ＝ 木＋木，吉 ＝ 士＋口', '接下來只要拆碼，打對兩個鍵就自動上屏，不用選字'], 'show': 'keyboard', 'rootLabels': True, 'example': '吉'}]),
+        {'type': 'drill', 'mode': 'split', 'title': '單碼字', 'hint': '這些字本身就是字根：按一個鍵。', 'gen': {'kind': 'chars', 'chars': singles, 'count': 16}},
+        {'type': 'drill', 'mode': 'split', 'title': '兩個部件', 'hint': '每個字由兩個字根組成：按次序打兩個鍵。', 'gen': {'kind': 'chars', 'chars': two, 'count': 20}},
+        {'type': 'test', 'mode': 'split', 'title': '過關小測', 'timeLimit': 60, 'pass': {'accuracy': 85},
+         'hint': '60 秒內拆得愈多愈好，沒有提示。準確率達 85% 即過關。', 'gen': {'kind': 'chars', 'chars': singles + two, 'count': 80}}]})
 
-# 第 9 課：拆字規則（首尾碼）
-split_chars = ''.join(c for c in COMMON[:400] if len(first[c]) == 2 and idx(c) == 1 and len(Z['cj'].get(c, '')) >= 3)[:40]
-L.append(quick_lesson(9, '拆字規則', '只打首碼和尾碼', split_chars,
-    '提示會列出倉頡全碼：只打第一個和最後一個字根。', {'accuracy': 90},
-    guide('拆字規則', [
-        {'title': '先拆字，再取首尾', 'points': [
-            '左右結構：先左後右，例如 林 ＝ 木＋木',
-            '上下結構：先上後下，例如 想 ＝ 木…心',
-            '外內結構：先外後內，例如 國 ＝ 田…一',
-            '速成只取第一個和最後一個字根，中間的不用打'], 'show': 'keyboard', 'rootLabels': True, 'example': '校'},
-        {'title': '再看一個例子', 'points': [
-            '「電」的倉頡碼是 一 月 田 山',
-            '速成只打 一（M）和 山（U）',
-            '不肯定時，可以用「速成查碼」查一查'], 'show': 'keyboard', 'rootLabels': True, 'example': '電'}])))
+# 第 9 課：拆字（一）：只用基本字根
+basic = ''.join(c for c in COMMON[:700] if len(Z['cj'].get(c, '')) >= 3 and len(first[c]) == 2)[:60]
+L.append(split_lesson(9, '拆字（一）', '只取首尾，中間不理', [
+    {'title': '中間的部件不用打', 'points': ['先按次序把整個字拆開', '速成只取第一個和最後一個部件', '中間有多少個部件都不用理會'], 'show': 'keyboard', 'rootLabels': True, 'example': '校'},
+    {'title': '再看兩個例子', 'points': ['電 ＝ 一 月 田 山 → 一（M）＋ 山（U）', '學 ＝ 竹 月 弓 木 → 竹（H）＋ 木（D）', '打錯一次會提示倉頡拆法，打錯兩次會顯示答案'], 'show': 'keyboard', 'rootLabels': True, 'example': '學'}],
+    basic, '自己拆出首碼和尾碼。打錯一次有提示，打錯兩次會顯示答案。'))
 
-# 第 10 課：同碼字選字
+# 第 10 課：拆字（二）：輔助字形
+aux = ''.join(ch for k in SHAPES for sh in SHAPES[k] if sh['shape'] != ROOTS[k] for ch in sh['examples'] if ch in first)
+aux = ''.join(dict.fromkeys(aux))
+L.append(split_lesson(10, '拆字（二）', '找出輔助字形', [
+    {'title': '部件不像字根？查輔助字形', 'points': ['很多部件是字根的變形，例如 氵 是水、扌 是手、亻 是人', '拆字時先認出部件，再想它屬哪個字根鍵', '下面是最常見的輔助字形'], 'shapes': 'eqoptj'},
+    {'title': '更多常見輔助字形', 'points': ['辶 走字底是 卜（Y），艹 草花頭是 廿（T）', '冂 同字框是 月（B），囗 大口框是 田（W）', '幺 絲字邊是 女（V），灬 四點火是 火（F）'], 'shapes': 'ybwvfi'},
+    {'title': '遇到不認識的部件', 'points': ['先打開「速成查碼」查一查，看它屬哪個鍵', '查碼頁底部有完整的字根和輔助字形表', '多拆幾次，常見的部件很快就會記住'], 'shapes': 'kmns'}],
+    aux, '這些字都有輔助字形：先認出部件，再想它屬哪個鍵。'))
+
+# 第 11 課：選字與標點
 pick_chars = ''.join(c for c in COMMON[:800] if 2 <= idx(c) <= 9)[:40]
-L.append(quick_lesson(10, '同碼字選字', '用數字鍵揀字', pick_chars,
-    '這些字都不是第 1 個候選字：打完碼，看清楚再按數字。', {'accuracy': 90},
-    guide('同碼字', [{'title': '同一組碼，很多個字', 'points': [
-        '速成只有兩碼，所以很多字共用同一組碼',
-        '選字窗按次序列出候選字：第 1 個按空白鍵，其餘按數字',
-        '常用字的位置是固定的，多打幾次就會記得',
-        '眼睛看選字窗，手指不用離開基準位太遠'], 'show': 'keyboard', 'rootLabels': True, 'imeDemo': '校'}])))
-
-# 第 11 課：中文標點
 punct_texts = ['你好，我是中一學生。', '今天上甚麼課？', '加油！我們一起努力。', '老師說：「準確比快更重要。」', '我喜歡中文、英文和數學。']
 for t in punct_texts:
     for c in t:
         assert c in PUNCT or c in first, c
-l11 = {'id': 11, 'title': '中文標點', 'subtitle': '，。、？！「」：', 'pass': {'accuracy': 90},
-       'newKeys': ['Comma', 'Period', 'Semicolon', 'Slash', 'Digit1', 'BracketLeft', 'BracketRight', 'Backslash', 'ShiftLeft', 'ShiftRight'],
-       'steps': [guide('中文標點', [{'title': '組字框空着時按標點鍵', 'points': [
-           '逗號「，」按 ,　句號「。」按 .　頓號「、」按 \\',
-           '問號「？」按 Shift＋/　感嘆號「！」按 Shift＋1',
-           '冒號「：」按 Shift＋;　引號「」按 [ 和 ]',
-           '要先把字上屏，組字框空着才可以打標點'], 'show': 'keyboard',
-           'highlight': ['Comma', 'Period', 'Backslash', 'Slash', 'Digit1', 'Semicolon', 'BracketLeft', 'BracketRight']}])]}
-for i, t in enumerate(punct_texts[:-1]):
-    l11['steps'].append({'type': 'drill', 'mode': 'quick', 'title': f'第 {i + 1} 句', 'hint': '留意每句的標點。', 'text': t})
-l11['steps'].append({'type': 'test', 'mode': 'quick', 'title': '過關小測', 'timeLimit': 90, 'pass': {'accuracy': 90},
-                     'hint': '把整句打出來，包括標點。準確率達 90% 即過關。', 'text': ''.join(punct_texts)})
-L.append(l11)
+L.append({'id': 11, 'title': '選字與標點', 'subtitle': '數字鍵揀字、中文標點', 'pass': {'accuracy': 90},
+    'newKeys': keycodes(ALL) + ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Comma', 'Period', 'Slash', 'Semicolon', 'BracketLeft', 'BracketRight', 'Backslash', 'ShiftLeft', 'ShiftRight'],
+    'steps': [
+        guide('選字與標點', [
+            {'title': '同一組碼，很多個字', 'points': ['速成只有兩碼，很多字共用同一組碼', '打完碼後，看選字窗，按字旁邊的數字 1 至 9 揀字', '要找的字不在這一頁時，按空白鍵翻到下一頁'], 'show': 'keyboard', 'rootLabels': True, 'imeDemo': '校'},
+            {'title': '中文標點', 'points': ['逗號「，」按 ,　句號「。」按 .　頓號「、」按 \\', '問號「？」按 Shift＋/　感嘆號「！」按 Shift＋1', '冒號「：」按 Shift＋;　引號「」按 [ 和 ]', '要先把字上屏，組字框空着才可以打標點'], 'show': 'keyboard',
+             'highlight': ['Comma', 'Period', 'Backslash', 'Slash', 'Digit1', 'Semicolon', 'BracketLeft', 'BracketRight']}]),
+        {'type': 'drill', 'mode': 'quick', 'title': '揀字', 'hint': '這些字都不是第 1 個候選字：打完碼，看清楚再按數字。', 'gen': {'kind': 'chars', 'chars': pick_chars, 'count': 20}},
+        {'type': 'drill', 'mode': 'quick', 'title': '標點（一）', 'hint': '留意每句的標點。', 'text': ''.join(punct_texts[:2])},
+        {'type': 'drill', 'mode': 'quick', 'title': '標點（二）', 'hint': '留意每句的標點。', 'text': ''.join(punct_texts[2:4])},
+        {'type': 'test', 'mode': 'quick', 'title': '過關小測', 'timeLimit': 90, 'pass': {'accuracy': 90},
+         'hint': '把整句打出來，包括標點。準確率達 90% 即過關。', 'text': ''.join(punct_texts)}]})
 
 # 第 12、13 課：常用字
 L.append(quick_lesson(12, '常用字（一）', '最常用 300 字', COMMON[:300],
-    '最常用的 300 字。有些字要按 PageDown 翻頁才找到，例如「學」。', {'wpm': 3}, count=30, test_count=120))
+    '最常用的 300 字。有些字要按空白鍵翻頁才找到，例如「學」在第 3 頁。', {'wpm': 3}, count=30, test_count=120))
 L.append(quick_lesson(13, '常用字（二）', '第 301 至 1000 字', COMMON[300:1000],
     '再多 700 個常用字。不記得碼時，看提示。', {'wpm': 5}, count=30, test_count=150))
 
@@ -202,7 +228,7 @@ rnd = random.Random(2027)
 def word_text(k):
     return '、'.join(rnd.sample(words, k)) + '。'
 L.append(text_lesson(14, '詞語', '常用兩字詞', [word_text(8), word_text(8), word_text(10), word_text(30)],
-    '詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按 PageDown。', {'wpm': 6, 'accuracy': 90}, unit='組'))
+    '詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按空白鍵。', {'wpm': 6, 'accuracy': 90}, unit='組'))
 
 # 第 15 課：句子與短文（原創）
 sentences = [
@@ -224,7 +250,7 @@ for l in L:
             assert c in PUNCT or c in first or s.get('mode') == 'roots', (l['id'], c)
 
 data = json.load(open('data/zh-lessons.json', encoding='utf-8'))
-data['lessons'] = data['lessons'][:2] + L
+data['lessons'] = data['lessons'][:1] + L
 json.dump(data, open('data/zh-lessons.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 print('共', len(data['lessons']), '課')
 for l in L:

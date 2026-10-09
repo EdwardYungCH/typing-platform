@@ -4,7 +4,8 @@ import { loadZh, ROOTS, ROOT_GROUPS, candidateIndex } from './zh-codes.js';
 applyWorld('magic');
 const $ = (id) => document.getElementById(id);
 const zh = await loadZh('../');
-$('source').textContent = `碼表來源：${zh.source}`;
+const shapes = (await fetch('../data/zh-shapes.json').then((r) => r.json())).keys;
+$('source').textContent = `碼表來源：${zh.source}；輔助字形表為常用部分，例字已用倉頡碼核對。`;
 
 const cap = (k, cls = '') => `<span class="cap ${cls}"><b>${ROOTS[k] ?? '?'}</b><small>${k}</small></span>`;
 const isHan = (ch) => /\p{Script=Han}/u.test(ch);
@@ -18,10 +19,9 @@ function card(ch) {
   const page = Math.ceil(idx / 9);
   const num = ((idx - 1) % 9) + 1;
   let pickText;
-  if (list.length === 1) pickText = '這組碼只有這個字，按<b>空白鍵</b>即可。';
-  else if (idx === 1) pickText = `排<b>第 1 位</b>，按<b>空白鍵</b>或 <b>1</b> 即可。`;
+  if (idx === 1) pickText = `排<b>第 1 位</b>，打完碼按 <b>1</b> 揀字。`;
   else if (page === 1) pickText = `排<b>第 ${idx} 位</b>，打完碼按數字 <b>${num}</b> 揀字。`;
-  else pickText = `排<b>第 ${idx} 位</b>：要翻到第 ${page} 頁，再按 <b>${num}</b>（常用字很少要翻頁）。`;
+  else pickText = `排<b>第 ${idx} 位</b>：按<b>空白鍵</b>${page > 2 ? ` ${page - 1} 次` : ''}翻到第 ${page} 頁，再按 <b>${num}</b>。`;
 
   // 拆字圖解：倉頡全碼中，首碼和尾碼亮起，中間的碼變淡（速成不用打）
   let split = '';
@@ -53,7 +53,11 @@ function search(text) {
 $('form').addEventListener('submit', (e) => { e.preventDefault(); search($('q').value); });
 
 $('roots').innerHTML = ROOT_GROUPS.map((g) => `
-  <div class="root-group"><h3>${g.name}</h3><div class="caps">${[...g.keys].map((k) => cap(k)).join('')}</div></div>`).join('');
+  <div class="root-group"><h3>${g.name}</h3>
+    <div class="shape-rows">${[...g.keys].map((k) => `
+      <div class="shape-row">${cap(k, 'key')}<div class="shape-list">${(shapes[k] ?? []).map((sh) =>
+        `<span class="shape-item" title="${sh.name}"><b>${sh.shape || '◇'}</b><small>${sh.name}<br>例：${sh.examples}</small></span>`).join('') || '<small class="muted">（只有字根本身）</small>'}</div></div>`).join('')}
+    </div></div>`).join('');
 
 const init = new URLSearchParams(location.search).get('q');
 if (init) { $('q').value = init; search(init); }

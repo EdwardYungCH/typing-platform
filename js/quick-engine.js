@@ -15,7 +15,10 @@ export class QuickEngine {
    * @param {string} o.text 要打的中文字（每個字一格）
    * @param {object} o.zh   loadZh() 的結果
    */
-  constructor({ text, zh, errorMode = 'block', timeLimit = 0, onKey, onFinish, onTick, onIme }) {
+  /** pick=false 是「拆字模式」：只打首尾碼，碼一對就自動上屏，不用選字。 */
+  constructor({ text, zh, errorMode = 'block', timeLimit = 0, pick = true, onKey, onFinish, onTick, onIme }) {
+    this.pick = pick;
+    this.misses = 0;     // 目前這個字打錯了幾次（拆字模式逐步提示用）
     this.chars = [...text];
     this.text = this.chars;              // 打字頁用 text[pos] 和 text.length
     this.zh = zh;
@@ -64,7 +67,8 @@ export class QuickEngine {
   /** 目前這一頁的候選字。 */
   get pageItems() { return this.candidates.slice(this.page * PAGE, this.page * PAGE + PAGE); }
 
-  /** 下一個應該按的鍵（給虛擬鍵盤和手形提示用）：字母、' '、數字、'Backspace'、'PageDown'。 */
+  /** 下一個應該按的鍵：字母、數字（揀字）、' '（翻頁）、'Backspace'、'PageUp'。
+   *  微軟速成：數字 1–9 揀字，空白鍵翻到下一頁。 */
   nextKey() {
     const ch = this.expectedChar;
     if (ch === undefined) return null;
@@ -73,12 +77,13 @@ export class QuickEngine {
     if (!code) return null;
     if (!code.startsWith(this.comp)) return 'Backspace';
     if (this.comp.length < code.length) return code[this.comp.length];
+    if (!this.pick) return null;
     const idx = this.zh.candidates(code).indexOf(ch);
     const page = Math.floor(idx / PAGE);
-    if (page > this.page) return 'PageDown';
+    if (page > this.page) return ' ';
     if (page < this.page) return 'PageUp';
     const n = idx % PAGE;
-    return n === 0 ? ' ' : String(n + 1);
+    return String(n + 1);
   }
 
   elapsedMs() {
@@ -109,8 +114,8 @@ export class QuickEngine {
 
     const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const isLetter = /^[a-y]$/.test(key) || key === 'x';
-    const isPick = key === ' ' || /^[1-9]$/.test(key);
-    const isNav = key === 'PageDown' || key === 'PageUp' || key === 'Backspace' || key === 'Escape';
+    const isPick = this.pick && /^[1-9]$/.test(key);
+    const isNav = key === 'PageDown' || key === 'PageUp' || key === 'Backspace' || key === 'Escape' || (key === ' ' && this.pick);
     const isPunct = !!PUNCT[key] && !this.comp;
     if (!isLetter && !isPick && !isNav && !isPunct) return;
     e.preventDefault();
@@ -125,10 +130,12 @@ export class QuickEngine {
       this.comp = key === 'Escape' ? '' : this.comp.slice(0, -1);
       this.page = 0;
       this._log(e, key, want, null);
-    } else if (key === 'PageDown' || key === 'PageUp') {
+    } else if (key === ' ' || key === 'PageDown' || key === 'PageUp') {
       const pages = Math.ceil(this.candidates.length / PAGE);
       if (!pages) return;
-      this.page = Math.min(Math.max(this.page + (key === 'PageDown' ? 1 : -1), 0), pages - 1);
+      // 空白鍵翻到下一頁，最後一頁再按會回到第一頁
+      if (key === ' ') this.page = (this.page + 1) % pages;
+      else this.page = Math.min(Math.max(this.page + (key === 'PageDown' ? 1 : -1), 0), pages - 1);
       this._log(e, key, want, null);
     } else if (isPunct) {
       const right = PUNCT[key] === this.expectedChar;
@@ -144,9 +151,15 @@ export class QuickEngine {
       if (this.comp.length >= 2) ok = false;            // 速成最多兩碼
       else if (ok || this.errorMode === 'continue') { this.comp += key; this.page = 0; }
       this._log(e, key, want, ok);
-      if (!ok) this.errorAt.add(this.pos);
+      if (!ok) { this.errorAt.add(this.pos); this.misses += 1; }
+      // 拆字模式：碼打齊就自動上屏
+      if (!this.pick) {
+        const code = this.expectedCode;
+        if (this.comp === code) this._commit(this.expectedChar, true);
+        else if (this.errorMode === 'continue' && this.comp.length >= code.length) this._commit(this.expectedChar, false);
+      }
     } else if (isPick) {
-      const n = key === ' ' ? 0 : Number(key) - 1;
+      const n = Number(key) - 1;
       const pick = this.pageItems[n];
       const right = pick !== undefined && pick === this.expectedChar;
       ok = right;
@@ -164,6 +177,8 @@ export class QuickEngine {
   }
 
   _commit(ch, right) {
+    this.lastDone = { ch: this.expectedChar, right };
+    this.misses = 0;
     this.committed.push(ch);
     this.status[this.pos] = right ? (this.errorAt.has(this.pos) ? 'fixed' : 'ok') : 'bad';
     this.pos += 1;

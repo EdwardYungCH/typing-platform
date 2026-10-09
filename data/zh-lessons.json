@@ -18,7 +18,7 @@
               "points": [
                 "每個中文字都可以拆成「字根」，每個字根住在一個英文字母鍵上",
                 "倉頡要打齊全部碼（最多 5 個）；速成只打第一碼和最後一碼",
-                "所以速成每個字最多按 2 個字母，再揀字",
+                "所以速成每個字最多按 2 個字母，再用數字揀字",
                 "英文打字的指法同樣適用：手指放在基準位，不看鍵盤"
               ],
               "show": "keyboard",
@@ -70,8 +70,8 @@
               "title": "選字窗",
               "points": [
                 "很多字的速成碼相同，打完碼後會出現候選字",
-                "要的字排第 1 個：按空白鍵",
-                "排第 2 至 9 個：按對應的數字鍵",
+                "要的字在這一頁：按字旁邊的數字（第 1 個按 1）",
+                "要的字不在這一頁：按空白鍵翻到下一頁",
                 "常用字大多在第一頁，很少要翻頁"
               ],
               "show": "keyboard",
@@ -80,7 +80,8 @@
               "highlight": [
                 "KeyD",
                 "KeyP",
-                "Digit3"
+                "Digit3",
+                "Space"
               ]
             },
             {
@@ -100,7 +101,7 @@
           "type": "drill",
           "mode": "quick",
           "title": "第一次打速成",
-          "hint": "跟着提示打碼，再按空白鍵上屏。",
+          "hint": "跟着提示打碼，再按 1 揀字上屏。",
           "display": "big",
           "text": "日月明"
         },
@@ -108,7 +109,7 @@
           "type": "drill",
           "mode": "quick",
           "title": "試試揀字",
-          "hint": "「林」排第 2 個，打完 D D 後按數字 2。",
+          "hint": "「林」排第 2 個，打完 D D 後按 2。",
           "display": "big",
           "text": "木林李"
         }
@@ -126,8 +127,11 @@
         "KeyE",
         "KeyF",
         "KeyG",
+        "Digit1",
         "Digit2",
-        "Digit3"
+        "Digit3",
+        "Digit4",
+        "Digit5"
       ],
       "pass": {
         "accuracy": 90
@@ -137,51 +141,86 @@
           "type": "drill",
           "mode": "roots",
           "title": "示範",
-          "hint": "日月金木水火土住在 A 至 G。看字根，按對應的鍵。",
           "display": "big",
-          "text": "abcdefg"
+          "hint": "日 月 金 木 水 火 土：日月金木水火土住在 A 至 G。看字根，按對應的鍵。",
+          "text": "abcdefgabcdefg"
         },
         {
           "type": "drill",
           "mode": "roots",
           "title": "單鍵",
           "hint": "每個字根三次，記住它的位置。",
-          "text": "aaabbbcccdddeeefffgggaaabbbcccdddeeefffggg"
+          "text": "aaabbbcccdddeeefffgggaaabbbcccdddeeefffgggaaabbbcccdddeeefffggg"
+        },
+        {
+          "type": "guide",
+          "title": "輔助字形",
+          "slides": [
+            {
+              "title": "輔助字形：日、月、金、木",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "abcd"
+            },
+            {
+              "title": "輔助字形：水、火、土",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "efg"
+            }
+          ]
         },
         {
           "type": "drill",
-          "mode": "roots",
-          "title": "組合",
-          "hint": "字根隨機出現。先看清楚，再按鍵。",
+          "mode": "shapes",
+          "title": "認字形",
+          "hint": "字根和它的輔助字形會隨機出現：看到哪個部件，就按它所屬的鍵。",
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
             "keys": "abcdefg",
-            "count": 40
+            "count": 30
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "shapes",
+          "title": "組合",
+          "hint": "新學和學過的字根、輔助字形一起出現。",
+          "gen": {
+            "kind": "shapes",
+            "keys": "abcdefgabcdefgabcdefgabcdefg",
+            "count": 45
           }
         },
         {
           "type": "drill",
           "mode": "quick",
           "title": "打字",
-          "hint": "這些字只用日月金木水火土就打到。跟着選字窗的提示揀字。",
+          "hint": "這些字只用學過的字根就打到。跟着選字窗的提示揀字。",
           "gen": {
             "kind": "chars",
-            "chars": "日月金木水火土明林朋炎昌晶李杯米景皮貝沒地涼受曾最量注堂池",
+            "chars": "沒地然最水日明金間量題常類月報受服火具熱照源板錯林注消股皮土",
             "count": 20
           }
         },
         {
           "type": "test",
-          "mode": "roots",
+          "mode": "shapes",
           "title": "過關小測",
-          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "hint": "45 秒內看字根或輔助字形按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
           "timeLimit": 45,
           "pass": {
             "accuracy": 90
           },
           "gen": {
-            "kind": "roots",
-            "keys": "abcdefg",
+            "kind": "shapes",
+            "keys": "abcdefgabcdefgabcdefgabcdefg",
             "count": 90
           }
         }
@@ -196,6 +235,7 @@
         "KeyI",
         "KeyJ",
         "KeyK",
+        "Digit1",
         "Digit2",
         "Digit4",
         "Digit5"
@@ -220,12 +260,38 @@
           "text": "hhhiiijjjkkkhhhiiijjjkkkhhhiiijjjkkk"
         },
         {
+          "type": "guide",
+          "title": "輔助字形",
+          "slides": [
+            {
+              "title": "輔助字形：竹、戈、十、大",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "hijk"
+            }
+          ]
+        },
+        {
           "type": "drill",
-          "mode": "roots",
-          "title": "組合",
-          "hint": "新字根和學過的字根一起出現。",
+          "mode": "shapes",
+          "title": "認字形",
+          "hint": "字根和它的輔助字形會隨機出現：看到哪個部件，就按它所屬的鍵。",
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
+            "keys": "hijk",
+            "count": 30
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "shapes",
+          "title": "組合",
+          "hint": "新學和學過的字根、輔助字形一起出現。",
+          "gen": {
+            "kind": "shapes",
             "keys": "abcdefghijkhijkhijkhijk",
             "count": 45
           }
@@ -243,15 +309,15 @@
         },
         {
           "type": "test",
-          "mode": "roots",
+          "mode": "shapes",
           "title": "過關小測",
-          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "hint": "45 秒內看字根或輔助字形按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
           "timeLimit": 45,
           "pass": {
             "accuracy": 90
           },
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
             "keys": "abcdefghijkhijkhijkhijk",
             "count": 90
           }
@@ -266,6 +332,7 @@
         "KeyL",
         "KeyM",
         "KeyN",
+        "Digit1",
         "Digit2",
         "Digit3",
         "Digit5"
@@ -290,12 +357,38 @@
           "text": "lllmmmnnnlllmmmnnnlllmmmnnn"
         },
         {
+          "type": "guide",
+          "title": "輔助字形",
+          "slides": [
+            {
+              "title": "輔助字形：中、一、弓",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "lmn"
+            }
+          ]
+        },
+        {
           "type": "drill",
-          "mode": "roots",
-          "title": "組合",
-          "hint": "新字根和學過的字根一起出現。",
+          "mode": "shapes",
+          "title": "認字形",
+          "hint": "字根和它的輔助字形會隨機出現：看到哪個部件，就按它所屬的鍵。",
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
+            "keys": "lmn",
+            "count": 30
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "shapes",
+          "title": "組合",
+          "hint": "新學和學過的字根、輔助字形一起出現。",
+          "gen": {
+            "kind": "shapes",
             "keys": "abcdefghijklmnlmnlmnlmn",
             "count": 45
           }
@@ -313,15 +406,15 @@
         },
         {
           "type": "test",
-          "mode": "roots",
+          "mode": "shapes",
           "title": "過關小測",
-          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "hint": "45 秒內看字根或輔助字形按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
           "timeLimit": 45,
           "pass": {
             "accuracy": 90
           },
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
             "keys": "abcdefghijklmnlmnlmnlmn",
             "count": 90
           }
@@ -337,6 +430,7 @@
         "KeyP",
         "KeyQ",
         "KeyR",
+        "Digit1",
         "Digit2",
         "Digit3",
         "Digit4",
@@ -362,12 +456,38 @@
           "text": "ooopppqqqrrrooopppqqqrrrooopppqqqrrr"
         },
         {
+          "type": "guide",
+          "title": "輔助字形",
+          "slides": [
+            {
+              "title": "輔助字形：人、心、手、口",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "opqr"
+            }
+          ]
+        },
+        {
           "type": "drill",
-          "mode": "roots",
-          "title": "組合",
-          "hint": "新字根和學過的字根一起出現。",
+          "mode": "shapes",
+          "title": "認字形",
+          "hint": "字根和它的輔助字形會隨機出現：看到哪個部件，就按它所屬的鍵。",
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
+            "keys": "opqr",
+            "count": 30
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "shapes",
+          "title": "組合",
+          "hint": "新學和學過的字根、輔助字形一起出現。",
+          "gen": {
+            "kind": "shapes",
             "keys": "abcdefghijklmnopqropqropqropqr",
             "count": 45
           }
@@ -385,15 +505,15 @@
         },
         {
           "type": "test",
-          "mode": "roots",
+          "mode": "shapes",
           "title": "過關小測",
-          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "hint": "45 秒內看字根或輔助字形按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
           "timeLimit": 45,
           "pass": {
             "accuracy": 90
           },
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
             "keys": "abcdefghijklmnopqropqropqropqr",
             "count": 90
           }
@@ -408,6 +528,7 @@
         "KeyS",
         "KeyT",
         "KeyU",
+        "Digit1",
         "Digit2",
         "Digit3",
         "Digit4",
@@ -433,12 +554,38 @@
           "text": "ssstttuuussstttuuussstttuuu"
         },
         {
+          "type": "guide",
+          "title": "輔助字形",
+          "slides": [
+            {
+              "title": "輔助字形：尸、廿、山",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "stu"
+            }
+          ]
+        },
+        {
           "type": "drill",
-          "mode": "roots",
-          "title": "組合",
-          "hint": "新字根和學過的字根一起出現。",
+          "mode": "shapes",
+          "title": "認字形",
+          "hint": "字根和它的輔助字形會隨機出現：看到哪個部件，就按它所屬的鍵。",
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
+            "keys": "stu",
+            "count": 30
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "shapes",
+          "title": "組合",
+          "hint": "新學和學過的字根、輔助字形一起出現。",
+          "gen": {
+            "kind": "shapes",
             "keys": "abcdefghijklmnopqrstustustustu",
             "count": 45
           }
@@ -456,15 +603,15 @@
         },
         {
           "type": "test",
-          "mode": "roots",
+          "mode": "shapes",
           "title": "過關小測",
-          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "hint": "45 秒內看字根或輔助字形按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
           "timeLimit": 45,
           "pass": {
             "accuracy": 90
           },
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
             "keys": "abcdefghijklmnopqrstustustustu",
             "count": 90
           }
@@ -479,6 +626,7 @@
         "KeyV",
         "KeyW",
         "KeyY",
+        "Digit1",
         "Digit2",
         "Digit3",
         "Digit4",
@@ -504,12 +652,38 @@
           "text": "vvvwwwyyyvvvwwwyyyvvvwwwyyy"
         },
         {
+          "type": "guide",
+          "title": "輔助字形",
+          "slides": [
+            {
+              "title": "輔助字形：女、田、卜",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "vwy"
+            }
+          ]
+        },
+        {
           "type": "drill",
-          "mode": "roots",
-          "title": "組合",
-          "hint": "新字根和學過的字根一起出現。",
+          "mode": "shapes",
+          "title": "認字形",
+          "hint": "字根和它的輔助字形會隨機出現：看到哪個部件，就按它所屬的鍵。",
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
+            "keys": "vwy",
+            "count": 30
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "shapes",
+          "title": "組合",
+          "hint": "新學和學過的字根、輔助字形一起出現。",
+          "gen": {
+            "kind": "shapes",
             "keys": "abcdefghijklmnopqrstuvwyvwyvwyvwy",
             "count": 45
           }
@@ -527,15 +701,15 @@
         },
         {
           "type": "test",
-          "mode": "roots",
+          "mode": "shapes",
           "title": "過關小測",
-          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "hint": "45 秒內看字根或輔助字形按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
           "timeLimit": 45,
           "pass": {
             "accuracy": 90
           },
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
             "keys": "abcdefghijklmnopqrstuvwyvwyvwyvwy",
             "count": 90
           }
@@ -572,6 +746,7 @@
         "KeyW",
         "KeyY",
         "KeyX",
+        "Digit1",
         "Digit2",
         "Digit3"
       ],
@@ -595,12 +770,92 @@
           "text": "xxxxxx"
         },
         {
+          "type": "guide",
+          "title": "總複習",
+          "slides": [
+            {
+              "title": "輔助字形：日、月、金、木",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "abcd"
+            },
+            {
+              "title": "輔助字形：水、火、土",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "efg"
+            },
+            {
+              "title": "輔助字形：竹、戈、十、大",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "hijk"
+            },
+            {
+              "title": "輔助字形：中、一、弓",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "lmn"
+            },
+            {
+              "title": "輔助字形：人、心、手、口",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "opqr"
+            },
+            {
+              "title": "輔助字形：尸、廿、山、女",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "stuv"
+            },
+            {
+              "title": "輔助字形：田、卜",
+              "points": [
+                "同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）",
+                "看到這些部件，都按同一個鍵",
+                "注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E"
+              ],
+              "shapes": "wy"
+            }
+          ]
+        },
+        {
           "type": "drill",
-          "mode": "roots",
-          "title": "組合",
-          "hint": "新字根和學過的字根一起出現。",
+          "mode": "shapes",
+          "title": "認字形",
+          "hint": "全部字根和輔助字形隨機出現。",
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
+            "keys": "abcdefghijklmnopqrstuvwyx",
+            "count": 30
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "shapes",
+          "title": "組合",
+          "hint": "新學和學過的字根、輔助字形一起出現。",
+          "gen": {
+            "kind": "shapes",
             "keys": "abcdefghijklmnopqrstuvwyx",
             "count": 45
           }
@@ -618,15 +873,15 @@
         },
         {
           "type": "test",
-          "mode": "roots",
+          "mode": "shapes",
           "title": "過關小測",
-          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "hint": "45 秒內看字根或輔助字形按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
           "timeLimit": 45,
           "pass": {
             "accuracy": 90
           },
           "gen": {
-            "kind": "roots",
+            "kind": "shapes",
             "keys": "abcdefghijklmnopqrstuvwyx",
             "count": 90
           }
@@ -635,199 +890,8 @@
     },
     {
       "id": 8,
-      "title": "單碼字",
-      "subtitle": "一個碼就打到的字",
-      "newKeys": [
-        "KeyA",
-        "KeyB",
-        "KeyC",
-        "KeyD",
-        "KeyE",
-        "KeyF",
-        "KeyG",
-        "KeyH",
-        "KeyI",
-        "KeyJ",
-        "KeyK",
-        "KeyL",
-        "KeyM",
-        "KeyN",
-        "KeyO",
-        "KeyP",
-        "KeyQ",
-        "KeyR",
-        "KeyS",
-        "KeyU",
-        "KeyV",
-        "KeyW",
-        "KeyY"
-      ],
-      "pass": {
-        "accuracy": 90
-      },
-      "steps": [
-        {
-          "type": "guide",
-          "title": "單碼字",
-          "slides": [
-            {
-              "title": "一個鍵就打到的字",
-              "points": [
-                "有些字本身就是一個字根，例如 日、月、木、口、人",
-                "這些字只要按一個鍵，再按空白鍵上屏",
-                "它們是最常用的字，熟練後可以打得很快"
-              ],
-              "show": "keyboard",
-              "rootLabels": true,
-              "example": "人"
-            }
-          ]
-        },
-        {
-          "type": "drill",
-          "mode": "quick",
-          "title": "練習",
-          "hint": "這些字只有一個字根：按一個鍵，再按空白鍵。",
-          "gen": {
-            "kind": "chars",
-            "chars": "一人大中心手水日金山口十女月火土木田竹卜弓戈尸",
-            "count": 20
-          }
-        },
-        {
-          "type": "drill",
-          "mode": "quick",
-          "title": "再練一次",
-          "hint": "同一批字，試試不看提示也打得到。",
-          "gen": {
-            "kind": "chars",
-            "chars": "一人大中心手水日金山口十女月火土木田竹卜弓戈尸",
-            "count": 20
-          }
-        },
-        {
-          "type": "test",
-          "mode": "quick",
-          "title": "過關小測",
-          "timeLimit": 60,
-          "pass": {
-            "accuracy": 90
-          },
-          "hint": "60 秒內打得愈多愈好。準確率達 90%即過關。",
-          "gen": {
-            "kind": "chars",
-            "chars": "一人大中心手水日金山口十女月火土木田竹卜弓戈尸",
-            "count": 60
-          }
-        }
-      ]
-    },
-    {
-      "id": 9,
-      "title": "拆字規則",
-      "subtitle": "只打首碼和尾碼",
-      "newKeys": [
-        "KeyA",
-        "KeyB",
-        "KeyC",
-        "KeyD",
-        "KeyE",
-        "KeyF",
-        "KeyG",
-        "KeyH",
-        "KeyI",
-        "KeyJ",
-        "KeyK",
-        "KeyL",
-        "KeyM",
-        "KeyN",
-        "KeyO",
-        "KeyP",
-        "KeyQ",
-        "KeyR",
-        "KeyS",
-        "KeyT",
-        "KeyU",
-        "KeyV",
-        "KeyW",
-        "KeyY"
-      ],
-      "pass": {
-        "accuracy": 90
-      },
-      "steps": [
-        {
-          "type": "guide",
-          "title": "拆字規則",
-          "slides": [
-            {
-              "title": "先拆字，再取首尾",
-              "points": [
-                "左右結構：先左後右，例如 林 ＝ 木＋木",
-                "上下結構：先上後下，例如 想 ＝ 木…心",
-                "外內結構：先外後內，例如 國 ＝ 田…一",
-                "速成只取第一個和最後一個字根，中間的不用打"
-              ],
-              "show": "keyboard",
-              "rootLabels": true,
-              "example": "校"
-            },
-            {
-              "title": "再看一個例子",
-              "points": [
-                "「電」的倉頡碼是 一 月 田 山",
-                "速成只打 一（M）和 山（U）",
-                "不肯定時，可以用「速成查碼」查一查"
-              ],
-              "show": "keyboard",
-              "rootLabels": true,
-              "example": "電"
-            }
-          ]
-        },
-        {
-          "type": "drill",
-          "mode": "quick",
-          "title": "練習",
-          "hint": "提示會列出倉頡全碼：只打第一個和最後一個字根。",
-          "gen": {
-            "kind": "chars",
-            "chars": "是在來以為可好國沒分成之地方定同而前者合當市外加打長場名身西考表位式花非件光收此",
-            "count": 20
-          }
-        },
-        {
-          "type": "drill",
-          "mode": "quick",
-          "title": "再練一次",
-          "hint": "同一批字，試試不看提示也打得到。",
-          "gen": {
-            "kind": "chars",
-            "chars": "是在來以為可好國沒分成之地方定同而前者合當市外加打長場名身西考表位式花非件光收此",
-            "count": 20
-          }
-        },
-        {
-          "type": "test",
-          "mode": "quick",
-          "title": "過關小測",
-          "timeLimit": 60,
-          "pass": {
-            "accuracy": 90
-          },
-          "hint": "60 秒內打得愈多愈好。準確率達 90%即過關。",
-          "gen": {
-            "kind": "chars",
-            "chars": "是在來以為可好國沒分成之地方定同而前者合當市外加打長場名身西考表位式花非件光收此",
-            "count": 60
-          }
-        }
-      ]
-    },
-    {
-      "id": 10,
-      "title": "同碼字選字",
-      "subtitle": "用數字鍵揀字",
+      "title": "單碼字與取碼次序",
+      "subtitle": "上至下、左至右、外至內",
       "newKeys": [
         "KeyA",
         "KeyB",
@@ -853,6 +917,333 @@
         "KeyV",
         "KeyW",
         "KeyY",
+        "KeyX"
+      ],
+      "pass": {
+        "accuracy": 85
+      },
+      "steps": [
+        {
+          "type": "guide",
+          "title": "取碼次序",
+          "slides": [
+            {
+              "title": "一個鍵就打到的字",
+              "points": [
+                "字本身就是一個字根，例如 日、月、木、口、人",
+                "按一個鍵就可以"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "人"
+            },
+            {
+              "title": "取碼的次序",
+              "points": [
+                "由上至下：例如 昌 ＝ 日（上）…日（下）",
+                "由左至右：例如 林 ＝ 木（左）…木（右）",
+                "由外至內：例如 回 ＝ 田字框（外）…口（內）",
+                "一個字可以同時用到幾個次序"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "回"
+            },
+            {
+              "title": "兩個部件的字",
+              "points": [
+                "先把字分成兩部分，再按次序取碼",
+                "明 ＝ 日＋月，林 ＝ 木＋木，吉 ＝ 士＋口",
+                "接下來只要拆碼，打對兩個鍵就自動上屏，不用選字"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "吉"
+            }
+          ]
+        },
+        {
+          "type": "drill",
+          "mode": "split",
+          "title": "單碼字",
+          "hint": "這些字本身就是字根：按一個鍵。",
+          "gen": {
+            "kind": "chars",
+            "chars": "一人大中心手水日金山口十女月火土木田竹卜弓戈尸",
+            "count": 16
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "split",
+          "title": "兩個部件",
+          "hint": "每個字由兩個字根組成：按次序打兩個鍵。",
+          "gen": {
+            "kind": "chars",
+            "chars": "不有了上下出也子用如去天小本年力比文主公回因果只什化明內己入",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "split",
+          "title": "過關小測",
+          "timeLimit": 60,
+          "pass": {
+            "accuracy": 85
+          },
+          "hint": "60 秒內拆得愈多愈好，沒有提示。準確率達 85% 即過關。",
+          "gen": {
+            "kind": "chars",
+            "chars": "一人大中心手水日金山口十女月火土木田竹卜弓戈尸不有了上下出也子用如去天小本年力比文主公回因果只什化明內己入",
+            "count": 80
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "拆字（一）",
+      "subtitle": "只取首尾，中間不理",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY",
+        "KeyX"
+      ],
+      "pass": {
+        "accuracy": 85
+      },
+      "steps": [
+        {
+          "type": "guide",
+          "title": "拆字（一）",
+          "slides": [
+            {
+              "title": "中間的部件不用打",
+              "points": [
+                "先按次序把整個字拆開",
+                "速成只取第一個和最後一個部件",
+                "中間有多少個部件都不用理會"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "校"
+            },
+            {
+              "title": "再看兩個例子",
+              "points": [
+                "電 ＝ 一 月 田 山 → 一（M）＋ 山（U）",
+                "學 ＝ 竹 月 弓 木 → 竹（H）＋ 木（D）",
+                "打錯一次會提示倉頡拆法，打錯兩次會顯示答案"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "學"
+            }
+          ]
+        },
+        {
+          "type": "drill",
+          "mode": "split",
+          "title": "拆字練習",
+          "hint": "自己拆出首碼和尾碼。打錯一次有提示，打錯兩次會顯示答案。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的是我個這在來就以為要能可到你學會時多好說國後生麼過自他都家還沒看對發於作分成們很面得之行業地那然開實理方點現經法動高所",
+            "count": 20
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "split",
+          "title": "再拆一次",
+          "hint": "自己拆出首碼和尾碼。打錯一次有提示，打錯兩次會顯示答案。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的是我個這在來就以為要能可到你學會時多好說國後生麼過自他都家還沒看對發於作分成們很面得之行業地那然開實理方點現經法動高所",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "split",
+          "title": "過關小測",
+          "timeLimit": 60,
+          "pass": {
+            "accuracy": 85
+          },
+          "hint": "60 秒內拆得愈多愈好，沒有提示。準確率達 85%即過關。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的是我個這在來就以為要能可到你學會時多好說國後生麼過自他都家還沒看對發於作分成們很面得之行業地那然開實理方點現經法動高所",
+            "count": 80
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "拆字（二）",
+      "subtitle": "找出輔助字形",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY",
+        "KeyX"
+      ],
+      "pass": {
+        "accuracy": 85
+      },
+      "steps": [
+        {
+          "type": "guide",
+          "title": "拆字（二）",
+          "slides": [
+            {
+              "title": "部件不像字根？查輔助字形",
+              "points": [
+                "很多部件是字根的變形，例如 氵 是水、扌 是手、亻 是人",
+                "拆字時先認出部件，再想它屬哪個字根鍵",
+                "下面是最常見的輔助字形"
+              ],
+              "shapes": "eqoptj"
+            },
+            {
+              "title": "更多常見輔助字形",
+              "points": [
+                "辶 走字底是 卜（Y），艹 草花頭是 廿（T）",
+                "冂 同字框是 月（B），囗 大口框是 田（W）",
+                "幺 絲字邊是 女（V），灬 四點火是 火（F）"
+              ],
+              "shapes": "ybwvfi"
+            },
+            {
+              "title": "遇到不認識的部件",
+              "points": [
+                "先打開「速成查碼」查一查，看它屬哪個鍵",
+                "查碼頁底部有完整的字根和輔助字形表",
+                "多拆幾次，常見的部件很快就會記住"
+              ],
+              "shapes": "kmns"
+            }
+          ]
+        },
+        {
+          "type": "drill",
+          "mode": "split",
+          "title": "拆字練習",
+          "hint": "這些字都有輔助字形：先認出部件，再想它屬哪個鍵。",
+          "gen": {
+            "kind": "chars",
+            "chars": "書曾會同用周軍冠爭愛受分公只共興寸海清沒友雙求熱然照當光京示志吉千生筆第等去店床廣太冰家字安左右有狗獨文交病痛川中初被補功巧紅江原厚歷多名外乞吃你他們情快忙句包勺北化比切打指找夫青區醫己已花草英並前首凶七兄先給經長衣展國因回主方言高道這近",
+            "count": 20
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "split",
+          "title": "再拆一次",
+          "hint": "這些字都有輔助字形：先認出部件，再想它屬哪個鍵。",
+          "gen": {
+            "kind": "chars",
+            "chars": "書曾會同用周軍冠爭愛受分公只共興寸海清沒友雙求熱然照當光京示志吉千生筆第等去店床廣太冰家字安左右有狗獨文交病痛川中初被補功巧紅江原厚歷多名外乞吃你他們情快忙句包勺北化比切打指找夫青區醫己已花草英並前首凶七兄先給經長衣展國因回主方言高道這近",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "split",
+          "title": "過關小測",
+          "timeLimit": 60,
+          "pass": {
+            "accuracy": 85
+          },
+          "hint": "60 秒內拆得愈多愈好，沒有提示。準確率達 85%即過關。",
+          "gen": {
+            "kind": "chars",
+            "chars": "書曾會同用周軍冠爭愛受分公只共興寸海清沒友雙求熱然照當光京示志吉千生筆第等去店床廣太冰家字安左右有狗獨文交病痛川中初被補功巧紅江原厚歷多名外乞吃你他們情快忙句包勺北化比切打指找夫青區醫己已花草英並前首凶七兄先給經長衣展國因回主方言高道這近",
+            "count": 80
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "選字與標點",
+      "subtitle": "數字鍵揀字、中文標點",
+      "pass": {
+        "accuracy": 90
+      },
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY",
+        "KeyX",
+        "Digit1",
         "Digit2",
         "Digit3",
         "Digit4",
@@ -860,82 +1251,11 @@
         "Digit6",
         "Digit7",
         "Digit8",
-        "Digit9"
-      ],
-      "pass": {
-        "accuracy": 90
-      },
-      "steps": [
-        {
-          "type": "guide",
-          "title": "同碼字",
-          "slides": [
-            {
-              "title": "同一組碼，很多個字",
-              "points": [
-                "速成只有兩碼，所以很多字共用同一組碼",
-                "選字窗按次序列出候選字：第 1 個按空白鍵，其餘按數字",
-                "常用字的位置是固定的，多打幾次就會記得",
-                "眼睛看選字窗，手指不用離開基準位太遠"
-              ],
-              "show": "keyboard",
-              "rootLabels": true,
-              "imeDemo": "校"
-            }
-          ]
-        },
-        {
-          "type": "drill",
-          "mode": "quick",
-          "title": "練習",
-          "hint": "這些字都不是第 1 個候選字：打完碼，看清楚再按數字。",
-          "gen": {
-            "kind": "chars",
-            "chars": "的有我要能到你會時多後生麼自他都家看發於作很面行那然開實年理點現經法動所工最體無",
-            "count": 20
-          }
-        },
-        {
-          "type": "drill",
-          "mode": "quick",
-          "title": "再練一次",
-          "hint": "同一批字，試試不看提示也打得到。",
-          "gen": {
-            "kind": "chars",
-            "chars": "的有我要能到你會時多後生麼自他都家看發於作很面行那然開實年理點現經法動所工最體無",
-            "count": 20
-          }
-        },
-        {
-          "type": "test",
-          "mode": "quick",
-          "title": "過關小測",
-          "timeLimit": 60,
-          "pass": {
-            "accuracy": 90
-          },
-          "hint": "60 秒內打得愈多愈好。準確率達 90%即過關。",
-          "gen": {
-            "kind": "chars",
-            "chars": "的有我要能到你會時多後生麼自他都家看發於作很面行那然開實年理點現經法動所工最體無",
-            "count": 60
-          }
-        }
-      ]
-    },
-    {
-      "id": 11,
-      "title": "中文標點",
-      "subtitle": "，。、？！「」：",
-      "pass": {
-        "accuracy": 90
-      },
-      "newKeys": [
+        "Digit9",
         "Comma",
         "Period",
-        "Semicolon",
         "Slash",
-        "Digit1",
+        "Semicolon",
         "BracketLeft",
         "BracketRight",
         "Backslash",
@@ -945,10 +1265,21 @@
       "steps": [
         {
           "type": "guide",
-          "title": "中文標點",
+          "title": "選字與標點",
           "slides": [
             {
-              "title": "組字框空着時按標點鍵",
+              "title": "同一組碼，很多個字",
+              "points": [
+                "速成只有兩碼，很多字共用同一組碼",
+                "打完碼後，看選字窗，按字旁邊的數字 1 至 9 揀字",
+                "要找的字不在這一頁時，按空白鍵翻到下一頁"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "imeDemo": "校"
+            },
+            {
+              "title": "中文標點",
               "points": [
                 "逗號「，」按 ,　句號「。」按 .　頓號「、」按 \\",
                 "問號「？」按 Shift＋/　感嘆號「！」按 Shift＋1",
@@ -972,30 +1303,27 @@
         {
           "type": "drill",
           "mode": "quick",
-          "title": "第 1 句",
-          "hint": "留意每句的標點。",
-          "text": "你好，我是中一學生。"
+          "title": "揀字",
+          "hint": "這些字都不是第 1 個候選字：打完碼，看清楚再按數字。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的有我要能到你會時多後生麼自他都家看發於作很面行那然開實年理點現經法動所工最體無",
+            "count": 20
+          }
         },
         {
           "type": "drill",
           "mode": "quick",
-          "title": "第 2 句",
+          "title": "標點（一）",
           "hint": "留意每句的標點。",
-          "text": "今天上甚麼課？"
+          "text": "你好，我是中一學生。今天上甚麼課？"
         },
         {
           "type": "drill",
           "mode": "quick",
-          "title": "第 3 句",
+          "title": "標點（二）",
           "hint": "留意每句的標點。",
-          "text": "加油！我們一起努力。"
-        },
-        {
-          "type": "drill",
-          "mode": "quick",
-          "title": "第 4 句",
-          "hint": "留意每句的標點。",
-          "text": "老師說：「準確比快更重要。」"
+          "text": "加油！我們一起努力。老師說：「準確比快更重要。」"
         },
         {
           "type": "test",
@@ -1014,40 +1342,7 @@
       "id": 12,
       "title": "常用字（一）",
       "subtitle": "最常用 300 字",
-      "newKeys": [
-        "KeyA",
-        "KeyB",
-        "KeyC",
-        "KeyD",
-        "KeyE",
-        "KeyF",
-        "KeyG",
-        "KeyH",
-        "KeyI",
-        "KeyJ",
-        "KeyK",
-        "KeyL",
-        "KeyM",
-        "KeyN",
-        "KeyO",
-        "KeyP",
-        "KeyQ",
-        "KeyR",
-        "KeyS",
-        "KeyT",
-        "KeyU",
-        "KeyV",
-        "KeyW",
-        "KeyY",
-        "Digit2",
-        "Digit3",
-        "Digit4",
-        "Digit5",
-        "Digit6",
-        "Digit7",
-        "Digit8",
-        "Digit9"
-      ],
+      "newKeys": [],
       "pass": {
         "wpm": 3
       },
@@ -1056,7 +1351,7 @@
           "type": "drill",
           "mode": "quick",
           "title": "練習",
-          "hint": "最常用的 300 字。有些字要按 PageDown 翻頁才找到，例如「學」。",
+          "hint": "最常用的 300 字。有些字要按空白鍵翻頁才找到，例如「學」在第 3 頁。",
           "gen": {
             "kind": "chars",
             "chars": "的是一不有了人我個這在大來就上以為要能可到你學會中時下多出好說也國子後生用麼過自他都家還沒看對如發於作分去成們很面得之天小本行業地那然開實年理方心點現經法動高所定機力同比工最而體無文主前公回些性種者事起想合道手其電因着和數當新市樣果進水裏區只什知三日但化部情意明通外相做老全金內間關加重期打頭品量真題長更度平產物常話己問入場應兩解正計美候名資身第別西基利給接特信代提次目幾網山等風氣二單考表結位程車門直安感海口東太流式少十師科需保價書花女路線教設選白再非論員被交變已原格件把何民語管讓司馬影完色光先務從收世專反算制斯術習並此各類建活運放遊才兒使萬難球據空神商容或記每見克戰音月圖字試四總南覺器費強向報",
@@ -1095,41 +1390,7 @@
       "id": 13,
       "title": "常用字（二）",
       "subtitle": "第 301 至 1000 字",
-      "newKeys": [
-        "KeyA",
-        "KeyB",
-        "KeyC",
-        "KeyD",
-        "KeyE",
-        "KeyF",
-        "KeyG",
-        "KeyH",
-        "KeyI",
-        "KeyJ",
-        "KeyK",
-        "KeyL",
-        "KeyM",
-        "KeyN",
-        "KeyO",
-        "KeyP",
-        "KeyQ",
-        "KeyR",
-        "KeyS",
-        "KeyT",
-        "KeyU",
-        "KeyV",
-        "KeyW",
-        "KeyX",
-        "KeyY",
-        "Digit2",
-        "Digit3",
-        "Digit4",
-        "Digit5",
-        "Digit6",
-        "Digit7",
-        "Digit8",
-        "Digit9"
-      ],
+      "newKeys": [],
       "pass": {
         "wpm": 5
       },
@@ -1177,32 +1438,7 @@
       "id": 14,
       "title": "詞語",
       "subtitle": "常用兩字詞",
-      "newKeys": [
-        "KeyA",
-        "KeyB",
-        "KeyC",
-        "KeyD",
-        "KeyE",
-        "KeyF",
-        "KeyG",
-        "KeyH",
-        "KeyI",
-        "KeyJ",
-        "KeyK",
-        "KeyL",
-        "KeyM",
-        "KeyN",
-        "KeyO",
-        "KeyP",
-        "KeyQ",
-        "KeyR",
-        "KeyS",
-        "KeyT",
-        "KeyU",
-        "KeyV",
-        "KeyW",
-        "KeyY"
-      ],
+      "newKeys": [],
       "pass": {
         "wpm": 6,
         "accuracy": 90
@@ -1212,21 +1448,21 @@
           "type": "drill",
           "mode": "quick",
           "title": "第 1 組",
-          "hint": "詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按 PageDown。",
+          "hint": "詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按空白鍵。",
           "text": "家人、睡覺、跑步、午餐、老師、地球、夏天、計劃。"
         },
         {
           "type": "drill",
           "mode": "quick",
           "title": "第 2 組",
-          "hint": "詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按 PageDown。",
+          "hint": "詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按空白鍵。",
           "text": "中午、小心、海灘、夢想、中文、今天、快樂、手機。"
         },
         {
           "type": "drill",
           "mode": "quick",
           "title": "第 3 組",
-          "hint": "詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按 PageDown。",
+          "hint": "詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按空白鍵。",
           "text": "天氣、太陽、水果、努力、早餐、安全、動物、冬天、星星、放學。"
         },
         {
@@ -1247,32 +1483,7 @@
       "id": 15,
       "title": "句子與短文",
       "subtitle": "把整段話打出來",
-      "newKeys": [
-        "KeyA",
-        "KeyB",
-        "KeyC",
-        "KeyD",
-        "KeyE",
-        "KeyF",
-        "KeyG",
-        "KeyH",
-        "KeyI",
-        "KeyJ",
-        "KeyK",
-        "KeyL",
-        "KeyM",
-        "KeyN",
-        "KeyO",
-        "KeyP",
-        "KeyQ",
-        "KeyR",
-        "KeyS",
-        "KeyT",
-        "KeyU",
-        "KeyV",
-        "KeyW",
-        "KeyY"
-      ],
+      "newKeys": [],
       "pass": {
         "wpm": 6,
         "accuracy": 90

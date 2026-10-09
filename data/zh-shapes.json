@@ -1,0 +1,431 @@
+{
+  "_說明": "速成／倉頡輔助字形表（常用部分）。每個字形列出例字和它在例字中的位置（first＝首碼、last＝尾碼），由 tools/check_shapes.py 用倉頡碼表核對。shape 為空時只顯示名稱。",
+  "keys": {
+    "a": [
+      {
+        "shape": "日",
+        "name": "日",
+        "pos": "first",
+        "examples": "明時晴"
+      },
+      {
+        "shape": "曰",
+        "name": "扁日",
+        "pos": "last",
+        "examples": "書曾會"
+      }
+    ],
+    "b": [
+      {
+        "shape": "冂",
+        "name": "同字框",
+        "pos": "first",
+        "examples": "同用周"
+      },
+      {
+        "shape": "冖",
+        "name": "冧寶蓋（無點）",
+        "pos": "first",
+        "examples": "軍冠"
+      },
+      {
+        "shape": "爫",
+        "name": "爪字頭",
+        "pos": "first",
+        "examples": "爭愛受"
+      },
+      {
+        "shape": "月",
+        "name": "月字旁",
+        "pos": "first",
+        "examples": "服肥朋"
+      }
+    ],
+    "c": [
+      {
+        "shape": "八",
+        "name": "八字",
+        "pos": "first",
+        "examples": "分公"
+      },
+      {
+        "shape": "八",
+        "name": "八字底",
+        "pos": "last",
+        "examples": "只共興"
+      },
+      {
+        "shape": "金",
+        "name": "金字旁",
+        "pos": "first",
+        "examples": "錢鐘銀"
+      }
+    ],
+    "d": [
+      {
+        "shape": "木",
+        "name": "木字旁",
+        "pos": "first",
+        "examples": "林校村"
+      },
+      {
+        "shape": "寸",
+        "name": "寸（不計點）",
+        "pos": "first",
+        "examples": "寸"
+      }
+    ],
+    "e": [
+      {
+        "shape": "氵",
+        "name": "三點水",
+        "pos": "first",
+        "examples": "海清沒"
+      },
+      {
+        "shape": "又",
+        "name": "又字底",
+        "pos": "last",
+        "examples": "友雙"
+      },
+      {
+        "shape": "",
+        "name": "求字底",
+        "pos": "last",
+        "examples": "求"
+      }
+    ],
+    "f": [
+      {
+        "shape": "灬",
+        "name": "四點火",
+        "pos": "last",
+        "examples": "熱然照"
+      },
+      {
+        "shape": "",
+        "name": "小字頭",
+        "pos": "first",
+        "examples": "當光"
+      },
+      {
+        "shape": "小",
+        "name": "小字底",
+        "pos": "last",
+        "examples": "京示"
+      }
+    ],
+    "g": [
+      {
+        "shape": "土",
+        "name": "土字旁",
+        "pos": "first",
+        "examples": "地城場"
+      },
+      {
+        "shape": "士",
+        "name": "士字頭",
+        "pos": "first",
+        "examples": "志吉"
+      }
+    ],
+    "h": [
+      {
+        "shape": "丿",
+        "name": "撇",
+        "pos": "first",
+        "examples": "千生"
+      },
+      {
+        "shape": "",
+        "name": "竹字頭",
+        "pos": "first",
+        "examples": "筆第等"
+      }
+    ],
+    "i": [
+      {
+        "shape": "厶",
+        "name": "私字邊",
+        "pos": "last",
+        "examples": "公去"
+      },
+      {
+        "shape": "广",
+        "name": "廣字頭",
+        "pos": "first",
+        "examples": "店床廣"
+      },
+      {
+        "shape": "丶",
+        "name": "點",
+        "pos": "last",
+        "examples": "太"
+      },
+      {
+        "shape": "冫",
+        "name": "兩點水",
+        "pos": "first",
+        "examples": "冰"
+      }
+    ],
+    "j": [
+      {
+        "shape": "宀",
+        "name": "寶蓋頭",
+        "pos": "first",
+        "examples": "家字安"
+      },
+      {
+        "shape": "十",
+        "name": "十字",
+        "pos": "first",
+        "examples": "古直"
+      }
+    ],
+    "k": [
+      {
+        "shape": "",
+        "name": "左字頭（橫、撇）",
+        "pos": "first",
+        "examples": "左右有"
+      },
+      {
+        "shape": "犭",
+        "name": "狗爪邊",
+        "pos": "first",
+        "examples": "狗獨"
+      },
+      {
+        "shape": "乂",
+        "name": "交叉",
+        "pos": "last",
+        "examples": "文交"
+      },
+      {
+        "shape": "疒",
+        "name": "病字頭",
+        "pos": "first",
+        "examples": "病痛"
+      }
+    ],
+    "l": [
+      {
+        "shape": "丨",
+        "name": "豎",
+        "pos": "first",
+        "examples": "川中"
+      },
+      {
+        "shape": "衤",
+        "name": "衣字邊",
+        "pos": "first",
+        "examples": "初被補"
+      }
+    ],
+    "m": [
+      {
+        "shape": "工",
+        "name": "工字",
+        "pos": "first",
+        "examples": "功巧"
+      },
+      {
+        "shape": "工",
+        "name": "工字（尾）",
+        "pos": "last",
+        "examples": "左紅江"
+      },
+      {
+        "shape": "厂",
+        "name": "廠字頭",
+        "pos": "first",
+        "examples": "原厚歷"
+      }
+    ],
+    "n": [
+      {
+        "shape": "",
+        "name": "夕字（少一點）",
+        "pos": "first",
+        "examples": "多名外"
+      },
+      {
+        "shape": "乙",
+        "name": "乙字",
+        "pos": "last",
+        "examples": "乞吃"
+      }
+    ],
+    "o": [
+      {
+        "shape": "亻",
+        "name": "企人邊",
+        "pos": "first",
+        "examples": "你他們"
+      },
+      {
+        "shape": "人",
+        "name": "人字頭",
+        "pos": "first",
+        "examples": "今合會"
+      }
+    ],
+    "p": [
+      {
+        "shape": "忄",
+        "name": "豎心邊",
+        "pos": "first",
+        "examples": "情快忙"
+      },
+      {
+        "shape": "勹",
+        "name": "包字頭",
+        "pos": "first",
+        "examples": "句包勺"
+      },
+      {
+        "shape": "匕",
+        "name": "匕字",
+        "pos": "last",
+        "examples": "北化比"
+      },
+      {
+        "shape": "七",
+        "name": "七字",
+        "pos": "first",
+        "examples": "切"
+      }
+    ],
+    "q": [
+      {
+        "shape": "扌",
+        "name": "剔手邊",
+        "pos": "first",
+        "examples": "打指找"
+      },
+      {
+        "shape": "",
+        "name": "二橫一豎",
+        "pos": "first",
+        "examples": "夫青"
+      }
+    ],
+    "r": [
+      {
+        "shape": "口",
+        "name": "口字",
+        "pos": "first",
+        "examples": "叫吃唱"
+      }
+    ],
+    "s": [
+      {
+        "shape": "尸",
+        "name": "尸字頭",
+        "pos": "first",
+        "examples": "屋展局"
+      },
+      {
+        "shape": "匚",
+        "name": "匚字框",
+        "pos": "first",
+        "examples": "區醫"
+      },
+      {
+        "shape": "己",
+        "name": "己字",
+        "pos": "first",
+        "examples": "己已"
+      }
+    ],
+    "t": [
+      {
+        "shape": "艹",
+        "name": "草花頭",
+        "pos": "first",
+        "examples": "花草英"
+      },
+      {
+        "shape": "丷",
+        "name": "並字頭",
+        "pos": "first",
+        "examples": "並前首"
+      }
+    ],
+    "u": [
+      {
+        "shape": "山",
+        "name": "山字",
+        "pos": "first",
+        "examples": "岸岩"
+      },
+      {
+        "shape": "凵",
+        "name": "凵字",
+        "pos": "first",
+        "examples": "凶"
+      },
+      {
+        "shape": "乚",
+        "name": "豎彎鈎",
+        "pos": "last",
+        "examples": "七兄先"
+      }
+    ],
+    "v": [
+      {
+        "shape": "幺",
+        "name": "絲字邊",
+        "pos": "first",
+        "examples": "紅給經"
+      },
+      {
+        "shape": "女",
+        "name": "女字旁",
+        "pos": "first",
+        "examples": "好她媽"
+      },
+      {
+        "shape": "",
+        "name": "衣字底",
+        "pos": "last",
+        "examples": "長衣展"
+      }
+    ],
+    "w": [
+      {
+        "shape": "囗",
+        "name": "大口框",
+        "pos": "first",
+        "examples": "國因回"
+      },
+      {
+        "shape": "田",
+        "name": "田字",
+        "pos": "first",
+        "examples": "男界"
+      }
+    ],
+    "y": [
+      {
+        "shape": "丶",
+        "name": "點（字頭）",
+        "pos": "first",
+        "examples": "主文方"
+      },
+      {
+        "shape": "亠",
+        "name": "點橫頭",
+        "pos": "first",
+        "examples": "言高京"
+      },
+      {
+        "shape": "辶",
+        "name": "走字底",
+        "pos": "first",
+        "examples": "道這近"
+      }
+    ]
+  }
+}

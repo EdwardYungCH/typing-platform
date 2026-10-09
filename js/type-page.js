@@ -52,7 +52,10 @@ async function init() {
   }
 
   applyWorld(worldForLang(lang));
-  if (lang === 'zh') state.zh = await loadZh();
+  if (lang === 'zh') {
+    state.zh = await loadZh();
+    state.shapes = (await fetch('data/zh-shapes.json').then((r) => r.json())).keys;
+  }
   state.world = worldForLang(lang);
   state.petData = await pet.loadCompanions();
   state.petId = pet.getChoice(state.world);
@@ -165,7 +168,7 @@ function runStep(i) {
   state.kb.setRootLabels(lang === 'zh' && step.type !== 'test' && !step.hideRoots ? ROOTS : null);
   $('ime').hidden = true;
   state.mode = step.mode ?? (lang === 'zh' ? 'roots' : 'en');
-  state.unit = { quick: '字/分', roots: '個/分', en: 'WPM' }[state.mode] ?? 'WPM';
+  state.unit = { quick: '字/分', split: '字/分', roots: '個/分', shapes: '個/分', en: 'WPM' }[state.mode] ?? 'WPM';
   $('m-unit').textContent = ` ${state.unit}`;
   // 速成評測不提示下一個鍵（否則變成跟住發光的鍵按）
   state.hideNext = lang === 'zh' && step.type === 'test';
@@ -194,7 +197,7 @@ function runGuide(step) {
           <h3>${s.title}</h3>
           <ul>${s.points.map((p) => `<li>${p}</li>`).join('')}</ul>
         </div>
-        <div class="slide-visual">${s.show === 'posture' ? POSTURE_SVG : ''}${s.example ? exampleHtml(s.example, s.exampleCode) : ''}${s.imeDemo ? imeDemoHtml(s.imeDemo) : ''}</div>
+        <div class="slide-visual">${s.show === 'posture' ? POSTURE_SVG : ''}${s.example ? exampleHtml(s.example, s.exampleCode) : ''}${s.imeDemo ? imeDemoHtml(s.imeDemo) : ''}${s.shapes ? shapesHtml(s.shapes) : ''}</div>
       </div>
       <div class="slide-nav">
         <button class="btn" type="button" data-nav="prev" ${idx === 0 ? 'disabled' : ''}>上一頁</button>
@@ -247,15 +250,39 @@ function runGuide(step) {
 // ---------- 打字練習和小測 ----------
 
 function makeText(step) {
+  state.display = null;
+  if (step.gen?.kind === 'shapes') {
+    // 認字形：題目是鍵，畫面顯示該鍵的字根或輔助字形
+    const rng = makeRng();
+    const items = [];
+    for (const k of step.gen.keys) {
+      items.push([k, ROOTS[k]]);
+      for (const sh of state.shapes[k] ?? []) {
+        if (!sh.shape || sh.shape === ROOTS[k]) continue;
+        // 部件本身也是一個字（例如「又」）而單獨打法不同時，不放進認字形題目，免得學生混淆
+        const own = state.zh.quickOf(sh.shape);
+        if (own && own !== k) continue;
+        items.push([k, sh.shape]);
+      }
+    }
+    const pickList = [];
+    for (let i = 0; i < step.gen.count; i++) {
+      let it;
+      do { it = items[Math.floor(rng() * items.length)]; } while (items.length > 1 && it === pickList[pickList.length - 1]);
+      pickList.push(it);
+    }
+    state.display = pickList.map((x) => x[1]);
+    return pickList.map((x) => x[0]).join('');
+  }
   if (step.text) return step.text;
   if (step.gen.kind === 'roots' || step.gen.kind === 'chars') return generateZh(step.gen, makeRng());
   return generateText(step.gen, makeRng());
 }
 
 function statsOf(eng) {
-  if (state.mode === 'quick') return computeZhStats(eng);
+  if (state.mode === 'quick' || state.mode === 'split') return computeZhStats(eng);
   const st = computeStats(eng);
-  if (state.mode === 'roots') {
+  if (state.mode === 'roots' || state.mode === 'shapes') {
     const per = st.seconds > 0 ? st.correctKeys / (st.seconds / 60) : 0;
     st.netWpm = per;
     st.grossWpm = per;
@@ -265,15 +292,15 @@ function statsOf(eng) {
 
 function runTyping(step) {
   showTypingUI(true);
-  if (state.mode === 'quick') return runQuick(step);
+  if (state.mode === 'quick' || state.mode === 'split') return runQuick(step);
 
   const text = makeText(step);
   const textEl = $('text');
-  const extra = state.mode === 'roots' ? ' roots' : '';
+  const extra = state.mode === 'roots' || state.mode === 'shapes' ? ' roots' : '';
   textEl.className = 'text' + (step.display === 'big' ? ' big' : '') + extra;
   $('text-wrap').className = 'text-wrap' + (step.display === 'big' ? ' big' : '');
   $('text-wrap').scrollTop = 0;
-  const spans = renderText(textEl, text, state.mode === 'roots' ? ROOTS : null);
+  const spans = renderText(textEl, text, state.display ?? (state.mode === 'roots' ? ROOTS : null));
 
   $('start-hint').hidden = false;
   $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
@@ -307,9 +334,9 @@ function pickHint(ch) {
   if (KEY_OF_PUNCT[ch]) return `按 ${KEY_OF_PUNCT[ch]}`;
   const code = state.zh.quickOf(ch);
   const idx = state.zh.candidates(code).indexOf(ch);
-  if (idx === 0) return '按空白鍵';
   if (idx < PAGE) return `按 ${idx + 1}`;
-  return `按 PageDown 翻到第 ${Math.floor(idx / PAGE) + 1} 頁，再按 ${(idx % PAGE) + 1}`;
+  const pg = Math.floor(idx / PAGE);
+  return `按空白鍵${pg > 1 ? ` ${pg} 次` : ''}翻到第 ${pg + 1} 頁，再按 ${(idx % PAGE) + 1}`;
 }
 
 function runQuick(step) {
@@ -322,7 +349,9 @@ function runQuick(step) {
   const isTest = step.type === 'test';
   $('ime').hidden = false;
   $('start-hint').hidden = false;
-  $('start-hint').textContent = '請先切換到英文輸入（不要開系統的速成），網站內置了速成選字窗。';
+  $('start-hint').textContent = state.mode === 'split'
+    ? '看字，自己拆出首碼和尾碼，按對兩個鍵就會自動上屏（不用選字）。'
+    : '請先切換到英文輸入（不要開系統的速成），網站內置了速成選字窗。';
   $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
   updateMeters(null, step);
 
@@ -330,6 +359,7 @@ function runQuick(step) {
   const engine = new QuickEngine({
     text,
     zh: state.zh,
+    pick: state.mode !== 'split',
     errorMode: isTest ? 'continue' : 'block',
     timeLimit: step.timeLimit ?? 0,
     onIme: () => { imeWarn = true; renderIme(engine, isTest, true); },
@@ -352,7 +382,39 @@ function runQuick(step) {
   engine.attach();
 }
 
+function shapeNote(ch) {
+  for (const [k, list] of Object.entries(state.shapes ?? {})) {
+    for (const sh of list) if (sh.examples.includes(ch) && sh.shape !== ROOTS[k]) return `「${ch}」的${sh.pos === 'first' ? '首' : '尾'}部件是輔助字形「${sh.shape || sh.name}」（${sh.name}），屬 ${ROOTS[k]} ${k.toUpperCase()} 鍵。`;
+  }
+  return '';
+}
+
+function splitExplain(ch) {
+  const cj = state.zh.cjOf(ch) ?? state.zh.quickOf(ch);
+  const q = state.zh.quickOf(ch);
+  return `「${ch}」倉頡 ${[...cj].map((k) => ROOTS[k]).join('')} → 速成取首尾：${[...q].map((k) => `${ROOTS[k]} ${k.toUpperCase()}`).join(' ＋ ')}。${shapeNote(ch)}`;
+}
+
+function renderSplitIme(eng, isTest, warn) {
+  const ch = eng.expectedChar;
+  const comp = eng.comp ? [...eng.comp].map((k) => zcap(k, 'key')).join('') : '<span class="empty">組字框</span>';
+  let hint = '';
+  if (!isTest && ch) {
+    const cj = state.zh.cjOf(ch) ?? state.zh.quickOf(ch);
+    if (eng.misses === 0) hint = `先想想「${ch}」由哪些部件組成：按「上至下、左至右、外至內」的次序，找出第一個和最後一個部件。`;
+    else if (eng.misses === 1) hint = `提示：「${ch}」的倉頡拆法是 ${[...cj].map((k) => ROOTS[k]).join('　')}，速成只取第一個和最後一個。`;
+    else hint = `答案：${splitExplain(ch)} 跟着發光的鍵按。`;
+  }
+  const last = !isTest && eng.lastDone ? `<span class="hint">✔ ${splitExplain(eng.lastDone.ch)}</span>` : '';
+  $('ime').innerHTML = `
+    <div class="comp">${comp}</div>
+    ${last}
+    ${hint ? `<span class="hint">${hint}</span>` : ''}
+    ${warn ? '<span class="warn">偵測到系統中文輸入法：請按 Shift 或 Win＋空白鍵切換回英文，再打一次。</span>' : ''}`;
+}
+
 function renderIme(eng, isTest, warn) {
+  if (!eng.pick) return renderSplitIme(eng, isTest, warn);
   const ch = eng.expectedChar;
   const comp = eng.comp
     ? [...eng.comp].map((k) => zcap(k, 'key')).join('')
@@ -398,7 +460,7 @@ function renderText(el, text, display = null, eachWord = false) {
   [...text].forEach((ch, i) => {
     const s = document.createElement('span');
     s.className = 'ch' + (ch === ' ' ? ' space' : '');
-    s.textContent = ch === ' ' ? ' ' : (display?.[ch] ?? ch);
+    s.textContent = ch === ' ' ? ' ' : (Array.isArray(display) ? display[i] : (display?.[ch] ?? ch));
     spans.push(s);
     word.append(s);
     if (ch === ' ' || eachWord || display || i === text.length - 1) {
@@ -420,7 +482,9 @@ function paint(spans, eng) {
   });
   const cur = spans[eng.pos];
   if (cur) keepInView(cur);
-  showNextKey(eng.nextKey ? eng.nextKey() : eng.text[eng.pos]);
+  // 拆字模式：學生要自己拆，打錯兩次才亮出下一個鍵
+  const hide = eng.pick === false && (state.hideNext || eng.misses < 2);
+  showNextKey(eng.nextKey ? (hide ? null : eng.nextKey()) : eng.text[eng.pos]);
   $('m-progress').style.width = `${(eng.pos / eng.text.length) * 100}%`;
 }
 
@@ -466,8 +530,9 @@ function showNextKey(ch) {
   const keyText = ch === ' ' ? '空白鍵' : ch.toUpperCase();
   let label = `用${fingerName(info.finger)}按 ${keyText}`;
   if (lang === 'zh' && ROOTS[ch] && state.kb.root.classList.contains('roots')) label += `（${ROOTS[ch]}）`;
-  if (lang === 'zh' && /^[2-9]$/.test(ch)) label = `用${fingerName(info.finger)}按 ${ch} 揀字`;
-  if (lang === 'zh' && ch === ' ') label = '用拇指按空白鍵揀第 1 個字';
+  if (lang === 'zh' && /^[1-9]$/.test(ch)) label = `用${fingerName(info.finger)}按 ${ch} 揀字`;
+  if (lang === 'zh' && ch === ' ') label = '要找的字不在這一頁：用拇指按空白鍵翻頁';
+  if (lang === 'zh' && ch === '1') label = `用${fingerName(info.finger)}按 1 揀第 1 個字`;
   if (info.finger === 'TH') label = '用拇指按空白鍵';
   if (info.shiftFinger) label = `${fingerName(info.shiftFinger)}按住 Shift，${fingerName(info.finger)}按 ${ch}`;
   state.hands.setFinger(fingers, label);
@@ -670,6 +735,16 @@ function exampleHtml(ch) {
     <div class="row"><span class="lbl">倉頡全碼</span>${[...cj].map((k, i) => zcap(k, i === 0 || i === cj.length - 1 ? 'key' : 'dim')).join('')}</div>
     <div class="row"><span class="lbl">速成</span>${[...q].map((k) => zcap(k, 'key')).join('<span>＋</span>')}<span class="muted">只打首尾兩碼</span></div>
   </div>`;
+}
+
+function shapesHtml(keys) {
+  return `<div class="shape-cards">${[...keys].map((k) => `
+    <div class="shape-card">
+      <div class="shape-key">${zcap(k, 'key')}</div>
+      <ul>${(state.shapes[k] ?? []).map((sh) => `
+        <li><b class="glyph">${sh.shape || '◇'}</b><span>${sh.name}</span><span class="ex">例：${[...sh.examples].join(' ')}</span></li>`).join('')}
+      </ul>
+    </div>`).join('')}</div>`;
 }
 
 function imeDemoHtml(ch) {
