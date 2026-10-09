@@ -13,6 +13,15 @@ export function generateZh(gen, rng) {
     }
     return out;
   }
+  if (gen.kind === 'chars' && gen.unique) {
+    // 不重複：洗牌後取前 count 個
+    const pool = [...new Set(gen.chars)];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, gen.count).join('');
+  }
   if (gen.kind === 'chars') {
     const pool = [...gen.chars];
     const out = [];

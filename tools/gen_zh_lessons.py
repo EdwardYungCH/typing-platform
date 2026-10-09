@@ -58,25 +58,22 @@ def guide(title, slides):
     return {'type': 'guide', 'title': title, 'slides': slides}
 
 def shape_slides(keys):
-    groups = [keys[i:i + 4] for i in range(0, len(keys), 4)]
-    out = []
-    for g in groups:
-        out.append({'title': '輔助字形：' + '、'.join(ROOTS[k] for k in g),
-                    'points': ['同一個字根鍵，在不同的字裏會變成不同樣子（輔助字形）',
-                               '看到這些部件，都按同一個鍵',
-                               '注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E'],
-                    'shapes': g})
-    return out
+    """每個字根鍵一頁：逐個教該鍵的全部輔助字形，每個字形 3 個例字（顏色標出位置）。"""
+    return [{'title': f'字根「{ROOTS[k]}」（{k.upper()}）的輔助字形',
+             'points': ['看到這些部件，都按 ' + k.upper() + ' 鍵',
+                        '注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E'],
+             'shapeKey': k} for k in keys if k != 'x']
 
 def roots_lesson(lid, title, new, learned, extra_hint):
     chars = pool(learned, new)
-    combo = pool(learned, new, maxidx=99, top=3000, n=60, colored=True, two=True)
-    test = pool(learned, learned, maxidx=99, top=1500, n=80, two=True)
+    combo = pool(learned, new, maxidx=99, top=3000, n=80, colored=True, two=True)
+    selfsplit = pool(learned, learned, maxidx=99, top=3000, n=80, colored=True, two=True)
+    selfsplit = ''.join(c for c in selfsplit if c not in combo[:20]) or selfsplit
     names = ' '.join(ROOTS[k] for k in new)
     weighted = learned + new * 3
     return {
         'id': lid, 'title': title, 'subtitle': names,
-        'newKeys': keycodes(new) + code_keys(chars),
+        'newKeys': keycodes(new) + code_keys(chars) + ['Space'],
         'pass': {'accuracy': 85},
         'steps': [
             {'type': 'drill', 'mode': 'roots', 'title': '示範', 'display': 'big',
@@ -84,18 +81,18 @@ def roots_lesson(lid, title, new, learned, extra_hint):
             {'type': 'drill', 'mode': 'roots', 'title': '單鍵',
              'hint': '每個字根三次，記住它的位置。', 'text': ''.join(k * 3 for k in new) * 3},
             guide('輔助字形', shape_slides(new)),
-            {'type': 'drill', 'mode': 'roots', 'title': '字根練習',
-             'hint': '新學和學過的字根隨機出現：看字根，按鍵。', 'gen': {'kind': 'roots', 'keys': weighted, 'count': 45}},
-            {'type': 'drill', 'mode': 'split', 'colored': True, 'title': '組合',
+            {'type': 'drill', 'mode': 'chart', 'title': '字形練習',
+             'hint': '這一課的輔助字形隨機出現：看字形，按它所屬字根的鍵。', 'gen': {'kind': 'chart', 'keys': new, 'count': 36}},
+            {'type': 'drill', 'mode': 'split', 'colored': True, 'title': '組合', 'chartKeys': learned,
              'hint': '常用字以顏色分碼：紅色部件是首碼，藍色部件是尾碼。認出部件，按兩個鍵。',
-             'gen': {'kind': 'chars', 'chars': combo, 'count': 20}},
-            {'type': 'drill', 'mode': 'quick', 'title': '打字',
-             'hint': '這些字只用學過的字根就打到。打完碼，按數字揀字。',
-             'gen': {'kind': 'chars', 'chars': chars, 'count': 20}},
-            {'type': 'test', 'mode': 'split', 'title': '過關小測', 'chartKeys': learned,
-             'hint': '60 秒內自行拆字，按首碼和尾碼；沒有顏色和提示，可參考字根表。準確率達 85% 即過關。',
+             'gen': {'kind': 'chars', 'chars': combo, 'count': 20, 'unique': True}},
+            {'type': 'drill', 'mode': 'split', 'hints': 'less', 'title': '自行拆字', 'chartKeys': learned,
+             'hint': '沒有顏色：自己拆字，打首碼和尾碼。打錯要改正才可繼續，錯三次才顯示答案。',
+             'gen': {'kind': 'chars', 'chars': selfsplit, 'count': 20, 'unique': True}},
+            {'type': 'test', 'mode': 'quick', 'title': '過關小測',
+             'hint': '60 秒內打字：打碼後按數字揀字，可以打錯。準確率達 85% 即過關。',
              'timeLimit': 60, 'pass': {'accuracy': 85},
-             'gen': {'kind': 'chars', 'chars': test, 'count': 80}},
+             'gen': {'kind': 'chars', 'chars': chars, 'count': 60}},
         ],
     }
 
@@ -151,20 +148,23 @@ l7['subtitle'] = '難 X ＋ 全部字根'
 ALL = 'abcdefghijklmnopqrstuvwyx'
 l7['steps'][0]['text'] = 'xxx'
 l7['steps'][1]['text'] = 'xxxxxx'
-l7['steps'][2] = guide('總複習', shape_slides('abcdefg') + shape_slides('hijklmn') + shape_slides('opqrstuvwy'))
-l7['steps'][3]['gen']['keys'] = ALL
-l7['steps'][4]['gen']['chars'] = pool(ALL, ALL, maxidx=99, top=3000, n=80, colored=True, two=True)
-l7['steps'][5]['gen']['chars'] = x_chars
-l7['steps'][6]['gen']['chars'] = pool(ALL, ALL, maxidx=99, top=1500, n=120, two=True)
-l7['steps'][6]['chartKeys'] = ALL
-l7['newKeys'] = keycodes(ALL) + code_keys(x_chars)
+l7['steps'][2] = guide('總複習', [{'title': '全部字根和輔助字形', 'points': ['24 個字根，加難字鍵 X', '下面是全部輔助字形，不記得的可以回到第 1 至 6 課重溫'], 'shapes': 'abcdefghijklmnopqrstuvwy'}])
+l7['steps'][3]['gen']['keys'] = ALL.replace('x', '')
+l7['steps'][3]['hint'] = '全部輔助字形隨機出現：看字形，按鍵。'
+for i in (4, 5):
+    l7['steps'][i]['chartKeys'] = ALL
+l7['steps'][4]['gen']['chars'] = pool(ALL, ALL, maxidx=99, top=3000, n=120, colored=True, two=True)
+l7['steps'][5]['gen']['chars'] = pool(ALL, ALL, maxidx=99, top=3000, n=200, colored=True, two=True)[60:]
+l7['steps'][6]['gen']['chars'] = x_chars + pool(ALL, ALL, 5, 1000, 40)
+l7['newKeys'] = []
 L.append(l7)
 
 def split_lesson(lid, title, subtitle, slides, chars, hint, test_pass={'accuracy': 85}, n=20):
+    chars = ''.join(c for c in chars if c in COLORED) or chars   # 統一用拆碼圖字體
     return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': keycodes(ALL), 'pass': test_pass,
             'steps': [guide(title, slides),
                       {'type': 'drill', 'mode': 'split', 'colored': True, 'title': '看顏色拆字', 'hint': '紅色部件是首碼，藍色部件是尾碼。', 'gen': {'kind': 'chars', 'chars': ''.join(c for c in chars if c in COLORED) or chars, 'count': n}},
-                      {'type': 'drill', 'mode': 'split', 'title': '拆字練習', 'hint': hint, 'gen': {'kind': 'chars', 'chars': chars, 'count': n}},
+                      {'type': 'drill', 'mode': 'split', 'hints': 'less', 'chartKeys': ALL, 'title': '自行拆字', 'hint': hint + ' 打錯要改正才可繼續。', 'gen': {'kind': 'chars', 'chars': chars, 'count': n, 'unique': True}},
                       {'type': 'test', 'mode': 'split', 'title': '過關小測', 'timeLimit': 60, 'pass': test_pass, 'chartKeys': ALL,
                        'hint': f'60 秒內自行拆字，沒有提示，可參考字根表。{pass_text(test_pass)}', 'gen': {'kind': 'chars', 'chars': chars, 'count': 80}}]}
 

@@ -58,6 +58,7 @@ async function init() {
     const sh = await fetch('data/zh-shapes.json').then((r) => r.json());
     state.shapes = sh.keys;
     state.chart = sh.chart;
+    state.chartInfo = sh.chartInfo ?? {};
   }
   state.world = worldForLang(lang);
   state.petData = await pet.loadCompanions();
@@ -184,7 +185,7 @@ function runStep(i) {
   $('pair').hidden = true;
   state.fx.reset();  // 上一步的連擊字樣不會帶到下一步
   state.mode = step.mode ?? (lang === 'zh' ? 'roots' : 'en');
-  state.unit = { quick: '字/分', split: '字/分', roots: '個/分', shapes: '個/分', en: 'WPM' }[state.mode] ?? 'WPM';
+  state.unit = { quick: '字/分', split: '字/分', roots: '個/分', shapes: '個/分', chart: '個/分', en: 'WPM' }[state.mode] ?? 'WPM';
   $('m-unit').textContent = ` ${state.unit}`;
   // 速成評測不提示下一個鍵（否則變成跟住發光的鍵按）
   state.hideNext = lang === 'zh' && step.type === 'test';
@@ -207,6 +208,11 @@ function runGuide(step) {
   const render = () => {
     const s = step.slides[idx];
     if (s.example && glyphNow(s.example) === null && !s._loaded) { s._loaded = true; glyphData(s.example).then(render); }
+    if (s.shapeKey && !s._loaded) {
+      s._loaded = true;
+      const chars = Object.entries(state.chartInfo).filter(([img]) => img[0] === s.shapeKey).flatMap(([, v]) => v.examples.map((e) => e[0]));
+      preloadGlyphs(chars).then(() => Promise.all(chars.map((c) => glyphData(c)))).then(render);
+    }
     box.innerHTML = `
       <div class="slide">
         <div class="slide-text">
@@ -214,7 +220,7 @@ function runGuide(step) {
           <h3>${s.title}</h3>
           <ul>${s.points.map((p) => `<li>${p}</li>`).join('')}</ul>
         </div>
-        <div class="slide-visual">${s.show === 'posture' ? POSTURE_SVG : ''}${s.example ? exampleHtml(s.example, s.exampleCode) : ''}${s.imeDemo ? imeDemoHtml(s.imeDemo) : ''}${s.shapes ? shapesHtml(s.shapes) : ''}</div>
+        <div class="slide-visual">${s.show === 'posture' ? POSTURE_SVG : ''}${s.example ? exampleHtml(s.example, s.exampleCode) : ''}${s.imeDemo ? imeDemoHtml(s.imeDemo) : ''}${s.shapes ? shapesHtml(s.shapes) : ''}${s.shapeKey ? shapeLessonHtml(s.shapeKey) : ''}</div>
       </div>
       <div class="slide-nav">
         <button class="btn" type="button" data-nav="prev" ${idx === 0 ? 'disabled' : ''}>上一頁</button>
@@ -269,6 +275,20 @@ function runGuide(step) {
 
 function makeText(step) {
   state.display = null;
+  if (step.gen?.kind === 'chart') {
+    // 字形練習：只出這一課的輔助字形（字根表圖片），學生按它所屬的鍵
+    const rng = makeRng();
+    const items = [];
+    for (const k of step.gen.keys) for (let i = 0; i < (state.chart?.[k] ?? 0); i++) items.push([k, i]);
+    const out = [];
+    for (let n = 0; n < step.gen.count; n++) {
+      let it;
+      do { it = items[Math.floor(rng() * items.length)]; } while (items.length > 1 && it === out[out.length - 1]);
+      out.push(it);
+    }
+    state.display = out.map(([k, i]) => ({ html: chartGlyphs(k, 1).replace(`${k}-0.png`, `${k}-${i}.png`) }));
+    return out.map((x) => x[0]).join('');
+  }
   if (step.gen?.kind === 'shapes') {
     // 認字形：題目是鍵，畫面顯示該鍵的字根或輔助字形
     const rng = makeRng();
@@ -300,7 +320,7 @@ function makeText(step) {
 function statsOf(eng) {
   if (state.mode === 'quick' || state.mode === 'split') return computeZhStats(eng);
   const st = computeStats(eng);
-  if (state.mode === 'roots' || state.mode === 'shapes') {
+  if (state.mode === 'roots' || state.mode === 'shapes' || state.mode === 'chart') {
     const per = st.seconds > 0 ? st.correctKeys / (st.seconds / 60) : 0;
     st.netWpm = per;
     st.grossWpm = per;
@@ -315,7 +335,7 @@ function runTyping(step) {
 
   const text = makeText(step);
   const textEl = $('text');
-  const extra = state.mode === 'roots' || state.mode === 'shapes' ? ' roots' : '';
+  const extra = state.mode === 'roots' || state.mode === 'shapes' || state.mode === 'chart' ? ' roots' : '';
   textEl.className = 'text' + (step.display === 'big' ? ' big' : '') + extra;
   $('text-wrap').className = 'text-wrap' + (step.display === 'big' ? ' big' : '');
   $('text-wrap').scrollTop = 0;
@@ -396,7 +416,8 @@ function renderPair(eng, step, isTest, wrongNow) {
   const code = state.zh.quickOf(ch);
   const g = glyphNow(ch);
   const pending = eng.comp.length === 0 ? 'f' : 'l';
-  const mode = !g ? null : step.colored && !isTest ? 'color' : (!isTest && eng.misses >= 1 ? pending : 'plain');
+  const lessHints = step.hints === 'less';
+  const mode = !g ? null : step.colored && !isTest ? 'color' : (!isTest && !lessHints && eng.misses >= 1 ? pending : 'plain');
   $('pair-glyph').innerHTML = g && mode ? glyphSvg(g, mode) : ch;
 
   // 兩格：已答對的顯示字根；剛答錯的那格變紅
@@ -421,7 +442,9 @@ function renderPair(eng, step, isTest, wrongNow) {
     if (eng.misses === 0) {
       hint = step.colored
         ? `${part}部件屬哪個字根？${pending === 'f' ? '先打首碼。' : '再打尾碼。'}`
-        : `按「上至下、左至右、外至內」，找出${pending === 'f' ? '第一個' : '最後一個'}部件。`;
+        : lessHints ? '自行拆字：打首碼和尾碼。' : `按「上至下、左至右、外至內」，找出${pending === 'f' ? '第一個' : '最後一個'}部件。`;
+    } else if (step.hints === 'less' && eng.misses < 3) {
+      hint = `不對，再想想${pending === 'f' ? '首碼' : '尾碼'}。可以看右邊的字形表。`;
     } else if (eng.misses === 1) {
       const cj = state.zh.cjOf(ch);
       hint = g ? `看${part}部件：它是哪個字根或輔助字形？` : `提示：倉頡拆法是 ${[...(cj ?? code)].map((k) => ROOTS[k]).join(' ')}。`;
@@ -434,9 +457,10 @@ function renderPair(eng, step, isTest, wrongNow) {
   $('pair-count').textContent = `第 ${eng.pos + 1} / ${total} 題　一次答啱 ${right}　答錯 ${state.pairWrong}`;
 
   // 右邊：評測顯示字形表；練習顯示上一題的雙色拆碼
+  const chart = step.chartKeys ? `<h4 style="margin-top:12px">字根和輔助字形表</h4>${chartMini(step.chartKeys)}` : '';
   if (isTest) $('pair-side').innerHTML = `<h4>字根和輔助字形表</h4>${chartMini(step.chartKeys ?? 'abcdefghijklmnopqrstuvwyx')}`;
-  else $('pair-side').innerHTML = eng.lastDone ? prevHtml(eng.lastDone.ch) : `<h4>上一題</h4><p class="muted">答對後，這裏會用顏色顯示怎樣拆：<b class="c-first">紅色</b>是首碼部件，<b class="c-last">藍色</b>是尾碼部件。</p>`;
-  showNextKey(eng.misses >= 2 && !isTest ? eng.nextKey() : null);
+  else $('pair-side').innerHTML = (eng.lastDone ? prevHtml(eng.lastDone.ch) : `<h4>上一題</h4><p class="muted">答對後，這裏會用顏色顯示怎樣拆：<b class="c-first">紅色</b>是首碼部件，<b class="c-last">藍色</b>是尾碼部件。</p>`) + chart;
+  showNextKey(eng.misses >= (lessHints ? 3 : 2) && !isTest ? eng.nextKey() : null);
 }
 
 function prevHtml(ch) {
@@ -590,7 +614,9 @@ function renderText(el, text, display = null, eachWord = false) {
   [...text].forEach((ch, i) => {
     const s = document.createElement('span');
     s.className = 'ch' + (ch === ' ' ? ' space' : '');
-    s.textContent = ch === ' ' ? ' ' : (Array.isArray(display) ? display[i] : (display?.[ch] ?? ch));
+    const shown = Array.isArray(display) ? display[i] : (display?.[ch] ?? ch);
+    if (shown && typeof shown === 'object') s.innerHTML = shown.html;
+    else s.textContent = ch === ' ' ? ' ' : shown;
     spans.push(s);
     word.append(s);
     if (ch === ' ' || eachWord || display || i === text.length - 1) {
@@ -792,7 +818,7 @@ function renderPanelPet() {
 function saveLessonDone(stars, stats) {
   const { prev, next } = store.saveLessonResult(lang, lessonId, {
     stars: stars ?? 0,
-    wpm: state.mode === 'roots' ? 0 : (stats?.netWpm ?? 0),  // 字根練習的「個/分」不算打字速度
+    wpm: ['roots', 'shapes', 'chart', 'split'].includes(state.mode) ? 0 : (stats?.netWpm ?? 0),  // 字根練習的「個/分」不算打字速度
     accuracy: stats?.accuracy ?? 0,
   });
   if (stars && next.stars > prev.stars && prev.done) return `新紀錄：${next.stars} 粒星！`;
@@ -868,6 +894,29 @@ function exampleHtml(ch) {
     <div class="row"><span class="lbl">倉頡全碼</span>${[...cj].map((k, i) => zcap(k, i === 0 ? 'key first' : i === cj.length - 1 ? 'key last' : 'dim')).join('')}</div>
     <div class="row"><span class="lbl">速成</span>${[...q].map((k, i) => zcap(k, i === 0 ? 'key first' : 'key last')).join('<span>＋</span>')}<span class="muted">只打首尾兩碼</span></div>
   </div>`;
+}
+
+/** 一個字根鍵的全部輔助字形：每個字形 3 個例字，用顏色標出字形在字中的位置。 */
+function shapeLessonHtml(k) {
+  const n = state.chart?.[k] ?? 0;
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    const info = state.chartInfo[`${k}-${i}`];
+    const img = `<span class="shape-img">${chartGlyphs(k, 1).replace(`${k}-0.png`, `${k}-${i}.png`)}</span>`;
+    let ex = '';
+    if (info) {
+      ex += info.examples.map(([c, side]) => {
+        const g = glyphNow(c);
+        return `<figure class="sx">${g ? glyphSvg(g, side) : `<span class="sx-t">${c}</span>`}<figcaption>${c}</figcaption></figure>`;
+      }).join('');
+      ex += (info.text ?? []).map(([c, p]) => {
+        const cj = state.zh.cjOf(c) ?? '';
+        return `<figure class="sx"><span class="sx-t">${c}</span><figcaption>${[...cj].map((x, j) => j === p ? `<b class="c-first">${ROOTS[x]}</b>` : ROOTS[x]).join('')}</figcaption></figure>`;
+      }).join('');
+    }
+    rows.push(`<div class="shape-row2">${img}<div class="sx-name">${info?.name ?? '輔助字形'}</div><div class="sx-list">${ex || '<small class="muted">較少見，暫未有例字</small>'}</div></div>`);
+  }
+  return `<div class="shape-lesson"><div class="shape-head">${zcap(k, 'key')}<span>字根「${ROOTS[k]}」的輔助字形（${n} 個）：例字中<b class="c-first">紅色</b>（首碼）或<b class="c-last">藍色</b>（尾碼）部分就是這個字形；沒有圖的例字，倉頡碼中標紅的就是它。</span></div>${rows.join('')}</div>`;
 }
 
 function shapesHtml(keys) {

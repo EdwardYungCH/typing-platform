@@ -36,7 +36,8 @@ for line in open(f'{MM}/graphics.txt', encoding='utf-8'):
 EXTRA = {'氵': 'e', '亻': 'o', '扌': 'q', '忄': 'p', '艹': 't', '宀': 'j', '辶': 'y', '灬': 'f', '⺌': 'f', '⺍': 'f',
          '冖': 'b', '冂': 'b', '爫': 'b', '⺈': 'n', '厶': 'i', '广': 'i', '疒': 'k', '犭': 'k', '衤': 'l', '礻': 'y',
          '囗': 'w', '匚': 's', '尸': 's', '丷': 'c', '八': 'c', '亠': 'y', '丶': 'i', '丿': 'h', '丨': 'l', '乚': 'u',
-         '凵': 'u', '幺': 'v', '彐': 's', '匕': 'p', '勹': 'p', '乂': 'k', '工': 'm', '厂': 'm', '士': 'g', '曰': 'a', '又': 'e'}
+         '凵': 'u', '幺': 'v', '匕': 'p',
+         '⺻': 'l', '龶': 'q', '⺗': 'p', '乛': 'n', '亅': 'n', '𠂉': 'o', '丆': 'm', '𠂇': 'k', '勹': 'p', '乂': 'k', '工': 'm', '厂': 'm', '士': 'g', '曰': 'a', '又': 'e'}
 def keys_of(c):
     ks = set()
     for k, r in ROOTS.items():
@@ -45,6 +46,7 @@ def keys_of(c):
         for s in lst:
             if s['shape'] == c: ks.add(k)
     if c in EXTRA: ks.add(EXTRA[c])
+    if c == '丷': ks.discard('t')   # 廿 的「䒑」比 丷 多一橫，只用 丷 會少標一筆
     cj = Z['cj'].get(c)
     if cj and len(cj) == 1: ks.add(cj)
     return ks
@@ -63,10 +65,30 @@ def parse(s, i=0):
 def strokes_of_child(matches, path, depth_idx):
     return [i for i, m in enumerate(matches) if m is not None and len(m) > depth_idx and m[:depth_idx + 1] == path]
 
+# 部分部件：只有前幾筆才是該字根（例如 ⺮ 的左半是竹、夕 的頭兩筆是弓的輔助字形）
+UNKNOWN_OK = set('左右有友灰刀己畏')
+PARTIAL = {('⺮', 'h', 'f'): 3, ('夕', 'n', 'f'): 2}
+
+def unknown(decomp, idxs, matches, want, side, char):
+    """分解式只有一個「？」部件（例如 左 ＝ ⿸？工）時，「？」的筆畫就是 matches 為空的筆畫。
+    只在最外層使用，並要求倉頡碼的首／尾碼跟 want 一致（已由呼叫者保證）。"""
+    # 只用於人手看過、確認「？」部件剛好是該字根的字
+    if decomp.count('？') != 1 or char != TOP[0] or char not in UNKNOWN_OK:
+        return None
+    sub = [idxs[i] for i, m in enumerate(matches) if m is None]
+    if not sub or len(sub) >= len(idxs): return None
+    MATCHED.append('？')
+    return sub
+
 def find(char, idxs, want, side, depth=0):
     """在 char（筆畫索引 idxs 對應整字的筆畫）裏找出屬 want 鍵的首／尾部件筆畫。"""
     if depth > 6: return None
+    part = PARTIAL.get((char, want, side))
+    if part and depth > 0 and len(idxs) > part:
+        MATCHED.append(char)
+        return idxs[:part]
     if want in keys_of(char) and depth > 0:
+        MATCHED.append(char)
         return idxs
     o = dic.get(char)
     if not o or not o.get('decomposition') or '？' in o['decomposition'][:1]:
@@ -84,9 +106,13 @@ def find(char, idxs, want, side, depth=0):
     for ki in order:
         node = kids[ki]
         sub = [idxs[i] for i, m in enumerate(matches) if m and m[0] == ki]
+        if node[0] == 'leaf' and node[1] == '？':
+            return unknown(o['decomposition'], idxs, matches, want, side, char)
         if not sub: return None
         if node[0] == 'leaf':
-            return find(node[1], sub, want, side, depth + 1) if node[1] != '？' else None
+            if node[1] == '？':
+                return unknown(o['decomposition'], idxs, matches, want, side, char)
+            return find(node[1], sub, want, side, depth + 1)
         # 子樹本身是 IDS：用整字的 matches 再往下一層
         sub_matches = [m[1:] for m in matches if m and m[0] == ki]
         return find_tree(node, sub, sub_matches, want, side, depth + 1)
@@ -104,6 +130,9 @@ def find_tree(node, idxs, matches, want, side, depth):
         return find_tree(child, sub, [m[1:] for m in matches if m and m[0] == ki], want, side, depth + 1)
     return None
 
+MATCHED = []
+TOP = [None]
+COMP = {}  # (鍵, 部件) -> [(字, 首/尾)]
 os.makedirs('assets/glyphs', exist_ok=True)
 ok = fail = 0
 fails = []
@@ -115,16 +144,25 @@ for ch in sorted(need):
         roles = ['f'] * n if q in keys_of(ch) or len(Z['cj'].get(ch, 'xx')) == 1 else roles
         good = roles[0] == 'f'
     else:
+        MATCHED.clear()
+        TOP[0] = ch
         f = find(ch, list(range(n)), q[0], 'f')
+        fc = MATCHED[-1] if f and MATCHED else None
+        MATCHED.clear()
         l = find(ch, list(range(n)), q[1], 'l')
+        lc = MATCHED[-1] if l and MATCHED else None
         good = bool(f and l and not set(f) & set(l) and len(f) < n and len(l) < n)
         if good:
             for i in f: roles[i] = 'f'
             for i in l: roles[i] = 'l'
+            COMP.setdefault(f'{q[0]}|{fc}', []).append([ch, 'f'])
+            COMP.setdefault(f'{q[1]}|{lc}', []).append([ch, 'l'])
     if good: ok += 1
     else: fail += 1; fails.append(ch)
     out = {'s': strokes}
     if good: out['r'] = ''.join(roles)
     json.dump(out, open(f'assets/glyphs/{ord(ch):x}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+os.makedirs('tools/out', exist_ok=True)
+json.dump(COMP, open('tools/out/components.json', 'w', encoding='utf-8'), ensure_ascii=False)
 print('上色成功', ok, '未能上色', fail)
 print('未能上色例子：', ''.join(fails[:80]))

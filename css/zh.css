@@ -92,3 +92,19 @@
 .zcap.key.first small { color: var(--code-first); }
 .zcap.key.last { border-color: var(--code-last); background: color-mix(in srgb, var(--code-last) 18%, transparent); }
 .zcap.key.last small { color: var(--code-last); }
+
+/* 輔助字形逐個教：字形圖、名稱、3 個例字 */
+.shape-lesson { display: grid; gap: 8px; width: 100%; }
+.shape-head { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--ink-2); }
+.shape-row2 { display: grid; grid-template-columns: 52px 9em 1fr; gap: 10px; align-items: center; padding: 6px 10px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.shape-img { font-size: 40px; line-height: 1; color: var(--ink); }
+.sx-name { font-weight: 700; font-size: 14px; }
+.sx-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.sx { margin: 0; width: 64px; text-align: center; font-size: 12px; color: var(--ink-2); }
+.sx .glyph { width: 56px; height: 56px; margin: 0 auto; color: var(--ink); }
+.sx-t { display: block; font-size: 44px; line-height: 56px; color: var(--ink); }
+@media (max-width: 640px) { .shape-row2 { grid-template-columns: 44px 1fr; } .sx-list { grid-column: 1 / -1; } }
+
+/* 輔助字形頁：講解在上，字形表全闊 */
+.slide:has(.shape-lesson), .slide:has(.shape-cards) { grid-template-columns: 1fr !important; }
+.slide:has(.shape-lesson) .slide-text ul { margin-bottom: 0; }
