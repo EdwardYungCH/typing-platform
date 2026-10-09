@@ -45,3 +45,18 @@ export function candidateIndex(zh, ch) {
   if (!code) return 0;
   return zh.candidates(code).indexOf(ch) + 1;
 }
+
+/** 輔助字形的顯示：有文字用文字，沒有就用字形表圖片（CSS mask 上色）。 */
+// 注意：CSS 自訂屬性裏的相對網址會按樣式表位置解釋，所以這裏先轉成完整網址
+const abs = (path) => new URL(path, document.baseURI).href;
+
+export function shapeGlyph(sh, base = '') {
+  if (sh.img) return `<span class="sg" role="img" aria-label="${sh.name}" style="--sg:url('${abs(`${base}assets/shapes/${sh.img}.png`)}')"></span>`;
+  return sh.shape;
+}
+
+/** 字形表圖片中某個鍵的全部字形。 */
+export function chartGlyphs(key, count, base = '') {
+  return Array.from({ length: count }, (_, i) =>
+    `<span class="sg" role="img" aria-label="${ROOTS[key]}的輔助字形" style="--sg:url('${abs(`${base}assets/shapes/${key}-${i}.png`)}')"></span>`).join('');
+}

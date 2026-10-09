@@ -1,4 +1,4 @@
-/* 速成查碼頁 */
+/* 速成查碼頁（拆字圖：首碼紅、尾碼藍） */
 .lk-title { margin: 0; font-size: clamp(26px, 4vw, 38px); }
 .lk-form { display: flex; gap: 10px; margin: 14px 0 18px; }
 .lk-input {
@@ -52,3 +52,9 @@
 .shape-item { display: flex; gap: 6px; align-items: center; padding: 4px 8px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
 .shape-item b { font-size: 22px; min-width: 1.1em; text-align: center; }
 .shape-item small { font-size: 11px; color: var(--ink-2); line-height: 1.3; }
+.shape-chart { display: flex; flex-wrap: wrap; gap: 8px; font-size: 26px; margin-bottom: 6px; }
+.lk-char .glyph { width: 78px; height: 78px; }
+.cap.key.first { border-color: var(--code-first); background: color-mix(in srgb, var(--code-first) 18%, transparent); }
+.cap.key.first small { color: var(--code-first); }
+.cap.key.last { border-color: var(--code-last); background: color-mix(in srgb, var(--code-last) 18%, transparent); }
+.cap.key.last small { color: var(--code-last); }

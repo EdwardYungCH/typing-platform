@@ -11,7 +11,8 @@ import * as pet from './companion.js';
 import { Fx } from './fx.js';
 import { setSoundEnabled } from './sound.js';
 import { QuickEngine, computeZhStats, PAGE, KEY_OF_PUNCT } from './quick-engine.js';
-import { loadZh, ROOTS } from './zh-codes.js';
+import { loadZh, ROOTS, chartGlyphs, shapeGlyph } from './zh-codes.js';
+import { preloadGlyphs, glyphData, glyphNow, glyphSvg } from './zh-glyph.js';
 import { generateZh } from './zh-gen.js';
 
 const $ = (id) => document.getElementById(id);
@@ -54,7 +55,9 @@ async function init() {
   applyWorld(worldForLang(lang));
   if (lang === 'zh') {
     state.zh = await loadZh();
-    state.shapes = (await fetch('data/zh-shapes.json').then((r) => r.json())).keys;
+    const sh = await fetch('data/zh-shapes.json').then((r) => r.json());
+    state.shapes = sh.keys;
+    state.chart = sh.chart;
   }
   state.world = worldForLang(lang);
   state.petData = await pet.loadCompanions();
@@ -72,7 +75,10 @@ async function init() {
   $('lesson-title').textContent = `${L.title}　${L.subtitle ?? ''}`.trim();
 
   const startStep = Math.min(Math.max(Number(params.get('step') ?? 1) - 1, 0), L.steps.length - 1);
-  state.maxReached = startStep;
+  // 做過的課：全部步驟都可以直接跳去重做；做過的步驟也可以
+  const done = store.getLessonResult(lang, lessonId)?.done;
+  const reached = Object.keys(store.getStepResults(lang, lessonId)).map(Number);
+  state.maxReached = done ? L.steps.length - 1 : Math.max(startStep, ...reached.map((n) => Math.min(n, L.steps.length - 1)));
   renderSteps();
   runStep(startStep);
 }
@@ -132,6 +138,14 @@ function renderSteps() {
     b.type = 'button';
     b.className = 'step-pill';
     b.textContent = `${i + 1}. ${s.title}`;
+    const rec = store.getStepResults(lang, lessonId)[i + 1]?.latest;
+    if (rec && rec.accuracy !== null) {
+      const sc = document.createElement('small');
+      sc.className = 'pill-score';
+      sc.textContent = rec.stars ? '★'.repeat(rec.stars) : `${Math.floor(rec.accuracy)}%`;
+      b.append(sc);
+      b.title = `最近一次：準確率 ${Math.floor(rec.accuracy)}%，速度 ${Math.round(rec.wpm)} ${rec.unit}（重做會刷新）`;
+    }
     if (i === state.stepIndex) b.setAttribute('aria-current', 'step');
     if (i < state.maxReached || (i === state.maxReached && i < state.stepIndex)) b.classList.add('done');
     b.disabled = i > state.maxReached;
@@ -167,6 +181,8 @@ function runStep(i) {
   // 速成課：鍵盤顯示字根（評測時隱藏，免得變成「看鍵盤找字根」）
   state.kb.setRootLabels(lang === 'zh' && step.type !== 'test' && !step.hideRoots ? ROOTS : null);
   $('ime').hidden = true;
+  $('pair').hidden = true;
+  state.fx.reset();  // 上一步的連擊字樣不會帶到下一步
   state.mode = step.mode ?? (lang === 'zh' ? 'roots' : 'en');
   state.unit = { quick: '字/分', split: '字/分', roots: '個/分', shapes: '個/分', en: 'WPM' }[state.mode] ?? 'WPM';
   $('m-unit').textContent = ` ${state.unit}`;
@@ -190,6 +206,7 @@ function runGuide(step) {
 
   const render = () => {
     const s = step.slides[idx];
+    if (s.example && glyphNow(s.example) === null && !s._loaded) { s._loaded = true; glyphData(s.example).then(render); }
     box.innerHTML = `
       <div class="slide">
         <div class="slide-text">
@@ -217,6 +234,7 @@ function runGuide(step) {
   const go = (d) => {
     if (d > 0 && idx === step.slides.length - 1) {
       cleanup();
+      store.saveStepResult(lang, lessonId, state.stepIndex + 1, {});
       finishStep({ guide: true });
       return;
     }
@@ -292,7 +310,8 @@ function statsOf(eng) {
 
 function runTyping(step) {
   showTypingUI(true);
-  if (state.mode === 'quick' || state.mode === 'split') return runQuick(step);
+  if (state.mode === 'split') return runSplit(step);
+  if (state.mode === 'quick') return runQuick(step);
 
   const text = makeText(step);
   const textEl = $('text');
@@ -324,6 +343,116 @@ function runTyping(step) {
   state.engine = engine;
   paint(spans, engine);
   engine.attach();
+}
+
+// ---------- 首尾碼練習（拆字模式，仿「五色倉頡」的首碼／尾碼兩格）----------
+
+async function runSplit(step) {
+  const text = makeText(step);
+  const isTest = step.type === 'test';
+  await Promise.all([...text].map((c) => glyphData(c)));
+  $('text-wrap').hidden = true;
+  $('pair').hidden = false;
+  $('start-hint').hidden = false;
+  $('start-hint').textContent = isTest
+    ? '自行拆字：按首碼和尾碼兩個鍵。右邊有字根和輔助字形表可以參考。'
+    : '看字，拆出首碼和尾碼，按對兩個鍵就會到下一題（不用選字）。';
+  $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
+  updateMeters(null, step);
+  state.pairWrong = 0;
+
+  const engine = new QuickEngine({
+    text,
+    zh: state.zh,
+    pick: false,
+    errorMode: isTest ? 'continue' : 'block',
+    timeLimit: step.timeLimit ?? 0,
+    onIme: () => { $('pair-hint').innerHTML = '<span class="warn" style="color:var(--bad)">偵測到系統中文輸入法：請按 Shift 或 Win＋空白鍵切換回英文。</span>'; },
+    onKey: (e, eng) => {
+      $('start-hint').hidden = true;
+      state.kb.press(eng.lastKey.code, eng.lastKey.ok !== false);
+      if (eng.lastKey.ok !== null) state.fx.key(eng.lastKey.ok);
+      if (eng.lastKey.ok === false) state.pairWrong += 1;
+      renderPair(eng, step, isTest, eng.lastKey.ok === false);
+      updateMeters(eng, step);
+    },
+    onTick: (eng) => updateMeters(eng, step),
+    onFinish: (eng) => { $('pair').hidden = true; onTypingDone(step, eng); },
+  });
+  state.engine = engine;
+  renderPair(engine, step, isTest, false);
+  engine.attach();
+}
+
+function rootTag(k) {
+  return `${ROOTS[k]}<i>${k.toUpperCase()}</i>`;
+}
+
+function renderPair(eng, step, isTest, wrongNow) {
+  const ch = eng.expectedChar;
+  const total = eng.chars.length;
+  $('m-progress').style.width = `${(eng.pos / total) * 100}%`;
+  if (ch === undefined) return;
+  const code = state.zh.quickOf(ch);
+  const g = glyphNow(ch);
+  const pending = eng.comp.length === 0 ? 'f' : 'l';
+  const mode = !g ? null : step.colored && !isTest ? 'color' : (!isTest && eng.misses >= 1 ? pending : 'plain');
+  $('pair-glyph').innerHTML = g && mode ? glyphSvg(g, mode) : ch;
+
+  // 兩格：已答對的顯示字根；剛答錯的那格變紅
+  const b1 = $('pb1'), b2 = $('pb2');
+  const single = code.length === 1;
+  b2.hidden = single;
+  b1.querySelector('small').textContent = single ? '單碼' : '首碼';
+  const fill = (box, k) => { box.className = `pbox ${box === b1 ? 'first' : 'last'} ok`; box.querySelector('b').innerHTML = rootTag(k); };
+  const clear = (box, now) => { box.className = `pbox ${box === b1 ? 'first' : 'last'}${now ? ' now' : ''}`; box.querySelector('b').innerHTML = ''; };
+  if (eng.comp.length >= 1) fill(b1, eng.comp[0]); else clear(b1, true);
+  if (eng.comp.length >= 2) fill(b2, eng.comp[1]); else clear(b2, eng.comp.length === 1);
+  if (wrongNow && eng.errorMode === 'block') {
+    const box = eng.comp.length === 0 ? b1 : b2;
+    box.classList.add('bad');
+  }
+
+  // 逐步提示：答錯一次亮出部件，兩次顯示答案（評測沒有提示）
+  let hint = '';
+  if (!isTest) {
+    const want = code[eng.comp.length];
+    const part = pending === 'f' ? '<b class="c-first">紅色</b>' : '<b class="c-last">藍色</b>';
+    if (eng.misses === 0) {
+      hint = step.colored
+        ? `${part}部件屬哪個字根？${pending === 'f' ? '先打首碼。' : '再打尾碼。'}`
+        : `按「上至下、左至右、外至內」，找出${pending === 'f' ? '第一個' : '最後一個'}部件。`;
+    } else if (eng.misses === 1) {
+      const cj = state.zh.cjOf(ch);
+      hint = g ? `看${part}部件：它是哪個字根或輔助字形？` : `提示：倉頡拆法是 ${[...(cj ?? code)].map((k) => ROOTS[k]).join(' ')}。`;
+    } else {
+      hint = `答案：${pending === 'f' ? '首碼' : '尾碼'}是 <b>${ROOTS[want]}（${want.toUpperCase()}）</b>，跟着發光的鍵按。`;
+    }
+  }
+  $('pair-hint').innerHTML = hint;
+  const right = eng.status.filter((x) => x === 'ok').length;
+  $('pair-count').textContent = `第 ${eng.pos + 1} / ${total} 題　一次答啱 ${right}　答錯 ${state.pairWrong}`;
+
+  // 右邊：評測顯示字形表；練習顯示上一題的雙色拆碼
+  if (isTest) $('pair-side').innerHTML = `<h4>字根和輔助字形表</h4>${chartMini(step.chartKeys ?? 'abcdefghijklmnopqrstuvwyx')}`;
+  else $('pair-side').innerHTML = eng.lastDone ? prevHtml(eng.lastDone.ch) : `<h4>上一題</h4><p class="muted">答對後，這裏會用顏色顯示怎樣拆：<b class="c-first">紅色</b>是首碼部件，<b class="c-last">藍色</b>是尾碼部件。</p>`;
+  showNextKey(eng.misses >= 2 && !isTest ? eng.nextKey() : null);
+}
+
+function prevHtml(ch) {
+  const g = glyphNow(ch);
+  const q = state.zh.quickOf(ch);
+  const cj = state.zh.cjOf(ch) ?? q;
+  const note = shapeNote(ch);
+  return `<h4>上一題</h4><div class="prev">
+    <div class="pg">${g ? glyphSvg(g, 'color') : ch}</div>
+    <div>倉頡：${[...cj].map((k, i) => i === 0 ? `<b class="c-first">${ROOTS[k]}</b>` : i === cj.length - 1 ? `<b class="c-last">${ROOTS[k]}</b>` : ROOTS[k]).join(' ')}<br>
+    速成：<b class="c-first">${ROOTS[q[0]]} ${q[0].toUpperCase()}</b>${q[1] ? ` ＋ <b class="c-last">${ROOTS[q[1]]} ${q[1].toUpperCase()}</b>` : ''}${note ? `<br><span class="muted">${note}</span>` : ''}</div></div>`;
+}
+
+function chartMini(keys) {
+  return `<div class="chart-mini">${[...keys].filter((k) => k !== 'x').map((k) => `
+    <div>${zcap(k)}${chartGlyphs(k, state.chart?.[k] ?? 0)}</div>`).join('')}</div>`;
 }
 
 // ---------- 速成（內置選字窗）----------
@@ -447,7 +576,8 @@ function showTypingUI(on) {
   $('start-hint').hidden = !on;
   document.querySelector('.progress').hidden = !on;
   $('guide').hidden = on;
-  if (!on) $('ime').hidden = true;
+  if (!on) { $('ime').hidden = true; $('pair').hidden = true; }
+  $('text-wrap').hidden = !on;
   $('start-hint').textContent = '雙手放在基準位，準備好就直接打第一個字。';
 }
 
@@ -575,6 +705,9 @@ function onTypingDone(step, eng) {
   }
   store.saveAttempt({
     lang, mode: 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
+  });
+  store.saveStepResult(lang, lessonId, state.stepIndex + 1, {
+    accuracy: stats.accuracy, wpm: stats.netWpm, stars, unit: state.unit,
   });
   finishStep({ stats, stars, step, rest: typingTotal >= CONFIG.restReminderMinutes * 60 });
 }
@@ -731,9 +864,9 @@ function exampleHtml(ch) {
   const q = zh.quickOf(ch);
   const cj = zh.cjOf(ch) ?? q;
   return `<div class="zh-ex">
-    <div class="big" lang="zh-Hant-HK">${ch}</div>
-    <div class="row"><span class="lbl">倉頡全碼</span>${[...cj].map((k, i) => zcap(k, i === 0 || i === cj.length - 1 ? 'key' : 'dim')).join('')}</div>
-    <div class="row"><span class="lbl">速成</span>${[...q].map((k) => zcap(k, 'key')).join('<span>＋</span>')}<span class="muted">只打首尾兩碼</span></div>
+    <div class="big" lang="zh-Hant-HK">${glyphNow(ch)?.r ? `<div style="width:1em">${glyphSvg(glyphNow(ch), 'color')}</div>` : ch}</div>
+    <div class="row"><span class="lbl">倉頡全碼</span>${[...cj].map((k, i) => zcap(k, i === 0 ? 'key first' : i === cj.length - 1 ? 'key last' : 'dim')).join('')}</div>
+    <div class="row"><span class="lbl">速成</span>${[...q].map((k, i) => zcap(k, i === 0 ? 'key first' : 'key last')).join('<span>＋</span>')}<span class="muted">只打首尾兩碼</span></div>
   </div>`;
 }
 
@@ -741,9 +874,12 @@ function shapesHtml(keys) {
   return `<div class="shape-cards">${[...keys].map((k) => `
     <div class="shape-card">
       <div class="shape-key">${zcap(k, 'key')}</div>
-      <ul>${(state.shapes[k] ?? []).map((sh) => `
-        <li><b class="glyph">${sh.shape || '◇'}</b><span>${sh.name}</span><span class="ex">例：${[...sh.examples].join(' ')}</span></li>`).join('')}
-      </ul>
+      <div>
+        <div class="shape-chart">${chartGlyphs(k, state.chart?.[k] ?? 0) || '<small class="muted">只有字根本身</small>'}</div>
+        <ul>${(state.shapes[k] ?? []).filter((sh) => sh.shape !== ROOTS[k]).map((sh) => `
+          <li><b class="glyph-t">${shapeGlyph(sh)}</b><span>${sh.name}</span><span class="ex">例：${[...sh.examples].join(' ')}</span></li>`).join('')}
+        </ul>
+      </div>
     </div>`).join('')}</div>`;
 }
 

@@ -1,5 +1,5 @@
 {
-  "_說明": "速成／倉頡輔助字形表（常用部分）。每個字形列出例字和它在例字中的位置（first＝首碼、last＝尾碼），由 tools/check_shapes.py 用倉頡碼表核對。shape 為空時只顯示名稱。",
+  "_說明": "速成／倉頡輔助字形表（常用部分）。每個字形列出例字和它在例字中的位置（first＝首碼、last＝尾碼），由 tools/check_shapes.py 用倉頡碼表核對。shape 為空時只顯示名稱。 chart 是字根表圖片（老師提供）每個鍵的字形數目，圖片在 assets/shapes/<鍵>-<序號>.png。img 指向其中一張。",
   "keys": {
     "a": [
       {
@@ -92,7 +92,8 @@
         "shape": "",
         "name": "求字底",
         "pos": "last",
-        "examples": "求"
+        "examples": "求",
+        "img": "e-2"
       }
     ],
     "f": [
@@ -106,7 +107,8 @@
         "shape": "",
         "name": "小字頭",
         "pos": "first",
-        "examples": "當光"
+        "examples": "當光",
+        "img": "f-1"
       },
       {
         "shape": "小",
@@ -140,7 +142,8 @@
         "shape": "",
         "name": "竹字頭",
         "pos": "first",
-        "examples": "筆第等"
+        "examples": "筆第等",
+        "img": "h-1"
       }
     ],
     "i": [
@@ -188,7 +191,8 @@
         "shape": "",
         "name": "左字頭（橫、撇）",
         "pos": "first",
-        "examples": "左右有"
+        "examples": "左右有",
+        "img": "k-0"
       },
       {
         "shape": "犭",
@@ -248,7 +252,8 @@
         "shape": "",
         "name": "夕字（少一點）",
         "pos": "first",
-        "examples": "多名外"
+        "examples": "多名外",
+        "img": "n-3"
       },
       {
         "shape": "乙",
@@ -308,7 +313,8 @@
         "shape": "",
         "name": "二橫一豎",
         "pos": "first",
-        "examples": "夫青"
+        "examples": "夫青",
+        "img": "q-1"
       }
     ],
     "r": [
@@ -390,7 +396,8 @@
         "shape": "",
         "name": "衣字底",
         "pos": "last",
-        "examples": "長衣展"
+        "examples": "長衣展",
+        "img": "v-4"
       }
     ],
     "w": [
@@ -427,5 +434,32 @@
         "examples": "道這近"
       }
     ]
+  },
+  "chart": {
+    "a": 2,
+    "b": 4,
+    "c": 3,
+    "d": 2,
+    "e": 3,
+    "f": 3,
+    "g": 2,
+    "h": 2,
+    "i": 3,
+    "j": 1,
+    "k": 4,
+    "l": 4,
+    "m": 4,
+    "n": 7,
+    "o": 5,
+    "p": 6,
+    "q": 4,
+    "r": 1,
+    "s": 4,
+    "t": 6,
+    "u": 3,
+    "v": 5,
+    "w": 2,
+    "y": 4,
+    "x": 12
   }
 }

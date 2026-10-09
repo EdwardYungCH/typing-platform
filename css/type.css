@@ -380,3 +380,6 @@
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* 步驟列上的最近成績（重做會刷新） */
+.step-pill .pill-score { margin-left: 6px; font-size: 11px; color: var(--star); font-weight: 700; }

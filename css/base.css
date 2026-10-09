@@ -186,3 +186,21 @@ a { color: var(--accent); }
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* 字形表圖片：用 mask 令字形跟隨文字顏色 */
+.sg {
+  display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em;
+  background: currentColor;
+  -webkit-mask: var(--sg) center / contain no-repeat;
+  mask: var(--sg) center / contain no-repeat;
+}
+
+/* 雙色拆碼：首碼紅、尾碼藍（全站統一） */
+:root { --code-first: #ff5a5f; --code-last: #4c8dff; }
+.glyph { width: 100%; height: auto; display: block; }
+.glyph .g-ink { fill: currentColor; }
+.glyph .g-dim { fill: currentColor; opacity: 0.28; }
+.glyph .g-first { fill: var(--code-first); }
+.glyph .g-last { fill: var(--code-last); }
+.c-first { color: var(--code-first); }
+.c-last { color: var(--code-last); }

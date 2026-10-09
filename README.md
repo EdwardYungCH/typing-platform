@@ -96,3 +96,8 @@ python -m http.server 8000
 ## 中文課文
 
 第 2–15 課由 `tools/gen_zh_lessons.py` 產生（需先有 `data/zh-codes.json`），詞語和句子為原創。重新產生：`python3 tools/gen_zh_lessons.py`（第 0、1 課不受影響）。
+
+## 速成雙色拆碼圖與字根表圖片
+
+- `assets/glyphs/`：每個字的筆畫取自 [Make Me a Hanzi](https://github.com/skishore/makemeahanzi)（字形來自 Arphic PL UKai，Arphic Public License；授權見 `assets/glyphs/COPYING.txt` 和 `tools/src/makemeahanzi-APL/`）。由 `tools/build_zh_glyphs.py` 按倉頡碼標出首碼（紅）和尾碼（藍）部件，對不上的字不收。
+- `assets/shapes/`：由老師提供的字根與輔助字形表（`tools/src/shape-chart.jpg`）用 `tools/cut_shapes.py` 切成每個字形一張圖。

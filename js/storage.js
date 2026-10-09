@@ -95,3 +95,25 @@ export function addTypingTime(seconds) {
 export function resetTypingTime() {
   try { sessionStorage.removeItem(KEY + ':rest'); } catch { /* 無需處理 */ }
 }
+
+/** 記錄某課某一步最近一次的成績（重做時會刷新），以及該步的最佳成績。 */
+export function saveStepResult(lang, lessonId, step, { accuracy = null, wpm = null, stars = null, unit = '' } = {}) {
+  const data = readAll();
+  data.steps ??= {};
+  const id = `${lang}:${lessonId}:${step}`;
+  const prev = data.steps[id];
+  const latest = { accuracy, wpm, stars, unit, at: new Date().toISOString() };
+  data.steps[id] = {
+    latest,
+    bestAccuracy: Math.max(prev?.bestAccuracy ?? 0, accuracy ?? 0),
+    bestWpm: Math.max(prev?.bestWpm ?? 0, wpm ?? 0),
+  };
+  writeAll(data);
+}
+
+export function getStepResults(lang, lessonId) {
+  const out = {};
+  const pre = `${lang}:${lessonId}:`;
+  for (const [id, v] of Object.entries(readAll().steps ?? {})) if (id.startsWith(pre)) out[Number(id.slice(pre.length))] = v;
+  return out;
+}

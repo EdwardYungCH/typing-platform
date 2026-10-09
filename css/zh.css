@@ -52,5 +52,43 @@
 .shape-card { display: flex; gap: 10px; padding: 10px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
 .shape-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
 .shape-card li { display: grid; grid-template-columns: 2em 1fr; column-gap: 6px; align-items: baseline; }
-.shape-card .glyph { font-size: 22px; text-align: center; grid-row: span 2; }
+.shape-card .glyph-t { font-size: 22px; text-align: center; grid-row: span 2; }
+.shape-chart { display: flex; flex-wrap: wrap; gap: 6px; font-size: 26px; margin-bottom: 6px; color: var(--ink); }
 .shape-card .ex { color: var(--ink-2); font-size: 13px; }
+
+/* 首尾碼練習卡（拆字模式） */
+.pair { display: grid; gap: 16px; margin-top: 8px; }
+@media (min-width: 820px) { .pair { grid-template-columns: minmax(260px, 1fr) 1.2fr; align-items: start; } }
+.pair-main { display: grid; justify-items: center; gap: 10px; }
+.pair-glyph {
+  width: 168px; height: 168px; display: grid; place-items: center; padding: 10px;
+  border-radius: 22px; background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 5px;
+  font-size: 128px; line-height: 1; color: var(--ink);
+}
+.pair-boxes { display: flex; gap: 12px; }
+.pbox {
+  width: 92px; height: 78px; display: grid; place-items: center; align-content: center; gap: 2px;
+  border-radius: 14px; border: 2px dashed var(--line); background: var(--surface);
+}
+.pbox small { font-size: 12px; font-weight: 700; }
+.pbox.first small { color: var(--code-first); }
+.pbox.last small { color: var(--code-last); }
+.pbox b { font-size: 26px; line-height: 1; min-height: 1em; }
+.pbox b i { font-style: normal; font-size: 13px; color: var(--ink-2); margin-left: 3px; font-family: var(--mono); }
+.pbox.ok { border-style: solid; border-color: var(--ok); background: var(--ok-bg); }
+.pbox.bad { border-style: solid; border-color: var(--bad); background: var(--bad-bg); animation: shake 0.24s; }
+.pbox.now { border-color: var(--accent); }
+.pair-count { margin: 0; font-size: 14px; color: var(--ink-2); }
+.pair-hint { margin: 0; min-height: 1.6em; text-align: center; font-size: 15px; color: var(--ink-2); max-width: 32em; }
+.pair-side { padding: 12px 14px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--line); font-size: 14px; min-height: 120px; }
+.pair-side h4 { margin: 0 0 8px; font-size: 14px; color: var(--ink-2); }
+.prev { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; }
+.prev .pg { width: 96px; height: 96px; font-size: 76px; line-height: 1; display: grid; place-items: center; }
+.chart-mini { display: grid; gap: 4px; }
+.chart-mini div { display: flex; align-items: center; gap: 8px; font-size: 26px; }
+.chart-mini .zcap { min-width: 34px; height: 36px; }
+.chart-mini .zcap b { font-size: 15px; }
+.zcap.key.first { border-color: var(--code-first); background: color-mix(in srgb, var(--code-first) 18%, transparent); }
+.zcap.key.first small { color: var(--code-first); }
+.zcap.key.last { border-color: var(--code-last); background: color-mix(in srgb, var(--code-last) 18%, transparent); }
+.zcap.key.last small { color: var(--code-last); }
