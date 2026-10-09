@@ -5,6 +5,10 @@
 
 export const PAGE = 9; // 微軟速成每頁 9 個候選字
 
+// 微軟速成（全形標點）：組字框空着時按這些鍵，直接打出中文標點
+export const PUNCT = { ',': '，', '.': '。', ';': '；', ':': '：', '?': '？', '!': '！', '[': '「', ']': '」', '\\': '、' };
+export const KEY_OF_PUNCT = Object.fromEntries(Object.entries(PUNCT).map(([k, v]) => [v, k]));
+
 export class QuickEngine {
   /**
    * @param {object} o
@@ -64,6 +68,7 @@ export class QuickEngine {
   nextKey() {
     const ch = this.expectedChar;
     if (ch === undefined) return null;
+    if (KEY_OF_PUNCT[ch]) return this.comp ? 'Backspace' : KEY_OF_PUNCT[ch];
     const code = this.expectedCode;
     if (!code) return null;
     if (!code.startsWith(this.comp)) return 'Backspace';
@@ -106,7 +111,8 @@ export class QuickEngine {
     const isLetter = /^[a-y]$/.test(key) || key === 'x';
     const isPick = key === ' ' || /^[1-9]$/.test(key);
     const isNav = key === 'PageDown' || key === 'PageUp' || key === 'Backspace' || key === 'Escape';
-    if (!isLetter && !isPick && !isNav) return;
+    const isPunct = !!PUNCT[key] && !this.comp;
+    if (!isLetter && !isPick && !isNav && !isPunct) return;
     e.preventDefault();
     if (e.repeat) return;
     if (!this.started) this.start();
@@ -124,6 +130,15 @@ export class QuickEngine {
       if (!pages) return;
       this.page = Math.min(Math.max(this.page + (key === 'PageDown' ? 1 : -1), 0), pages - 1);
       this._log(e, key, want, null);
+    } else if (isPunct) {
+      const right = PUNCT[key] === this.expectedChar;
+      ok = right;
+      this._log(e, key, want, ok);
+      if (right) this._commit(PUNCT[key], true);
+      else {
+        this.errorAt.add(this.pos);
+        if (this.errorMode === 'continue') this._commit(PUNCT[key], false);
+      }
     } else if (isLetter) {
       ok = key === want;
       if (this.comp.length >= 2) ok = false;            // 速成最多兩碼

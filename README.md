@@ -92,3 +92,7 @@ python -m http.server 8000
 - 速成碼與選字次序：[rime-ms-quick](https://github.com/kanzaki1201/rime-ms-quick)（依 Windows 微軟速成整理；該儲存庫未附授權條款，正式推出前需向作者確認或改用其他來源）
 - 倉頡全碼（拆字圖解）：[rime-cangjie](https://github.com/rime/rime-cangjie)，LGPL-3.0
 - 字頻（常用字排序）：[rime-essay](https://github.com/rime/rime-essay)，LGPL-3.0
+
+## 中文課文
+
+第 2–15 課由 `tools/gen_zh_lessons.py` 產生（需先有 `data/zh-codes.json`），詞語和句子為原創。重新產生：`python3 tools/gen_zh_lessons.py`（第 0、1 課不受影響）。

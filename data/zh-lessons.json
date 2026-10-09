@@ -5,7 +5,9 @@
       "title": "認識速成",
       "subtitle": "首尾取碼和選字窗",
       "newKeys": [],
-      "pass": { "complete": true },
+      "pass": {
+        "complete": true
+      },
       "steps": [
         {
           "type": "guide",
@@ -44,7 +46,10 @@
               "show": "keyboard",
               "rootLabels": true,
               "example": "明",
-              "highlight": ["KeyA", "KeyB"]
+              "highlight": [
+                "KeyA",
+                "KeyB"
+              ]
             },
             {
               "title": "首尾取碼：想",
@@ -56,7 +61,10 @@
               "show": "keyboard",
               "rootLabels": true,
               "example": "想",
-              "highlight": ["KeyD", "KeyP"]
+              "highlight": [
+                "KeyD",
+                "KeyP"
+              ]
             },
             {
               "title": "選字窗",
@@ -69,7 +77,11 @@
               "show": "keyboard",
               "rootLabels": true,
               "imeDemo": "想",
-              "highlight": ["KeyD", "KeyP", "Digit3"]
+              "highlight": [
+                "KeyD",
+                "KeyP",
+                "Digit3"
+              ]
             },
             {
               "title": "在這裏練習時用英文輸入",
@@ -106,8 +118,20 @@
       "id": 1,
       "title": "哲理類字根",
       "subtitle": "日 月 金 木 水 火 土",
-      "newKeys": ["KeyA", "KeyB", "KeyC", "KeyD", "KeyE", "KeyF", "KeyG", "Digit2", "Digit3"],
-      "pass": { "accuracy": 90 },
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "Digit2",
+        "Digit3"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
       "steps": [
         {
           "type": "drill",
@@ -129,14 +153,22 @@
           "mode": "roots",
           "title": "組合",
           "hint": "字根隨機出現。先看清楚，再按鍵。",
-          "gen": { "kind": "roots", "keys": "abcdefg", "count": 40 }
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefg",
+            "count": 40
+          }
         },
         {
           "type": "drill",
           "mode": "quick",
           "title": "打字",
           "hint": "這些字只用日月金木水火土就打到。跟着選字窗的提示揀字。",
-          "gen": { "kind": "chars", "chars": "日月金木水火土明林朋炎昌晶李杯米景皮貝沒地涼受曾最量注堂池", "count": 20 }
+          "gen": {
+            "kind": "chars",
+            "chars": "日月金木水火土明林朋炎昌晶李杯米景皮貝沒地涼受曾最量注堂池",
+            "count": 20
+          }
         },
         {
           "type": "test",
@@ -144,8 +176,1154 @@
           "title": "過關小測",
           "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
           "timeLimit": 45,
-          "pass": { "accuracy": 90 },
-          "gen": { "kind": "roots", "keys": "abcdefg", "count": 90 }
+          "pass": {
+            "accuracy": 90
+          },
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefg",
+            "count": 90
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "筆畫類字根（上）",
+      "subtitle": "竹 戈 十 大",
+      "newKeys": [
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "Digit2",
+        "Digit4",
+        "Digit5"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "示範",
+          "display": "big",
+          "hint": "竹 戈 十 大：竹戈十大住在 H 至 K，由右手食指和中指負責。看字根，按對應的鍵。",
+          "text": "hijkhijk"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "單鍵",
+          "hint": "每個字根三次，記住它的位置。",
+          "text": "hhhiiijjjkkkhhhiiijjjkkkhhhiiijjjkkk"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "組合",
+          "hint": "新字根和學過的字根一起出現。",
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijkhijkhijkhijk",
+            "count": 45
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "打字",
+          "hint": "這些字只用學過的字根就打到。跟着選字窗的提示揀字。",
+          "gen": {
+            "kind": "chars",
+            "chars": "有在大為時後麼分去實公者重真度物場身第車太少十師科教白影專反",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "roots",
+          "title": "過關小測",
+          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "timeLimit": 45,
+          "pass": {
+            "accuracy": 90
+          },
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijkhijkhijkhijk",
+            "count": 90
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "筆畫類字根（下）",
+      "subtitle": "中 一 弓",
+      "newKeys": [
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "Digit2",
+        "Digit3",
+        "Digit5"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "示範",
+          "display": "big",
+          "hint": "中 一 弓：中一弓住在 L、M、N。看字根，按對應的鍵。",
+          "text": "lmnlmn"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "單鍵",
+          "hint": "每個字根三次，記住它的位置。",
+          "text": "lllmmmnnnlllmmmnnnlllmmmnnn"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "組合",
+          "hint": "新字根和學過的字根一起出現。",
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnlmnlmnlmn",
+            "count": 45
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "打字",
+          "hint": "這些字只用學過的字根就打到。跟着選字窗的提示揀字。",
+          "gen": {
+            "kind": "chars",
+            "chars": "一不了到中多子生都面天小本行所工而事三更平利二門直式書再被原",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "roots",
+          "title": "過關小測",
+          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "timeLimit": 45,
+          "pass": {
+            "accuracy": 90
+          },
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnlmnlmnlmn",
+            "count": 90
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "人體類字根",
+      "subtitle": "人 心 手 口",
+      "newKeys": [
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "Digit2",
+        "Digit3",
+        "Digit4",
+        "Digit5"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "示範",
+          "display": "big",
+          "hint": "人 心 手 口：人心手口住在 O 至 R。看字根，按對應的鍵。",
+          "text": "opqropqr"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "單鍵",
+          "hint": "每個字根三次，記住它的位置。",
+          "text": "ooopppqqqrrrooopppqqqrrrooopppqqqrrr"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "組合",
+          "hint": "新字根和學過的字根一起出現。",
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnopqropqropqropqr",
+            "count": 45
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "打字",
+          "hint": "這些字只用學過的字根就打到。跟着選字窗的提示揀字。",
+          "gen": {
+            "kind": "chars",
+            "chars": "是人來可你也用他家之年心定同比性想合手只什化情老全內加打品問",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "roots",
+          "title": "過關小測",
+          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "timeLimit": 45,
+          "pass": {
+            "accuracy": 90
+          },
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnopqropqropqropqr",
+            "count": 90
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "字形類字根（上）",
+      "subtitle": "尸 廿 山",
+      "newKeys": [
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "Digit2",
+        "Digit3",
+        "Digit4",
+        "Digit5"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "示範",
+          "display": "big",
+          "hint": "尸 廿 山：尸廿山住在 S、T、U。看字根，按對應的鍵。",
+          "text": "stustu"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "單鍵",
+          "hint": "每個字根三次，記住它的位置。",
+          "text": "ssstttuuussstttuuussstttuuu"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "組合",
+          "hint": "新字根和學過的字根一起出現。",
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnopqrstustustustu",
+            "count": 45
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "打字",
+          "hint": "這些字只用學過的字根就打到。跟着選字窗的提示揀字。",
+          "gen": {
+            "kind": "chars",
+            "chars": "出自作成那開力前起其相期己美基目山考位花已把司馬完色光先世算",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "roots",
+          "title": "過關小測",
+          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "timeLimit": 45,
+          "pass": {
+            "accuracy": 90
+          },
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnopqrstustustustu",
+            "count": 90
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "字形類字根（下）",
+      "subtitle": "女 田 卜",
+      "newKeys": [
+        "KeyV",
+        "KeyW",
+        "KeyY",
+        "Digit2",
+        "Digit3",
+        "Digit4",
+        "Digit5"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "示範",
+          "display": "big",
+          "hint": "女 田 卜：女田卜住在 V、W、Y。看字根，按對應的鍵。",
+          "text": "vwyvwy"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "單鍵",
+          "hint": "每個字根三次，記住它的位置。",
+          "text": "vvvwwwyyyvvvwwwyyyvvvwwwyyy"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "組合",
+          "hint": "新字根和學過的字根一起出現。",
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnopqrstuvwyvwyvwyvwy",
+            "count": 45
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "打字",
+          "hint": "這些字只用學過的字根就打到。跟着選字窗的提示揀字。",
+          "gen": {
+            "kind": "chars",
+            "chars": "上以要下好國如於很方經文主回些因當市果外長西接表安海東女設非",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "roots",
+          "title": "過關小測",
+          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "timeLimit": 45,
+          "pass": {
+            "accuracy": 90
+          },
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnopqrstuvwyvwyvwyvwy",
+            "count": 90
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "難字鍵與總複習",
+      "subtitle": "難 X ＋ 全部字根",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY",
+        "KeyX",
+        "Digit2",
+        "Digit3"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "示範",
+          "display": "big",
+          "hint": "難：難字鍵 X 用於難以拆分的部分，例如「齊」「舊」。看字根，按對應的鍵。",
+          "text": "xxx"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "單鍵",
+          "hint": "每個字根三次，記住它的位置。",
+          "text": "xxxxxx"
+        },
+        {
+          "type": "drill",
+          "mode": "roots",
+          "title": "組合",
+          "hint": "新字根和學過的字根一起出現。",
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnopqrstuvwyx",
+            "count": 45
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "打字",
+          "hint": "這些字只用學過的字根就打到。跟着選字窗的提示揀字。",
+          "gen": {
+            "kind": "chars",
+            "chars": "濟舊齊插陷擠肅蕭稻繡是一不有了人在大來上以為要可你中時下多出",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "roots",
+          "title": "過關小測",
+          "hint": "45 秒內看字根按鍵，鍵盤不會顯示字根。準確率達 90% 即過關。",
+          "timeLimit": 45,
+          "pass": {
+            "accuracy": 90
+          },
+          "gen": {
+            "kind": "roots",
+            "keys": "abcdefghijklmnopqrstuvwyx",
+            "count": 90
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "單碼字",
+      "subtitle": "一個碼就打到的字",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "guide",
+          "title": "單碼字",
+          "slides": [
+            {
+              "title": "一個鍵就打到的字",
+              "points": [
+                "有些字本身就是一個字根，例如 日、月、木、口、人",
+                "這些字只要按一個鍵，再按空白鍵上屏",
+                "它們是最常用的字，熟練後可以打得很快"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "人"
+            }
+          ]
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "練習",
+          "hint": "這些字只有一個字根：按一個鍵，再按空白鍵。",
+          "gen": {
+            "kind": "chars",
+            "chars": "一人大中心手水日金山口十女月火土木田竹卜弓戈尸",
+            "count": 20
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "再練一次",
+          "hint": "同一批字，試試不看提示也打得到。",
+          "gen": {
+            "kind": "chars",
+            "chars": "一人大中心手水日金山口十女月火土木田竹卜弓戈尸",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "quick",
+          "title": "過關小測",
+          "timeLimit": 60,
+          "pass": {
+            "accuracy": 90
+          },
+          "hint": "60 秒內打得愈多愈好。準確率達 90%即過關。",
+          "gen": {
+            "kind": "chars",
+            "chars": "一人大中心手水日金山口十女月火土木田竹卜弓戈尸",
+            "count": 60
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "拆字規則",
+      "subtitle": "只打首碼和尾碼",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "guide",
+          "title": "拆字規則",
+          "slides": [
+            {
+              "title": "先拆字，再取首尾",
+              "points": [
+                "左右結構：先左後右，例如 林 ＝ 木＋木",
+                "上下結構：先上後下，例如 想 ＝ 木…心",
+                "外內結構：先外後內，例如 國 ＝ 田…一",
+                "速成只取第一個和最後一個字根，中間的不用打"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "校"
+            },
+            {
+              "title": "再看一個例子",
+              "points": [
+                "「電」的倉頡碼是 一 月 田 山",
+                "速成只打 一（M）和 山（U）",
+                "不肯定時，可以用「速成查碼」查一查"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "example": "電"
+            }
+          ]
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "練習",
+          "hint": "提示會列出倉頡全碼：只打第一個和最後一個字根。",
+          "gen": {
+            "kind": "chars",
+            "chars": "是在來以為可好國沒分成之地方定同而前者合當市外加打長場名身西考表位式花非件光收此",
+            "count": 20
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "再練一次",
+          "hint": "同一批字，試試不看提示也打得到。",
+          "gen": {
+            "kind": "chars",
+            "chars": "是在來以為可好國沒分成之地方定同而前者合當市外加打長場名身西考表位式花非件光收此",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "quick",
+          "title": "過關小測",
+          "timeLimit": 60,
+          "pass": {
+            "accuracy": 90
+          },
+          "hint": "60 秒內打得愈多愈好。準確率達 90%即過關。",
+          "gen": {
+            "kind": "chars",
+            "chars": "是在來以為可好國沒分成之地方定同而前者合當市外加打長場名身西考表位式花非件光收此",
+            "count": 60
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "同碼字選字",
+      "subtitle": "用數字鍵揀字",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY",
+        "Digit2",
+        "Digit3",
+        "Digit4",
+        "Digit5",
+        "Digit6",
+        "Digit7",
+        "Digit8",
+        "Digit9"
+      ],
+      "pass": {
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "guide",
+          "title": "同碼字",
+          "slides": [
+            {
+              "title": "同一組碼，很多個字",
+              "points": [
+                "速成只有兩碼，所以很多字共用同一組碼",
+                "選字窗按次序列出候選字：第 1 個按空白鍵，其餘按數字",
+                "常用字的位置是固定的，多打幾次就會記得",
+                "眼睛看選字窗，手指不用離開基準位太遠"
+              ],
+              "show": "keyboard",
+              "rootLabels": true,
+              "imeDemo": "校"
+            }
+          ]
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "練習",
+          "hint": "這些字都不是第 1 個候選字：打完碼，看清楚再按數字。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的有我要能到你會時多後生麼自他都家看發於作很面行那然開實年理點現經法動所工最體無",
+            "count": 20
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "再練一次",
+          "hint": "同一批字，試試不看提示也打得到。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的有我要能到你會時多後生麼自他都家看發於作很面行那然開實年理點現經法動所工最體無",
+            "count": 20
+          }
+        },
+        {
+          "type": "test",
+          "mode": "quick",
+          "title": "過關小測",
+          "timeLimit": 60,
+          "pass": {
+            "accuracy": 90
+          },
+          "hint": "60 秒內打得愈多愈好。準確率達 90%即過關。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的有我要能到你會時多後生麼自他都家看發於作很面行那然開實年理點現經法動所工最體無",
+            "count": 60
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "中文標點",
+      "subtitle": "，。、？！「」：",
+      "pass": {
+        "accuracy": 90
+      },
+      "newKeys": [
+        "Comma",
+        "Period",
+        "Semicolon",
+        "Slash",
+        "Digit1",
+        "BracketLeft",
+        "BracketRight",
+        "Backslash",
+        "ShiftLeft",
+        "ShiftRight"
+      ],
+      "steps": [
+        {
+          "type": "guide",
+          "title": "中文標點",
+          "slides": [
+            {
+              "title": "組字框空着時按標點鍵",
+              "points": [
+                "逗號「，」按 ,　句號「。」按 .　頓號「、」按 \\",
+                "問號「？」按 Shift＋/　感嘆號「！」按 Shift＋1",
+                "冒號「：」按 Shift＋;　引號「」按 [ 和 ]",
+                "要先把字上屏，組字框空着才可以打標點"
+              ],
+              "show": "keyboard",
+              "highlight": [
+                "Comma",
+                "Period",
+                "Backslash",
+                "Slash",
+                "Digit1",
+                "Semicolon",
+                "BracketLeft",
+                "BracketRight"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 1 句",
+          "hint": "留意每句的標點。",
+          "text": "你好，我是中一學生。"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 2 句",
+          "hint": "留意每句的標點。",
+          "text": "今天上甚麼課？"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 3 句",
+          "hint": "留意每句的標點。",
+          "text": "加油！我們一起努力。"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 4 句",
+          "hint": "留意每句的標點。",
+          "text": "老師說：「準確比快更重要。」"
+        },
+        {
+          "type": "test",
+          "mode": "quick",
+          "title": "過關小測",
+          "timeLimit": 90,
+          "pass": {
+            "accuracy": 90
+          },
+          "hint": "把整句打出來，包括標點。準確率達 90% 即過關。",
+          "text": "你好，我是中一學生。今天上甚麼課？加油！我們一起努力。老師說：「準確比快更重要。」我喜歡中文、英文和數學。"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "常用字（一）",
+      "subtitle": "最常用 300 字",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY",
+        "Digit2",
+        "Digit3",
+        "Digit4",
+        "Digit5",
+        "Digit6",
+        "Digit7",
+        "Digit8",
+        "Digit9"
+      ],
+      "pass": {
+        "wpm": 3
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "練習",
+          "hint": "最常用的 300 字。有些字要按 PageDown 翻頁才找到，例如「學」。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的是一不有了人我個這在大來就上以為要能可到你學會中時下多出好說也國子後生用麼過自他都家還沒看對如發於作分去成們很面得之天小本行業地那然開實年理方心點現經法動高所定機力同比工最而體無文主前公回些性種者事起想合道手其電因着和數當新市樣果進水裏區只什知三日但化部情意明通外相做老全金內間關加重期打頭品量真題長更度平產物常話己問入場應兩解正計美候名資身第別西基利給接特信代提次目幾網山等風氣二單考表結位程車門直安感海口東太流式少十師科需保價書花女路線教設選白再非論員被交變已原格件把何民語管讓司馬影完色光先務從收世專反算制斯術習並此各類建活運放遊才兒使萬難球據空神商容或記每見克戰音月圖字試四總南覺器費強向報",
+            "count": 30
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "再練一次",
+          "hint": "同一批字，試試不看提示也打得到。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的是一不有了人我個這在大來就上以為要能可到你學會中時下多出好說也國子後生用麼過自他都家還沒看對如發於作分去成們很面得之天小本行業地那然開實年理方心點現經法動高所定機力同比工最而體無文主前公回些性種者事起想合道手其電因着和數當新市樣果進水裏區只什知三日但化部情意明通外相做老全金內間關加重期打頭品量真題長更度平產物常話己問入場應兩解正計美候名資身第別西基利給接特信代提次目幾網山等風氣二單考表結位程車門直安感海口東太流式少十師科需保價書花女路線教設選白再非論員被交變已原格件把何民語管讓司馬影完色光先務從收世專反算制斯術習並此各類建活運放遊才兒使萬難球據空神商容或記每見克戰音月圖字試四總南覺器費強向報",
+            "count": 30
+          }
+        },
+        {
+          "type": "test",
+          "mode": "quick",
+          "title": "過關小測",
+          "timeLimit": 60,
+          "pass": {
+            "wpm": 3
+          },
+          "hint": "60 秒內打得愈多愈好。速度達每分鐘 3 字即過關。",
+          "gen": {
+            "kind": "chars",
+            "chars": "的是一不有了人我個這在大來就上以為要能可到你學會中時下多出好說也國子後生用麼過自他都家還沒看對如發於作分去成們很面得之天小本行業地那然開實年理方心點現經法動高所定機力同比工最而體無文主前公回些性種者事起想合道手其電因着和數當新市樣果進水裏區只什知三日但化部情意明通外相做老全金內間關加重期打頭品量真題長更度平產物常話己問入場應兩解正計美候名資身第別西基利給接特信代提次目幾網山等風氣二單考表結位程車門直安感海口東太流式少十師科需保價書花女路線教設選白再非論員被交變已原格件把何民語管讓司馬影完色光先務從收世專反算制斯術習並此各類建活運放遊才兒使萬難球據空神商容或記每見克戰音月圖字試四總南覺器費強向報",
+            "count": 120
+          }
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "常用字（二）",
+      "subtitle": "第 301 至 1000 字",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyX",
+        "KeyY",
+        "Digit2",
+        "Digit3",
+        "Digit4",
+        "Digit5",
+        "Digit6",
+        "Digit7",
+        "Digit8",
+        "Digit9"
+      ],
+      "pass": {
+        "wpm": 5
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "練習",
+          "hint": "再多 700 個常用字。不記得碼時，看提示。",
+          "gen": {
+            "kind": "chars",
+            "chars": "吧質拉哈至清帶技義認言處愛她節受樂視標政死求轉與思始級城片較北界傳快導形系及五買該哪邊眼將服走整觀展號統任錢聯德包易立隊聲像又戲達寫戶指且軍證里推調投火權病友功星越持找院具識畫改裝治精聽百備紅由條存步布答玩熱首張客華確元社士規驗英王組請型歷石喜準住望校集讀取案息歡低足團詞研值效造照源滿深半角今告命房千州板陽失料差連決率廣醫便優除近錯領它簡遠夠議段斷模黑江林根亞素覆未黃龍站支局細營極食賽卡必辦課離製排換底配超款項象擇注嗎職際油速態族巴消羅創環查版阿往官狀壓演藥維雲共股古歌八微河眾拿跟早酒構引史男呢復防顯絕普曲血例適皮評測濟落講況剛助青示貨究飛武勢留親土續香企輕錄六險背層終則擊興腦置羣雙待木寶班乎修約乾育增致參許響念般爭練隨恩獨限範銷切牌銀即筆屬米稱劇景養幹盤假另殺初幫謝波列票章孩賣牛句夫核補供肉複護笑雖倒畢蘭母魚鐵盡味境升索京軟材農店尼叫編志圍破份博劃密福控甚律奇衣週積似碼依僅晚室印省傷概兵送藝毛射招頻套拍預夜按故充草李漢麪財九朋析苦掉互希七左菜鐘春免短雜周異溫右亂頂害樓跑靠獲舉黨餘購益慢操毒鄉塊飯順腳富居突納談輪否某粉退域略廠架絲端葉怕朝臨惡骨付刻輸沙翻酸係採雨策冷典蘇久緊衛負彈衝寧訴佈紀洗融座彩樹檢勝責啊載竟嚴訓委令止聞守善卻停吸階誰父派減智藏缺坐良降序額雞港織鬥稅湖睡遇紙貴髮玉唱承追威勞散痛航攻歸鏡播急哥願察禮媽島歐硬施移園洋臉肯堂症礎佔售亮田船永甲述跳搞警舊熟秋針靜康均穿奧獎封帝薦牙健私麻暗協折府審怪登慮偏疑激雷趣洲野刀繼豐迷救批圈村判耳介露冰秀篇燈療輯蛋含纔借庫舞穩括抗絡貼吉于懷夢鍵脫胡曾罪討季啥混虛婚累驚綠鎮敗雪蟲掛監誤陳雄堅鋼瞭申聖虎茶圓豆享陰若宣您敢蓋須劑頁陸革探",
+            "count": 30
+          }
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "再練一次",
+          "hint": "同一批字，試試不看提示也打得到。",
+          "gen": {
+            "kind": "chars",
+            "chars": "吧質拉哈至清帶技義認言處愛她節受樂視標政死求轉與思始級城片較北界傳快導形系及五買該哪邊眼將服走整觀展號統任錢聯德包易立隊聲像又戲達寫戶指且軍證里推調投火權病友功星越持找院具識畫改裝治精聽百備紅由條存步布答玩熱首張客華確元社士規驗英王組請型歷石喜準住望校集讀取案息歡低足團詞研值效造照源滿深半角今告命房千州板陽失料差連決率廣醫便優除近錯領它簡遠夠議段斷模黑江林根亞素覆未黃龍站支局細營極食賽卡必辦課離製排換底配超款項象擇注嗎職際油速態族巴消羅創環查版阿往官狀壓演藥維雲共股古歌八微河眾拿跟早酒構引史男呢復防顯絕普曲血例適皮評測濟落講況剛助青示貨究飛武勢留親土續香企輕錄六險背層終則擊興腦置羣雙待木寶班乎修約乾育增致參許響念般爭練隨恩獨限範銷切牌銀即筆屬米稱劇景養幹盤假另殺初幫謝波列票章孩賣牛句夫核補供肉複護笑雖倒畢蘭母魚鐵盡味境升索京軟材農店尼叫編志圍破份博劃密福控甚律奇衣週積似碼依僅晚室印省傷概兵送藝毛射招頻套拍預夜按故充草李漢麪財九朋析苦掉互希七左菜鐘春免短雜周異溫右亂頂害樓跑靠獲舉黨餘購益慢操毒鄉塊飯順腳富居突納談輪否某粉退域略廠架絲端葉怕朝臨惡骨付刻輸沙翻酸係採雨策冷典蘇久緊衛負彈衝寧訴佈紀洗融座彩樹檢勝責啊載竟嚴訓委令止聞守善卻停吸階誰父派減智藏缺坐良降序額雞港織鬥稅湖睡遇紙貴髮玉唱承追威勞散痛航攻歸鏡播急哥願察禮媽島歐硬施移園洋臉肯堂症礎佔售亮田船永甲述跳搞警舊熟秋針靜康均穿奧獎封帝薦牙健私麻暗協折府審怪登慮偏疑激雷趣洲野刀繼豐迷救批圈村判耳介露冰秀篇燈療輯蛋含纔借庫舞穩括抗絡貼吉于懷夢鍵脫胡曾罪討季啥混虛婚累驚綠鎮敗雪蟲掛監誤陳雄堅鋼瞭申聖虎茶圓豆享陰若宣您敢蓋須劑頁陸革探",
+            "count": 30
+          }
+        },
+        {
+          "type": "test",
+          "mode": "quick",
+          "title": "過關小測",
+          "timeLimit": 60,
+          "pass": {
+            "wpm": 5
+          },
+          "hint": "60 秒內打得愈多愈好。速度達每分鐘 5 字即過關。",
+          "gen": {
+            "kind": "chars",
+            "chars": "吧質拉哈至清帶技義認言處愛她節受樂視標政死求轉與思始級城片較北界傳快導形系及五買該哪邊眼將服走整觀展號統任錢聯德包易立隊聲像又戲達寫戶指且軍證里推調投火權病友功星越持找院具識畫改裝治精聽百備紅由條存步布答玩熱首張客華確元社士規驗英王組請型歷石喜準住望校集讀取案息歡低足團詞研值效造照源滿深半角今告命房千州板陽失料差連決率廣醫便優除近錯領它簡遠夠議段斷模黑江林根亞素覆未黃龍站支局細營極食賽卡必辦課離製排換底配超款項象擇注嗎職際油速態族巴消羅創環查版阿往官狀壓演藥維雲共股古歌八微河眾拿跟早酒構引史男呢復防顯絕普曲血例適皮評測濟落講況剛助青示貨究飛武勢留親土續香企輕錄六險背層終則擊興腦置羣雙待木寶班乎修約乾育增致參許響念般爭練隨恩獨限範銷切牌銀即筆屬米稱劇景養幹盤假另殺初幫謝波列票章孩賣牛句夫核補供肉複護笑雖倒畢蘭母魚鐵盡味境升索京軟材農店尼叫編志圍破份博劃密福控甚律奇衣週積似碼依僅晚室印省傷概兵送藝毛射招頻套拍預夜按故充草李漢麪財九朋析苦掉互希七左菜鐘春免短雜周異溫右亂頂害樓跑靠獲舉黨餘購益慢操毒鄉塊飯順腳富居突納談輪否某粉退域略廠架絲端葉怕朝臨惡骨付刻輸沙翻酸係採雨策冷典蘇久緊衛負彈衝寧訴佈紀洗融座彩樹檢勝責啊載竟嚴訓委令止聞守善卻停吸階誰父派減智藏缺坐良降序額雞港織鬥稅湖睡遇紙貴髮玉唱承追威勞散痛航攻歸鏡播急哥願察禮媽島歐硬施移園洋臉肯堂症礎佔售亮田船永甲述跳搞警舊熟秋針靜康均穿奧獎封帝薦牙健私麻暗協折府審怪登慮偏疑激雷趣洲野刀繼豐迷救批圈村判耳介露冰秀篇燈療輯蛋含纔借庫舞穩括抗絡貼吉于懷夢鍵脫胡曾罪討季啥混虛婚累驚綠鎮敗雪蟲掛監誤陳雄堅鋼瞭申聖虎茶圓豆享陰若宣您敢蓋須劑頁陸革探",
+            "count": 150
+          }
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "詞語",
+      "subtitle": "常用兩字詞",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY"
+      ],
+      "pass": {
+        "wpm": 6,
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 1 組",
+          "hint": "詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按 PageDown。",
+          "text": "家人、睡覺、跑步、午餐、老師、地球、夏天、計劃。"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 2 組",
+          "hint": "詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按 PageDown。",
+          "text": "中午、小心、海灘、夢想、中文、今天、快樂、手機。"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 3 組",
+          "hint": "詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按 PageDown。",
+          "text": "天氣、太陽、水果、努力、早餐、安全、動物、冬天、星星、放學。"
+        },
+        {
+          "type": "test",
+          "mode": "quick",
+          "title": "過關小測",
+          "timeLimit": 90,
+          "pass": {
+            "wpm": 6,
+            "accuracy": 90
+          },
+          "hint": "90 秒內打得愈多愈好。速度達每分鐘 6 字、準確率達 90%即過關。",
+          "text": "電車、新聞、希望、地球、合作、起床、新界、練習、音樂、電腦、禮物、冬天、幫助、今天、地理、晚上、運動、星期、校服、跑步、時間、電影、春天、努力、媽媽、英文、下課、夏天、游泳、地鐵。"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "句子與短文",
+      "subtitle": "把整段話打出來",
+      "newKeys": [
+        "KeyA",
+        "KeyB",
+        "KeyC",
+        "KeyD",
+        "KeyE",
+        "KeyF",
+        "KeyG",
+        "KeyH",
+        "KeyI",
+        "KeyJ",
+        "KeyK",
+        "KeyL",
+        "KeyM",
+        "KeyN",
+        "KeyO",
+        "KeyP",
+        "KeyQ",
+        "KeyR",
+        "KeyS",
+        "KeyT",
+        "KeyU",
+        "KeyV",
+        "KeyW",
+        "KeyY"
+      ],
+      "pass": {
+        "wpm": 6,
+        "accuracy": 90
+      },
+      "steps": [
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 1 句",
+          "hint": "連標點一起打。不記得碼時，看提示。",
+          "text": "今天天氣很好，我們一起去公園跑步。"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 2 句",
+          "hint": "連標點一起打。不記得碼時，看提示。",
+          "text": "上課的時候，請大家專心聽老師講解。"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 3 句",
+          "hint": "連標點一起打。不記得碼時，看提示。",
+          "text": "放學後，我和同學在圖書館做功課。"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 4 句",
+          "hint": "連標點一起打。不記得碼時，看提示。",
+          "text": "你知道明天的考試在甚麼時間開始嗎？"
+        },
+        {
+          "type": "drill",
+          "mode": "quick",
+          "title": "第 5 段",
+          "hint": "連標點一起打。不記得碼時，看提示。",
+          "text": "香港是一個國際城市，每天都有很多人來旅行。這裏的交通十分方便，乘坐地鐵和巴士可以到達不同的地方。"
+        },
+        {
+          "type": "test",
+          "mode": "quick",
+          "title": "過關小測",
+          "timeLimit": 120,
+          "pass": {
+            "wpm": 6,
+            "accuracy": 90
+          },
+          "hint": "120 秒內打得愈多愈好。速度達每分鐘 6 字、準確率達 90%即過關。",
+          "text": "學習打字需要耐心。開始時速度會比較慢，但只要每天練習十分鐘，手指就會慢慢記住每個字根的位置。先求準確，再求速度，你一定可以做到！"
         }
       ]
     }

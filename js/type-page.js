@@ -10,7 +10,7 @@ import { applyWorld, worldForLang } from './world.js';
 import * as pet from './companion.js';
 import { Fx } from './fx.js';
 import { setSoundEnabled } from './sound.js';
-import { QuickEngine, computeZhStats, PAGE } from './quick-engine.js';
+import { QuickEngine, computeZhStats, PAGE, KEY_OF_PUNCT } from './quick-engine.js';
 import { loadZh, ROOTS } from './zh-codes.js';
 import { generateZh } from './zh-gen.js';
 
@@ -304,6 +304,7 @@ function runTyping(step) {
 const zcap = (k, cls = '') => `<span class="zcap ${cls}"><b>${ROOTS[k] ?? k}</b><small>${k}</small></span>`;
 
 function pickHint(ch) {
+  if (KEY_OF_PUNCT[ch]) return `按 ${KEY_OF_PUNCT[ch]}`;
   const code = state.zh.quickOf(ch);
   const idx = state.zh.candidates(code).indexOf(ch);
   if (idx === 0) return '按空白鍵';
@@ -360,9 +361,15 @@ function renderIme(eng, isTest, warn) {
   const pages = Math.ceil(eng.candidates.length / PAGE);
   const cands = items.map((c, i) => `<span class="${!isTest && c === ch ? 'want' : ''}"><i>${i + 1}</i>${c}</span>`).join('');
   let hint = '';
-  if (!isTest && ch) {
+  if (!isTest && ch && KEY_OF_PUNCT[ch]) {
+    const k = KEY_OF_PUNCT[ch];
+    const shift = /[:?!]/.test(k) ? 'Shift ＋ ' : '';
+    hint = `<span class="hint">標點「${ch}」：組字框空着時按 ${shift}${k === '\\' ? '\\（Enter 上面）' : k}</span>`;
+  } else if (!isTest && ch) {
     const code = state.zh.quickOf(ch) ?? '';
-    hint = `<span class="hint">「${ch}」＝ ${[...code].map((k) => `${ROOTS[k]} ${k.toUpperCase()}`).join(' ＋ ')}，${pickHint(ch)}</span>`;
+    const cj = state.zh.cjOf(ch);
+    const full = cj && cj.length > 2 ? `（倉頡 ${[...cj].map((k) => ROOTS[k]).join('')}，只打首尾）` : '';
+    hint = `<span class="hint">「${ch}」＝ ${[...code].map((k) => `${ROOTS[k]} ${k.toUpperCase()}`).join(' ＋ ')}${full}，${pickHint(ch)}</span>`;
   }
   $('ime').innerHTML = `
     <div class="comp">${comp}</div>
