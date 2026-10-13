@@ -61,7 +61,7 @@ def shape_slides(keys):
     """每個字根鍵一頁：逐個教該鍵的全部輔助字形，每個字形 3 個例字（顏色標出位置）。"""
     return [{'title': f'字根「{ROOTS[k]}」（{k.upper()}）的輔助字形',
              'points': ['看到這些部件，都按 ' + k.upper() + ' 鍵',
-                        '注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 N E'],
+                        '注意：部件不等於單獨的字，例如「又」作部件屬 水 E，但單獨打「又」字是 弓大（N K）'],
              'shapeKey': k} for k in keys if k != 'x']
 
 def roots_lesson(lid, title, new, learned, extra_hint):
