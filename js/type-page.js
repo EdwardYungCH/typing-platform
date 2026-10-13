@@ -45,6 +45,7 @@ async function init() {
     fetch('data/levels.json').then((r) => r.json()),
   ]);
   state.lessons = lessonsData.lessons;
+  state.notes = lessonsData.notes ?? {};   // 個別字的拆碼說明（為甚麼首／尾碼是這個）
   state.levels = levels;
   state.lesson = state.lessons.find((l) => l.id === lessonId);
   if (!state.lesson) {
@@ -208,6 +209,10 @@ function runGuide(step) {
   const render = () => {
     const s = step.slides[idx];
     if (s.example && glyphNow(s.example) === null && !s._loaded) { s._loaded = true; glyphData(s.example).then(render); }
+    if (s.codes && !s._loaded) {
+      s._loaded = true;
+      Promise.all([...s.codes].map((c) => glyphData(c))).then(render);
+    }
     if (s.shapeKey && !s._loaded) {
       s._loaded = true;
       const chars = Object.entries(state.chartInfo).filter(([img]) => img[0] === s.shapeKey).flatMap(([, v]) => v.examples.filter((e) => e[2]).map((e) => e[0]));
@@ -220,7 +225,7 @@ function runGuide(step) {
           <h3>${s.title}</h3>
           <ul>${s.points.map((p) => `<li>${p}</li>`).join('')}</ul>
         </div>
-        <div class="slide-visual">${s.show === 'posture' ? POSTURE_SVG : ''}${s.example ? exampleHtml(s.example, s.exampleCode) : ''}${s.imeDemo ? imeDemoHtml(s.imeDemo) : ''}${s.shapes ? shapesHtml(s.shapes) : ''}${s.shapeKey ? shapeLessonHtml(s.shapeKey) : ''}</div>
+        <div class="slide-visual">${s.show === 'posture' ? POSTURE_SVG : ''}${s.example ? exampleHtml(s.example, s.exampleCode) : ''}${s.imeDemo ? imeDemoHtml(s.imeDemo) : ''}${s.shapes ? shapesHtml(s.shapes) : ''}${s.shapeKey ? shapeLessonHtml(s.shapeKey) : ''}${s.codes ? codesHtml(s.codes) : ''}</div>
       </div>
       <div class="slide-nav">
         <button class="btn" type="button" data-nav="prev" ${idx === 0 ? 'disabled' : ''}>上一頁</button>
@@ -450,7 +455,7 @@ function renderPair(eng, step, isTest, wrongNow) {
       const cj = state.zh.cjOf(ch);
       hint = g ? `看${part}部件：它是哪個字根或輔助字形？` : `提示：倉頡拆法是 ${[...(cj ?? code)].map((k) => ROOTS[k]).join(' ')}。`;
     } else {
-      hint = `答案：${pending === 'f' ? '首碼' : '尾碼'}是 <b>${ROOTS[want]}（${want.toUpperCase()}）</b>，跟着發光的鍵按。`;
+      hint = `答案：${pending === 'f' ? '首碼' : '尾碼'}是 <b>${ROOTS[want]}（${want.toUpperCase()}）</b>，跟着發光的鍵按。${state.notes[ch] ? `<br><span class="muted">${state.notes[ch]}</span>` : ''}`;
     }
   }
   $('pair-hint').innerHTML = hint;
@@ -468,7 +473,7 @@ function prevHtml(ch) {
   const g = glyphNow(ch);
   const q = state.zh.quickOf(ch);
   const cj = state.zh.cjOf(ch) ?? q;
-  const note = shapeNote(ch);
+  const note = state.notes[ch] || shapeNote(ch);
   return `<h4>上一題</h4><div class="prev">
     <div class="pg">${g ? glyphSvg(g, 'color') : ch}</div>
     <div>倉頡：${[...cj].map((k, i) => i === 0 ? `<b class="c-first">${ROOTS[k]}</b>` : i === cj.length - 1 ? `<b class="c-last">${ROOTS[k]}</b>` : ROOTS[k]).join(' ')}<br>
@@ -916,6 +921,20 @@ function shapeLessonHtml(k) {
     rows.push(`<div class="shape-row2">${img}<div class="sx-name">${info.name}</div><div class="sx-list">${ex}</div></div>`);
   }
   return `<div class="shape-lesson"><div class="shape-head">${zcap(k, 'key')}<span>字根「${ROOTS[k]}」的輔助字形：例字中<b class="c-first">紅色</b>是作首碼的位置，<b class="c-last">藍色</b>是作尾碼的位置。</span></div>${rows.join('') || '<p class="muted">這個字根沒有輔助字形，認住字根本身就可以。</p>'}</div>`;
+}
+
+/** 規則例字卡：字（有雙色圖就上色）、倉頡碼（首紅尾藍）、速成碼、說明。 */
+function codesHtml(chars) {
+  return `<div class="code-cards">${[...chars].map((ch) => {
+    const g = glyphNow(ch);
+    const q = state.zh.quickOf(ch) ?? '';
+    const cj = state.zh.cjOf(ch) ?? q;
+    const cjHtml = [...cj].map((k, i) => i === 0 ? `<b class="c-first">${ROOTS[k]}</b>` : i === cj.length - 1 ? `<b class="c-last">${ROOTS[k]}</b>` : `<span class="dim">${ROOTS[k]}</span>`).join('');
+    return `<div class="code-card">
+      <div class="cc-glyph">${g?.r ? glyphSvg(g, 'color') : ch}</div>
+      <div class="cc-body"><div class="cc-cj">${ch}　${cjHtml}　<small>速成 <b class="c-first">${q[0]?.toUpperCase() ?? ''}</b><b class="c-last">${q[1]?.toUpperCase() ?? ''}</b></small></div>
+      <div class="cc-note">${state.notes[ch] ?? ''}</div></div></div>`;
+  }).join('')}</div>`;
 }
 
 function shapesHtml(keys) {

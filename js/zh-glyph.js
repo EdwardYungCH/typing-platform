@@ -29,7 +29,7 @@ export function glyphNow(ch) { return ready.get(ch) ?? null; }
  */
 export function glyphSvg(g, mode = 'plain') {
   const cls = (r) => {
-    if (mode === 'plain') return 'g-ink';
+    if (mode === 'plain' || !g.r) return 'g-ink';
     if (mode === 'color') return r === 'f' ? 'g-first' : r === 'l' ? 'g-last' : 'g-dim';
     if (mode === 'f') return r === 'f' ? 'g-first' : 'g-ink';
     if (mode === 'l') return r === 'l' ? 'g-last' : 'g-ink';

@@ -23,10 +23,13 @@ for line in open(f'{MM}/dictionary.txt', encoding='utf-8'):
     o = json.loads(line); dic[o['character']] = o
 gfx = {}
 need = set(Z['common'][:3000])
+LESSON_CHARS = set()
 for p in ('data/zh-lessons.json',):
     for l in json.load(open(p, encoding='utf-8'))['lessons']:
         for s in l['steps']:
             need |= set(s.get('text', '') + s.get('gen', {}).get('chars', ''))
+            LESSON_CHARS |= set(s.get('text', '') + s.get('gen', {}).get('chars', ''))
+            for sl in s.get('slides', []): LESSON_CHARS |= set(sl.get('codes', '') + sl.get('example', ''))
 for line in open(f'{MM}/graphics.txt', encoding='utf-8'):
     o = json.loads(line)
     if o['character'] in need or o['character'] in dic:
@@ -159,6 +162,8 @@ for ch in sorted(need):
             COMP.setdefault(f'{q[1]}|{lc}', []).append([ch, 'l'])
     if good: ok += 1
     else: fail += 1; fails.append(ch)
+    # 沒法上色的字：只有課文用到的才保留筆畫（令練習字體一致），其餘不存
+    if not good and ch not in LESSON_CHARS: continue
     out = {'s': strokes}
     if good: out['r'] = ''.join(roles)
     json.dump(out, open(f'assets/glyphs/{ord(ch):x}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))

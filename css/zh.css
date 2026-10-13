@@ -108,3 +108,13 @@
 /* 輔助字形頁：講解在上，字形表全闊 */
 .slide:has(.shape-lesson), .slide:has(.shape-cards) { grid-template-columns: 1fr !important; }
 .slide:has(.shape-lesson) .slide-text ul { margin-bottom: 0; }
+
+/* 規則例字卡 */
+.slide:has(.code-cards) { grid-template-columns: 1fr !important; }
+.code-cards { display: grid; gap: 8px; width: 100%; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.code-card { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.cc-glyph { width: 64px; height: 64px; font-size: 52px; line-height: 64px; text-align: center; color: var(--ink); }
+.cc-cj { font-size: 16px; }
+.cc-cj .dim { opacity: 0.45; }
+.cc-cj small { color: var(--ink-2); margin-left: 4px; }
+.cc-note { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
