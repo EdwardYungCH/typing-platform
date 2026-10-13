@@ -47,6 +47,8 @@ for (const [w, info] of Object.entries(data.worlds)) {
     ul.append(li);
   }
   card.append(ul);
+  card.insertAdjacentHTML('beforeend', `<ul class="map"><li><a class="node" href="practice.html?lang=${info.lang}">
+    <span class="num">練</span><span class="t"><b>練習區</b><span>自由操練、弱項加強${info.lang === 'zh' ? '、真實輸入法' : ''}</span></span></a></li></ul>`)
   if (info.lang === 'zh') {
     card.insertAdjacentHTML('beforeend', `
       <ul class="map"><li><a class="node" href="zh/lookup.html">

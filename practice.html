@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant-HK" data-world="planet">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>練習區</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/world.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/practice.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="index.html">打字練習平台</a>
+      <span class="spacer"></span>
+      <a class="btn ghost" href="index.html">回首頁</a>
+    </header>
+    <h1 style="margin:0">練習區</h1>
+    <p class="muted">自由操練，不計星、不限次數。做完的課堂內容都可以在這裏再練。</p>
+    <div class="tabs" id="tabs"></div>
+    <form class="card pr-form" id="form">
+      <section class="pr-sec" id="sec-kind"><h2>練甚麼</h2><div class="pr-opts" id="kinds"></div></section>
+      <section class="pr-sec" id="sec-range"><h2>範圍</h2><div class="pr-opts" id="range"></div></section>
+      <section class="pr-sec"><h2>題數與時限</h2>
+        <div class="pr-row">
+          <label>題數 <select id="count"><option>10</option><option selected>20</option><option>30</option><option>50</option></select></label>
+          <label>時限 <select id="time"><option value="0" selected>不限</option><option value="60">60 秒</option><option value="120">2 分鐘</option><option value="180">3 分鐘</option></select></label>
+        </div>
+      </section>
+      <div class="pr-actions"><button class="btn primary" type="submit">開始練習</button></div>
+    </form>
+    <section class="card pr-weak" id="weak"></section>
+  </div>
+  <script type="module" src="js/practice-page.js"></script>
+</body>
+</html>

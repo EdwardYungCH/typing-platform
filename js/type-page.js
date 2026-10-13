@@ -14,11 +14,13 @@ import { QuickEngine, computeZhStats, PAGE, KEY_OF_PUNCT } from './quick-engine.
 import { loadZh, ROOTS, chartGlyphs, shapeGlyph } from './zh-codes.js';
 import { preloadGlyphs, glyphData, glyphNow, glyphSvg } from './zh-glyph.js';
 import { generateZh } from './zh-gen.js';
+import { buildPractice } from './practice.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const lang = params.get('lang') === 'zh' ? 'zh' : 'en';
-const lessonId = Number(params.get('id') ?? 0);
+const PRACTICE = params.get('mode') === 'practice';
+const lessonId = PRACTICE ? -1 : Number(params.get('id') ?? 0);
 
 const state = {
   lesson: null,
@@ -47,17 +49,22 @@ async function init() {
   state.lessons = lessonsData.lessons;
   state.notes = lessonsData.notes ?? {};   // 個別字的拆碼說明（為甚麼首／尾碼是這個）
   state.levels = levels;
-  state.lesson = state.lessons.find((l) => l.id === lessonId);
-  if (!state.lesson) {
-    $('lesson-title').textContent = '找不到這一課';
-    return;
-  }
-
   applyWorld(worldForLang(lang));
   if (lang === 'zh') {
     state.zh = await loadZh();
     const sh = await fetch('data/zh-shapes.json').then((r) => r.json());
     state.shapes = sh.keys;
+  }
+  state.lesson = PRACTICE
+    ? buildPractice(params, { lang, zh: state.zh, enLessons: state.lessons })
+    : state.lessons.find((l) => l.id === lessonId);
+  if (!state.lesson) {
+    $('lesson-title').textContent = PRACTICE ? '弱項還未夠資料' : '找不到這一課';
+    $('step-hint').textContent = PRACTICE ? '先做幾課或幾次練習，網站記錄到你常錯的鍵和字後，這裏才會出題。' : '';
+    return;
+  }
+  if (lang === 'zh') {
+    const sh = await fetch('data/zh-shapes.json').then((r) => r.json());
     state.chart = sh.chart;
     state.chartInfo = sh.chartInfo ?? {};
   }
@@ -71,14 +78,14 @@ async function init() {
   setupFx();
 
   const L = state.lesson;
-  document.title = `第 ${L.id} 課：${L.title}｜打字練習`;
+  document.title = PRACTICE ? `${L.title}｜練習區` : `第 ${L.id} 課：${L.title}｜打字練習`;
   $('crumb').textContent = lang === 'en' ? '英文打字' : '中文速成';
-  $('lesson-eyebrow').textContent = `第 ${L.id} 課`;
+  $('lesson-eyebrow').textContent = PRACTICE ? '練習區' : `第 ${L.id} 課`;
   $('lesson-title').textContent = `${L.title}　${L.subtitle ?? ''}`.trim();
 
   const startStep = Math.min(Math.max(Number(params.get('step') ?? 1) - 1, 0), L.steps.length - 1);
   // 做過的課：全部步驟都可以直接跳去重做；做過的步驟也可以
-  const done = store.getLessonResult(lang, lessonId)?.done;
+  const done = PRACTICE || store.getLessonResult(lang, lessonId)?.done;
   const reached = Object.keys(store.getStepResults(lang, lessonId)).map(Number);
   state.maxReached = done ? L.steps.length - 1 : Math.max(startStep, ...reached.map((n) => Math.min(n, L.steps.length - 1)));
   renderSteps();
@@ -134,6 +141,7 @@ function setupFingerToggle(initial) {
 function renderSteps() {
   const ol = $('steps');
   ol.innerHTML = '';
+  if (state.lesson.practice) return;
   state.lesson.steps.forEach((s, i) => {
     const li = document.createElement('li');
     const b = document.createElement('button');
@@ -184,9 +192,11 @@ function runStep(i) {
   state.kb.setRootLabels(lang === 'zh' && step.type !== 'test' && !step.hideRoots ? ROOTS : null);
   $('ime').hidden = true;
   $('pair').hidden = true;
+  $('ime-input').hidden = true;
+  $('kb-area').hidden = false;
   state.fx.reset();  // 上一步的連擊字樣不會帶到下一步
   state.mode = step.mode ?? (lang === 'zh' ? 'roots' : 'en');
-  state.unit = { quick: '字/分', split: '字/分', roots: '個/分', shapes: '個/分', chart: '個/分', en: 'WPM' }[state.mode] ?? 'WPM';
+  state.unit = { quick: '字/分', split: '字/分', ime: '字/分', roots: '個/分', shapes: '個/分', chart: '個/分', en: 'WPM' }[state.mode] ?? 'WPM';
   $('m-unit').textContent = ` ${state.unit}`;
   // 速成評測不提示下一個鍵（否則變成跟住發光的鍵按）
   state.hideNext = lang === 'zh' && step.type === 'test';
@@ -324,7 +334,7 @@ function makeText(step) {
 }
 
 function statsOf(eng) {
-  if (state.mode === 'quick' || state.mode === 'split') return computeZhStats(eng);
+  if (state.mode === 'quick' || state.mode === 'split' || state.mode === 'ime') return computeZhStats(eng);
   const st = computeStats(eng);
   if (state.mode === 'roots' || state.mode === 'shapes' || state.mode === 'chart') {
     const per = st.seconds > 0 ? st.correctKeys / (st.seconds / 60) : 0;
@@ -336,6 +346,7 @@ function statsOf(eng) {
 
 function runTyping(step) {
   showTypingUI(true);
+  if (state.mode === 'ime') return runIme(step);
   if (state.mode === 'split') return runSplit(step);
   if (state.mode === 'quick') return runQuick(step);
 
@@ -369,6 +380,64 @@ function runTyping(step) {
   state.engine = engine;
   paint(spans, engine);
   engine.attach();
+}
+
+// ---------- 真實輸入法模式：學生用系統的微軟速成打字，網站只收打出的字 ----------
+
+function runIme(step) {
+  const text = makeText(step);
+  const textEl = $('text');
+  textEl.className = 'text zh';
+  $('text-wrap').className = 'text-wrap';
+  const spans = renderText(textEl, text, null, true);
+  $('kb-area').hidden = true;
+  $('start-hint').hidden = false;
+  $('start-hint').textContent = '請切換到系統的「微軟速成」，在下面的輸入框打字。打出的字會逐個跟題目比對。';
+  $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
+  updateMeters(null, step);
+
+  const box = $('ime-input');
+  box.hidden = false;
+  box.value = '';
+  box.focus();
+  const engine = {
+    chars: [...text], text: [...text], pos: 0, status: new Array(text.length).fill('todo'), keystrokes: [],
+    started: false, finished: false, startTime: 0, endTime: 0, timeLimit: step.timeLimit ?? 0, errorMode: 'continue', pick: true, misses: 0,
+    elapsedMs() { return this.started ? (this.finished ? this.endTime : performance.now()) - this.startTime : 0; },
+    remainingSec() { return this.timeLimit ? Math.max(0, this.timeLimit - this.elapsedMs() / 1000) : null; },
+    nextKey() { return null; },
+    detach() { clearInterval(this._timer); box.removeEventListener('input', onInput); box.hidden = true; $('kb-area').hidden = false; },
+    finish() {
+      if (this.finished) return;
+      this.finished = true; this.endTime = performance.now(); clearInterval(this._timer); box.removeEventListener('input', onInput);
+      box.hidden = true; $('kb-area').hidden = false;
+      onTypingDone(step, this);
+    },
+  };
+  const onInput = () => {
+    if (engine.finished) return;
+    if (!engine.started) {
+      engine.started = true; engine.startTime = performance.now();
+      engine._timer = setInterval(() => { if (engine.timeLimit && engine.elapsedMs() >= engine.timeLimit * 1000) engine.finish(); else updateMeters(engine, step); }, 250);
+    }
+    $('start-hint').hidden = true;
+    const typed = [...box.value.replace(/\s/g, '')];
+    // 逐字比對：每個已打出的字是對是錯；正在組字（compositionstart 後）的字不計
+    for (let i = 0; i < engine.chars.length; i++) {
+      if (i < typed.length) {
+        const ok = typed[i] === engine.chars[i];
+        if (engine.status[i] === 'todo') engine.keystrokes.push({ t: Math.round(performance.now() - engine.startTime), key: typed[i], code: '', expected: engine.chars[i], ok });
+        engine.status[i] = ok ? 'ok' : 'bad';
+      } else engine.status[i] = 'todo';
+    }
+    engine.pos = Math.min(typed.length, engine.chars.length);
+    paint(spans, engine);
+    updateMeters(engine, step);
+    if (typed.length >= engine.chars.length) engine.finish();
+  };
+  box.addEventListener('input', onInput);
+  state.engine = engine;
+  paint(spans, engine);
 }
 
 // ---------- 首尾碼練習（拆字模式，仿「五色倉頡」的首碼／尾碼兩格）----------
@@ -607,6 +676,7 @@ function showTypingUI(on) {
   document.querySelector('.progress').hidden = !on;
   $('guide').hidden = on;
   if (!on) { $('ime').hidden = true; $('pair').hidden = true; }
+  $('ime-input').hidden = true;
   $('text-wrap').hidden = !on;
   $('start-hint').textContent = '雙手放在基準位，準備好就直接打第一個字。';
 }
@@ -736,16 +806,38 @@ function onTypingDone(step, eng) {
     state.testResult = { stats, stars };
   }
   store.saveAttempt({
-    lang, mode: 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
+    lang, mode: PRACTICE ? 'practice' : 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
   });
-  store.saveStepResult(lang, lessonId, state.stepIndex + 1, {
+  if (!PRACTICE) store.saveStepResult(lang, lessonId, state.stepIndex + 1, {
     accuracy: stats.accuracy, wpm: stats.netWpm, stars, unit: state.unit,
   });
+  store.addWeak(lang, weakTable(eng));
   finishStep({ stats, stars, step, rest: typingTotal >= CONFIG.restReminderMinutes * 60 });
+}
+
+/** 弱項：每個應按的鍵（字母）和每個字的答錯次數。 */
+function weakTable(eng) {
+  const t = {};
+  const add = (k, ok) => { if (!k) return; const r = (t[k] ??= { tries: 0, errors: 0 }); r.tries += 1; if (!ok) r.errors += 1; };
+  for (const k of eng.keystrokes) {
+    if (k.ok === null || !k.expected || k.expected.length !== 1) continue;
+    add(k.expected.toLowerCase(), k.ok);
+  }
+  if (eng.chars) eng.chars.forEach((ch, i) => { if (eng.status[i] !== 'todo') add(ch, eng.status[i] === 'ok'); });
+  return t;
 }
 
 function finishStep({ stats, stars, step, rest, guide }) {
   const L = state.lesson;
+  if (L.practice) {
+    const statsList = stats ? [['速度', `${fmt(stats.netWpm)} ${state.unit}`], ['準確率', `${fmtAcc(stats.accuracy)}%`], ['用時', clock(stats.seconds)], ['打錯', `${stats.errors} 次`]] : [];
+    renderPanelPet();
+    state.fx.setFocus(false);
+    state.fx.finish({ stars: 1 });
+    showPanel({ title: '完成！', msg: '練習不計星，想再試就按「再來一組」。', stars: null, stats: statsList,
+      actions: [['再來一組', () => runStep(0), true], ['回到練習區', () => (location.href = `practice.html?lang=${lang}`), false]] });
+    return;
+  }
   const isLast = state.stepIndex === L.steps.length - 1;
   const isTest = step?.type === 'test';
   const passed = !isTest || stars > 0;

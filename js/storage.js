@@ -117,3 +117,28 @@ export function getStepResults(lang, lessonId) {
   for (const [id, v] of Object.entries(readAll().steps ?? {})) if (id.startsWith(pre)) out[Number(id.slice(pre.length))] = v;
   return out;
 }
+
+/** 弱項紀錄：每個「應按的鍵／字」答錯次數和作答次數（練習區「弱項加強」用）。 */
+export function addWeak(lang, table) {
+  const data = readAll();
+  data.weak ??= {};
+  const w = (data.weak[lang] ??= {});
+  for (const [k, v] of Object.entries(table)) {
+    const row = (w[k] ??= { tries: 0, errors: 0 });
+    row.tries += v.tries ?? 0;
+    row.errors += v.errors ?? 0;
+  }
+  // 只保留最近 300 項，避免無限增長
+  const keys = Object.keys(w);
+  if (keys.length > 300) for (const k of keys.slice(0, keys.length - 300)) delete w[k];
+  writeAll(data);
+}
+
+/** 弱項列表：錯誤率高的在前（至少作答 2 次才算）。 */
+export function getWeak(lang) {
+  const w = readAll().weak?.[lang] ?? {};
+  return Object.entries(w)
+    .filter(([, v]) => v.tries >= 2 && v.errors > 0)
+    .map(([k, v]) => ({ key: k, tries: v.tries, errors: v.errors, rate: v.errors / v.tries }))
+    .sort((a, b) => b.rate - a.rate || b.errors - a.errors);
+}
