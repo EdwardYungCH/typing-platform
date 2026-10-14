@@ -1,5 +1,6 @@
 import { getProgress, getSetting } from './storage.js';
 import { loadCompanions, art, getChoice, nickOf, summary, stageOf, nextGoal } from './companion.js';
+import { dailyProgress } from './daily.js';
 
 const data = await loadCompanions();
 const [en, zhL] = await Promise.all(['en', 'zh'].map((l) => fetch(`data/${l}-lessons.json`).then((r) => r.json())));
@@ -48,6 +49,12 @@ for (const [w, info] of Object.entries(data.worlds)) {
     ul.append(li);
   }
   card.append(ul);
+  const dp = dailyProgress(info.lang);
+  const dailySub = dp.finishedToday ? `今日已完成 ✓　連續 ${dp.streak} 天` : dp.done.length ? `今日已做 ${dp.done.length}／3 部分` : `每日十分鐘，重溫到期的字根和字${dp.streak ? `　連續 ${dp.streak} 天` : ''}`;
+  card.insertAdjacentHTML('beforeend', `<ul class="map"><li><a class="node${dp.finishedToday ? ' done' : ''}" href="type.html?lang=${info.lang}&mode=daily">
+    <span class="num">${dp.finishedToday ? '✓' : '日'}</span><span class="t"><b>每日任務</b><span>${dailySub}</span></span></a></li>
+    <li><a class="node" href="milestones.html?lang=${info.lang}">
+    <span class="num">程</span><span class="t"><b>里程碑</b><span>${info.lang === 'zh' ? '認齊字根、認齊輔助字形、拆對和打熟常用字' : '掌握 26 個鍵、打熟常用詞、速度目標'}</span></span></a></li></ul>`);
   card.insertAdjacentHTML('beforeend', `<ul class="map"><li><a class="node" href="practice.html?lang=${info.lang}">
     <span class="num">練</span><span class="t"><b>練習區</b><span>自由操練、弱項加強${info.lang === 'zh' ? '、真實輸入法' : ''}</span></span></a></li>
     <li><a class="node" href="tests.html?lang=${info.lang}">
@@ -56,8 +63,7 @@ for (const [w, info] of Object.entries(data.worlds)) {
     card.insertAdjacentHTML('beforeend', `
       <ul class="map"><li><a class="node" href="zh/lookup.html">
         <span class="num">查</span>
-        <span class="t"><b>速成查碼</b><span>任何字的速成碼、拆字圖解和選字位置</span></span></a></li></ul>
-      <p class="soon">第 2 至 15 課製作中。建議先完成英文第 0、1 課，熟習十指基準位。</p>`);
+        <span class="t"><b>速成查碼</b><span>任何字的速成碼、拆字圖解和選字位置</span></span></a></li></ul>`);
   }
   root.append(card);
 }

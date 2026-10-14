@@ -15,13 +15,16 @@ import { loadZh, ROOTS, chartGlyphs, shapeGlyph } from './zh-codes.js';
 import { preloadGlyphs, glyphData, glyphNow, glyphSvg } from './zh-glyph.js';
 import { generateZh } from './zh-gen.js';
 import { buildPractice } from './practice.js';
+import * as mastery from './mastery.js';
+import { buildDaily, dailyProgress } from './daily.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const lang = params.get('lang') === 'zh' ? 'zh' : 'en';
 const PRACTICE = params.get('mode') === 'practice';
 const TEST = params.get('mode') === 'test';
-const lessonId = (PRACTICE || TEST) ? -1 : Number(params.get('id') ?? 0);
+const DAILY = params.get('mode') === 'daily';
+const lessonId = (PRACTICE || TEST || DAILY) ? -1 : Number(params.get('id') ?? 0);
 
 const state = {
   lesson: null,
@@ -55,6 +58,8 @@ async function init() {
     state.zh = await loadZh();
     const sh = await fetch('data/zh-shapes.json').then((r) => r.json());
     state.shapes = sh.keys;
+    state.chart = sh.chart;
+    state.chartInfo = sh.chartInfo ?? {};
   }
   if (TEST) {
     const tests = (await fetch('data/tests.json').then((r) => r.json())).tests;
@@ -69,18 +74,15 @@ async function init() {
       steps: [{ type: 'test', mode: lang === 'zh' ? 'quick' : 'en', title: state.test.title, hint: `${Math.round(state.test.timeLimit / 60)} 分鐘內打得愈多愈好。開始後不能暫停。`,
                 timeLimit: state.test.timeLimit, pass: state.test.pass, text: state.test.text }],
     };
-  } else state.lesson = PRACTICE
+  } else if (DAILY) state.lesson = buildDaily({ lang, zh: state.zh, lessons: state.lessons, chartInfo: state.chartInfo });
+  else state.lesson = PRACTICE
     ? buildPractice(params, { lang, zh: state.zh, enLessons: state.lessons })
     : state.lessons.find((l) => l.id === lessonId);
   if (!state.lesson) {
-    $('lesson-title').textContent = PRACTICE ? '弱項還未夠資料' : '找不到這一課';
-    $('step-hint').textContent = PRACTICE ? '先做幾課或幾次練習，網站記錄到你常錯的鍵和字後，這裏才會出題。' : '';
+    $('lesson-title').textContent = PRACTICE ? '弱項還未夠資料' : DAILY ? '先完成第一課' : '找不到這一課';
+    $('step-hint').innerHTML = PRACTICE ? '先做幾課或幾次練習，網站記錄到你常錯的鍵和字後，這裏才會出題。'
+      : DAILY ? `每日任務會重溫你學過的字根和字。先去<a href="index.html">首頁</a>完成第 1 課吧。` : '';
     return;
-  }
-  if (lang === 'zh') {
-    const sh = await fetch('data/zh-shapes.json').then((r) => r.json());
-    state.chart = sh.chart;
-    state.chartInfo = sh.chartInfo ?? {};
   }
   state.world = worldForLang(lang);
   state.petData = await pet.loadCompanions();
@@ -92,9 +94,9 @@ async function init() {
   setupFx();
 
   const L = state.lesson;
-  document.title = PRACTICE ? `${L.title}｜練習區` : TEST ? `${L.title}｜評測區` : `第 ${L.id} 課：${L.title}｜打字練習`;
+  document.title = PRACTICE ? `${L.title}｜練習區` : TEST ? `${L.title}｜評測區` : DAILY ? '每日任務｜打字練習' : `第 ${L.id} 課：${L.title}｜打字練習`;
   $('crumb').textContent = lang === 'en' ? '英文打字' : '中文速成';
-  $('lesson-eyebrow').textContent = PRACTICE ? '練習區' : TEST ? '評測區' : `第 ${L.id} 課`;
+  $('lesson-eyebrow').textContent = PRACTICE ? '練習區' : TEST ? '評測區' : DAILY ? '每日任務' : `第 ${L.id} 課`;
   $('lesson-title').textContent = `${L.title}　${L.subtitle ?? ''}`.trim();
 
   const startStep = Math.min(Math.max(Number(params.get('step') ?? 1) - 1, 0), L.steps.length - 1);
@@ -304,12 +306,14 @@ function runGuide(step) {
 
 function makeText(step) {
   state.display = null;
+  state.items = null;
   if (step.gen?.kind === 'chart') {
     // 字形練習：只出這一課的輔助字形（字根表圖片），學生按它所屬的鍵
     const rng = makeRng();
     const items = [];
-    for (const k of step.gen.keys) for (let i = 0; i < (state.chart?.[k] ?? 0); i++) if (state.chartInfo[`${k}-${i}`]) items.push([k, i]);
-    if (!items.length) for (const k of step.gen.keys) items.push([k, 0]);
+    if (step.gen.items) for (const id of step.gen.items) items.push([id[0], Number(id.slice(2))]);   // 指定字形，例如每日任務的到期項目 'a-1'
+    else for (const k of step.gen.keys) for (let i = 0; i < (state.chart?.[k] ?? 0); i++) if (state.chartInfo[`${k}-${i}`]) items.push([k, i]);
+    if (!items.length) for (const k of step.gen.keys ?? 'a') items.push([k, 0]);
     const out = [];
     for (let n = 0; n < step.gen.count; n++) {
       let it;
@@ -317,6 +321,7 @@ function makeText(step) {
       out.push(it);
     }
     state.display = out.map(([k, i]) => ({ html: chartGlyphs(k, 1).replace(`${k}-0.png`, `${k}-${i}.png`) }));
+    state.items = out.map(([k, i]) => `s:${k}-${i}`);
     return out.map((x) => x[0]).join('');
   }
   if (step.gen?.kind === 'shapes') {
@@ -820,17 +825,39 @@ function onTypingDone(step, eng) {
     state.testResult = { stats, stars };
   }
   store.saveAttempt({
-    lang, mode: PRACTICE ? 'practice' : TEST ? 'test' : 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
+    lang, mode: PRACTICE ? 'practice' : TEST ? 'test' : DAILY ? 'daily' : 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
   });
   if (TEST) {
     // 保留按鍵紀錄，日後 school 模式由伺服器重新計分
     store.saveTestResult(state.test.id, { wpm: stats.netWpm, accuracy: stats.accuracy, seconds: stats.seconds, stars: stars ?? 0, keystrokes: eng.keystrokes.slice(0, 3000) });
   }
-  if (!PRACTICE) store.saveStepResult(lang, lessonId, state.stepIndex + 1, {
+  if (!PRACTICE && !DAILY) store.saveStepResult(lang, lessonId, state.stepIndex + 1, {
     accuracy: stats.accuracy, wpm: stats.netWpm, stars, unit: state.unit,
   });
   store.addWeak(lang, weakTable(eng));
+  mastery.record(lang, masteryResults(eng));
+  if (DAILY) mastery.markDailyDone(lang, step.daily ?? `step${state.stepIndex}`);
   finishStep({ stats, stars, step, rest: typingTotal >= CONFIG.restReminderMinutes * 60 });
+}
+
+/** 掌握度：把這一步每個題目（字根 r:、輔助字形 s:、字 c:、英文鍵 k:）的對錯整理出來。 */
+function masteryResults(eng) {
+  const out = {};
+  const add = (id, ok) => { if (!id) return; const r = (out[id] ??= { ok: 0, err: 0 }); if (ok) r.ok += 1; else r.err += 1; };
+  const okAt = (i) => eng.status[i] === 'ok';
+  if (state.mode === 'chart' && state.items) {
+    state.items.forEach((id, i) => { if (eng.status[i] !== 'todo') add(id, okAt(i)); });
+  } else if (state.mode === 'roots' || state.mode === 'shapes') {
+    [...eng.text].forEach((k, i) => { if (eng.status[i] !== 'todo' && ROOTS[k]) add(`r:${k}`, okAt(i)); });
+  } else if (eng.chars) {
+    eng.chars.forEach((ch, i) => { if (eng.status[i] !== 'todo' && /\p{Script=Han}/u.test(ch)) add(`c:${ch}`, okAt(i)); });
+  } else {
+    for (const k of eng.keystrokes) {
+      if (k.ok === null || !k.expected || !/^[a-z]$/i.test(k.expected)) continue;
+      add(`k:${k.expected.toLowerCase()}`, k.ok);
+    }
+  }
+  return out;
 }
 
 /** 弱項：每個應按的鍵（字母）和每個字的答錯次數。 */
@@ -877,6 +904,22 @@ function finishStep({ stats, stars, step, rest, guide }) {
     return;
   }
   const isLast = state.stepIndex === L.steps.length - 1;
+  if (L.daily) {
+    const statsList = stats ? [['速度', `${fmt(stats.netWpm)} ${state.unit}`], ['準確率', `${fmtAcc(stats.accuracy)}%`], ['用時', clock(stats.seconds)], ['打錯', `${stats.errors} 次`]] : [];
+    const dp = dailyProgress(lang);
+    renderPanelPet(); state.fx.setFocus(false); state.fx.finish({ stars: 1 });
+    const actions = [];
+    if (isLast) {
+      actions.push(['回到首頁', () => (location.href = 'index.html'), true]);
+      actions.push(['再做一次', () => runStep(0), false]);
+    } else {
+      actions.push([`下一步：${L.steps[state.stepIndex + 1].title}`, () => runStep(state.stepIndex + 1), true]);
+      actions.push(['再練一次', () => runStep(state.stepIndex), false]);
+    }
+    showPanel({ title: isLast ? '今日任務完成！' : '做得好！', stars: null, stats: statsList, actions,
+      msg: isLast ? `連續 ${dp.streak} 天完成每日任務。明天再來，字根和字會按你的掌握度安排重溫。` : `已完成 ${dp.done.length}／3 部分。` });
+    return;
+  }
   const isTest = step?.type === 'test';
   const passed = !isTest || stars > 0;
 
@@ -957,9 +1000,24 @@ function saveLessonDone(stars, stats) {
     wpm: ['roots', 'shapes', 'chart', 'split'].includes(state.mode) ? 0 : (stats?.netWpm ?? 0),  // 字根練習的「個/分」不算打字速度
     accuracy: stats?.accuracy ?? 0,
   });
+  mastery.introduce(lang, lessonItems(state.lesson));
   if (stars && next.stars > prev.stars && prev.done) return `新紀錄：${next.stars} 粒星！`;
   if (stars && stars < 3) return '想拿更多星星？可以再試一次，打得更準、更快。';
   return '已解鎖下一課。';
+}
+
+/** 這一課教過的項目（字根、輔助字形、英文鍵），完成課堂後加入重溫名單。 */
+function lessonItems(L) {
+  const ids = new Set();
+  const keys = (L.newKeys ?? []).map((k) => /^Key([A-Z])$/.exec(k)?.[1]?.toLowerCase()).filter(Boolean);
+  for (const st of L.steps ?? []) for (const k of st.gen?.keys ?? []) keys.push(k);
+  for (const k of keys) {
+    if (lang === 'en') { ids.add(`k:${k}`); continue; }
+    if (!ROOTS[k]) continue;
+    ids.add(`r:${k}`);
+    for (let i = 0; i < (state.chart?.[k] ?? 0); i++) if (state.chartInfo?.[`${k}-${i}`]) ids.add(`s:${k}-${i}`);
+  }
+  return [...ids];
 }
 
 function goLesson(id) {

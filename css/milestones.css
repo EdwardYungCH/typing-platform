@@ -1,0 +1,16 @@
+/* 里程碑頁 */
+.ms-daily { margin-top: 8px; padding: 16px 18px; display: grid; gap: 8px; }
+.ms-daily .btn { justify-self: start; }
+.ms-item { margin-top: 12px; padding: 16px 18px; }
+.ms-item.done { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+.ms-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 18px; }
+.ms-num { font-family: 'Baloo 2', 'Noto Sans TC', sans-serif; font-weight: 800; color: var(--accent); font-size: 20px; }
+.ms-bar { height: 12px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; margin: 10px 0 6px; }
+.ms-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--ok)); transition: width .4s ease; }
+.ms-sub { margin: 0; }
+.ms-weak { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 8%, transparent); font-size: 16px; }
+.chip small { opacity: .6; font-size: 11px; }
+.chip-img .sg { width: 26px; height: 26px; }
+.ms-detail { margin-top: 16px; padding: 16px 18px; }
+.ms-detail h2 { margin: 0 0 6px; font-size: 18px; }

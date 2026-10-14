@@ -71,11 +71,14 @@ def roots_lesson(lid, title, new, learned, extra_hint):
     selfsplit = ''.join(c for c in selfsplit if c not in combo[:20]) or selfsplit
     names = ' '.join(ROOTS[k] for k in new)
     weighted = learned + new * 3
+    prev = ''.join(k for k in learned if k not in new)
+    review = [{'type': 'drill', 'mode': 'chart', 'title': '複習前課',
+               'hint': '先重溫之前學過的字根和輔助字形：看字形，按它所屬的鍵。', 'gen': {'kind': 'chart', 'keys': prev, 'count': 20}}] if prev else []
     return {
         'id': lid, 'title': title, 'subtitle': names,
         'newKeys': keycodes(new) + code_keys(chars) + ['Space'],
-        'pass': {'accuracy': 85},
-        'steps': [
+        'pass': {'accuracy': 90},
+        'steps': review + [
             {'type': 'drill', 'mode': 'roots', 'title': '示範', 'display': 'big',
              'hint': f'{names}：{extra_hint}看字根，按對應的鍵。', 'text': new * 2},
             {'type': 'drill', 'mode': 'roots', 'title': '單鍵',
@@ -90,8 +93,8 @@ def roots_lesson(lid, title, new, learned, extra_hint):
              'hint': '沒有顏色：自己拆字，打首碼和尾碼。打錯要改正才可繼續，錯三次才顯示答案。',
              'gen': {'kind': 'chars', 'chars': selfsplit, 'count': 20, 'unique': True}},
             {'type': 'test', 'mode': 'quick', 'title': '過關小測',
-             'hint': '60 秒內打字：打碼後按數字揀字，可以打錯。準確率達 85% 即過關。',
-             'timeLimit': 60, 'pass': {'accuracy': 85},
+             'hint': '60 秒內打字：打碼後按數字揀字，可以打錯。準確率達 90% 即過關。',
+             'timeLimit': 60, 'pass': {'accuracy': 90},
              'gen': {'kind': 'chars', 'chars': chars, 'count': 60}},
         ],
     }
@@ -145,6 +148,7 @@ learned += 'x'
 x_chars = pool(learned, 'x', 5, 3000, 10) + pool(learned, learned, 3, 300, 20)
 l7 = roots_lesson(7, '難字鍵與總複習', 'x', learned, '難字鍵 X 用於難以拆分的部分，例如「齊」「舊」。')
 l7['subtitle'] = '難 X ＋ 全部字根'
+del l7['steps'][0]   # 第 7 課本身就是總複習，不另加「複習前課」
 ALL = 'abcdefghijklmnopqrstuvwyx'
 l7['steps'][0]['text'] = 'xxx'
 l7['steps'][1]['text'] = 'xxxxxx'
@@ -159,7 +163,7 @@ l7['steps'][6]['gen']['chars'] = x_chars + pool(ALL, ALL, 5, 1000, 40)
 l7['newKeys'] = []
 L.append(l7)
 
-def split_lesson(lid, title, subtitle, slides, chars, hint, test_pass={'accuracy': 85}, n=20):
+def split_lesson(lid, title, subtitle, slides, chars, hint, test_pass={'accuracy': 90}, n=20):
     chars = ''.join(dict.fromkeys(chars))
     return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': keycodes(ALL), 'pass': test_pass,
             'steps': [guide(title, slides),
@@ -171,7 +175,7 @@ def split_lesson(lid, title, subtitle, slides, chars, hint, test_pass={'accuracy
 # 第 8 課：單碼字與取碼次序
 singles = ''.join(c for c in COMMON[:3000] if len(first[c]) == 1 and idx(c) == 1)
 two = ''.join(c for c in COMMON[:800] if len(Z['cj'].get(c, '')) == 2)[:30]
-L.append({'id': 8, 'title': '單碼字與取碼次序', 'subtitle': '上至下、左至右、外至內', 'newKeys': keycodes(ALL), 'pass': {'accuracy': 85},
+L.append({'id': 8, 'title': '單碼字與取碼次序', 'subtitle': '上至下、左至右、外至內', 'newKeys': keycodes(ALL), 'pass': {'accuracy': 90},
     'steps': [
         guide('取碼次序', [
             {'title': '一個鍵就打到的字', 'points': ['字本身就是一個字根，例如 日、月、木、口、人', '按一個鍵就可以'], 'show': 'keyboard', 'rootLabels': True, 'example': '人'},
@@ -179,8 +183,8 @@ L.append({'id': 8, 'title': '單碼字與取碼次序', 'subtitle': '上至下�
             {'title': '兩個部件的字', 'points': ['先把字分成兩部分，再按次序取碼', '明 ＝ 日＋月，林 ＝ 木＋木，吉 ＝ 士＋口', '接下來只要拆碼，打對兩個鍵就自動上屏，不用選字'], 'show': 'keyboard', 'rootLabels': True, 'example': '吉'}]),
         {'type': 'drill', 'mode': 'split', 'title': '單碼字', 'hint': '這些字本身就是字根：按一個鍵。', 'gen': {'kind': 'chars', 'chars': singles, 'count': 16}},
         {'type': 'drill', 'mode': 'split', 'title': '兩個部件', 'hint': '每個字由兩個字根組成：按次序打兩個鍵。', 'gen': {'kind': 'chars', 'chars': two, 'count': 20}},
-        {'type': 'test', 'mode': 'split', 'title': '過關小測', 'timeLimit': 60, 'pass': {'accuracy': 85},
-         'hint': '60 秒內拆得愈多愈好，沒有提示。準確率達 85% 即過關。', 'gen': {'kind': 'chars', 'chars': singles + two, 'count': 80}}]})
+        {'type': 'test', 'mode': 'split', 'title': '過關小測', 'timeLimit': 60, 'pass': {'accuracy': 90},
+         'hint': '60 秒內拆得愈多愈好，沒有提示。準確率達 90% 即過關。', 'gen': {'kind': 'chars', 'chars': singles + two, 'count': 80}}]})
 
 # 拆碼說明（按 docs/cangjie-rules.md；顯示在規則卡、拆字答案和「上一題」）
 NOTES = {
@@ -290,11 +294,21 @@ L.append({'id': 11, 'title': '選字與標點', 'subtitle': '數字鍵揀字、�
         {'type': 'test', 'mode': 'quick', 'title': '過關小測', 'timeLimit': 90, 'pass': {'accuracy': 90},
          'hint': '把整句打出來，包括標點。準確率達 90% 即過關。', 'text': ''.join(punct_texts)}]})
 
-# 第 12、13 課：常用字
-L.append(quick_lesson(12, '常用字（一）', '最常用 300 字', COMMON[:300],
-    '最常用的 300 字。有些字要按空白鍵翻頁才找到，例如「學」在第 3 頁。', {'wpm': 3}, count=30, test_count=120))
-L.append(quick_lesson(13, '常用字（二）', '第 301 至 1000 字', COMMON[300:1000],
-    '再多 700 個常用字。不記得碼時，看提示。', {'wpm': 5}, count=30, test_count=150))
+# 第 12、13 課：常用字，每 50 字一批，逐批打熟（每批不重複出齊 50 字），最後小測
+def batch_lesson(lid, title, subtitle, start, end, test_pass, test_count):
+    steps = []
+    for b in range(start, end, 50):
+        chars = COMMON[b:b + 50]
+        steps.append({'type': 'drill', 'mode': 'quick', 'title': f'第 {b + 1}–{b + 50} 字',
+                      'hint': f'常用字第 {b + 1} 至 {b + 50}：這 50 個字每個出一次。不記得碼時，看提示；要翻頁的字按空白鍵。',
+                      'gen': {'kind': 'chars', 'chars': chars, 'count': 50, 'unique': True}})
+    steps.append({'type': 'test', 'mode': 'quick', 'title': '過關小測', 'timeLimit': 90, 'pass': test_pass,
+                  'hint': f'90 秒內打得愈多愈好，字從第 {start + 1} 至 {end} 字抽出。{pass_text(test_pass)}',
+                  'gen': {'kind': 'chars', 'chars': COMMON[start:end], 'count': test_count}})
+    return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': [], 'pass': test_pass, 'steps': steps}
+
+L.append(batch_lesson(12, '常用字（一）', '最常用 500 字，分 10 批', 0, 500, {'wpm': 3, 'accuracy': 90}, 120))
+L.append(batch_lesson(13, '常用字（二）', '第 501 至 1000 字，分 10 批', 500, 1000, {'wpm': 5, 'accuracy': 90}, 150))
 
 # 第 14 課：詞語（原創的香港常用兩字詞，用頓號分隔；部分字要翻頁，例如「學」）
 WORDS = """學校 老師 同學 課室 功課 考試 上課 下課 放學 早餐 午餐 晚餐 朋友 家人 爸爸 媽媽 哥哥 姐姐 弟弟 妹妹
