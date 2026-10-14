@@ -20,7 +20,8 @@ const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const lang = params.get('lang') === 'zh' ? 'zh' : 'en';
 const PRACTICE = params.get('mode') === 'practice';
-const lessonId = PRACTICE ? -1 : Number(params.get('id') ?? 0);
+const TEST = params.get('mode') === 'test';
+const lessonId = (PRACTICE || TEST) ? -1 : Number(params.get('id') ?? 0);
 
 const state = {
   lesson: null,
@@ -55,7 +56,20 @@ async function init() {
     const sh = await fetch('data/zh-shapes.json').then((r) => r.json());
     state.shapes = sh.keys;
   }
-  state.lesson = PRACTICE
+  if (TEST) {
+    const tests = (await fetch('data/tests.json').then((r) => r.json())).tests;
+    state.test = tests.find((t) => t.id === params.get('id') && t.lang === lang);
+    if (state.test && store.getTestResult(state.test.id) && !params.get('again')) {
+      $('lesson-title').textContent = '這個評測已經做過';
+      $('step-hint').innerHTML = '每個評測只可以做一次。要重做請找老師。<a href="tests.html?lang=' + lang + '">回到評測區</a>';
+      return;
+    }
+    if (state.test) state.lesson = {
+      id: 0, title: state.test.title, subtitle: state.test.subtitle, newKeys: [], test: state.test,
+      steps: [{ type: 'test', mode: lang === 'zh' ? 'quick' : 'en', title: state.test.title, hint: `${Math.round(state.test.timeLimit / 60)} 分鐘內打得愈多愈好。開始後不能暫停。`,
+                timeLimit: state.test.timeLimit, pass: state.test.pass, text: state.test.text }],
+    };
+  } else state.lesson = PRACTICE
     ? buildPractice(params, { lang, zh: state.zh, enLessons: state.lessons })
     : state.lessons.find((l) => l.id === lessonId);
   if (!state.lesson) {
@@ -78,14 +92,14 @@ async function init() {
   setupFx();
 
   const L = state.lesson;
-  document.title = PRACTICE ? `${L.title}｜練習區` : `第 ${L.id} 課：${L.title}｜打字練習`;
+  document.title = PRACTICE ? `${L.title}｜練習區` : TEST ? `${L.title}｜評測區` : `第 ${L.id} 課：${L.title}｜打字練習`;
   $('crumb').textContent = lang === 'en' ? '英文打字' : '中文速成';
-  $('lesson-eyebrow').textContent = PRACTICE ? '練習區' : `第 ${L.id} 課`;
+  $('lesson-eyebrow').textContent = PRACTICE ? '練習區' : TEST ? '評測區' : `第 ${L.id} 課`;
   $('lesson-title').textContent = `${L.title}　${L.subtitle ?? ''}`.trim();
 
   const startStep = Math.min(Math.max(Number(params.get('step') ?? 1) - 1, 0), L.steps.length - 1);
   // 做過的課：全部步驟都可以直接跳去重做；做過的步驟也可以
-  const done = PRACTICE || store.getLessonResult(lang, lessonId)?.done;
+  const done = PRACTICE || TEST || store.getLessonResult(lang, lessonId)?.done;
   const reached = Object.keys(store.getStepResults(lang, lessonId)).map(Number);
   state.maxReached = done ? L.steps.length - 1 : Math.max(startStep, ...reached.map((n) => Math.min(n, L.steps.length - 1)));
   renderSteps();
@@ -141,7 +155,7 @@ function setupFingerToggle(initial) {
 function renderSteps() {
   const ol = $('steps');
   ol.innerHTML = '';
-  if (state.lesson.practice) return;
+  if (state.lesson.practice || state.lesson.test) return;
   state.lesson.steps.forEach((s, i) => {
     const li = document.createElement('li');
     const b = document.createElement('button');
@@ -806,8 +820,12 @@ function onTypingDone(step, eng) {
     state.testResult = { stats, stars };
   }
   store.saveAttempt({
-    lang, mode: PRACTICE ? 'practice' : 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
+    lang, mode: PRACTICE ? 'practice' : TEST ? 'test' : 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
   });
+  if (TEST) {
+    // 保留按鍵紀錄，日後 school 模式由伺服器重新計分
+    store.saveTestResult(state.test.id, { wpm: stats.netWpm, accuracy: stats.accuracy, seconds: stats.seconds, stars: stars ?? 0, keystrokes: eng.keystrokes.slice(0, 3000) });
+  }
   if (!PRACTICE) store.saveStepResult(lang, lessonId, state.stepIndex + 1, {
     accuracy: stats.accuracy, wpm: stats.netWpm, stars, unit: state.unit,
   });
@@ -829,6 +847,26 @@ function weakTable(eng) {
 
 function finishStep({ stats, stars, step, rest, guide }) {
   const L = state.lesson;
+  if (L.test) {
+    const t = L.test;
+    const statsList = [['速度', `${fmt(stats.netWpm)} ${state.unit}`], ['準確率', `${fmtAcc(stats.accuracy)}%`], ['用時', clock(stats.seconds)], ['打錯', `${stats.errors} 次`]];
+    let title, msg;
+    if (t.kind === 'placement') {
+      const lv = [...t.levels].reverse().find((x) => stats.netWpm >= x.minWpm && stats.accuracy >= x.minAcc) ?? t.levels[0];
+      store.setSetting(`placement:${lang}`, lv.startLesson);
+      title = '分級完成';
+      msg = `${lv.note}（跳過的課仍可隨時重溫。）`;
+      renderPanelPet(); state.fx.setFocus(false); state.fx.finish({ stars: 1 });
+      showPanel({ title, msg, stars: null, stats: statsList, actions: [[`去第 ${lv.startLesson} 課`, () => (location.href = `type.html?lang=${lang}&mode=lesson&id=${lv.startLesson}`), true], ['回到評測區', () => (location.href = `tests.html?lang=${lang}`), false]] });
+      return;
+    }
+    const passed = stars > 0;
+    title = passed ? '達標！' : '未達標';
+    msg = passed ? `達到${t.subtitle.replace(/^.*目標/, '目標')}的要求。` : `目標是${t.subtitle.replace(/^.*目標/, '')}。到練習區再練一練，下次評測再試。`;
+    renderPanelPet(); state.fx.setFocus(false); state.fx.finish({ stars: stars ?? 0 });
+    showPanel({ title, msg, stars, stats: statsList, actions: [['回到評測區', () => (location.href = `tests.html?lang=${lang}`), true], ['去練習區', () => (location.href = `practice.html?lang=${lang}`), false]] });
+    return;
+  }
   if (L.practice) {
     const statsList = stats ? [['速度', `${fmt(stats.netWpm)} ${state.unit}`], ['準確率', `${fmtAcc(stats.accuracy)}%`], ['用時', clock(stats.seconds)], ['打錯', `${stats.errors} 次`]] : [];
     renderPanelPet();

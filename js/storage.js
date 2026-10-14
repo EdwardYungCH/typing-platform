@@ -142,3 +142,15 @@ export function getWeak(lang) {
     .map(([k, v]) => ({ key: k, tries: v.tries, errors: v.errors, rate: v.errors / v.tries }))
     .sort((a, b) => b.rate - a.rate || b.errors - a.errors);
 }
+
+/** 評測結果：每個評測只做一次（free 模式鎖在瀏覽器；school 模式由伺服器決定）。 */
+export function saveTestResult(testId, result) {
+  const data = readAll();
+  data.tests ??= {};
+  data.tests[testId] = { ...result, at: new Date().toISOString() };
+  writeAll(data);
+}
+
+export function getTestResult(testId) {
+  return readAll().tests?.[testId] ?? null;
+}

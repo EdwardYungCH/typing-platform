@@ -1,0 +1,39 @@
+{
+  "_說明": "評測區的題目。正式推出後，老師自訂的評測會存在伺服器，這裏只是內置的評測。placement 是分級測驗，結果用來建議由第幾課開始。",
+  "tests": [
+    {
+      "id": "en-placement", "lang": "en", "kind": "placement", "title": "英文分級測驗", "subtitle": "3 分鐘，看看你已經到哪個程度",
+      "timeLimit": 180, "pass": {},
+      "text": "The sun is up and we go to school. I like to read books in the library. My friend has a small brown dog. Please open your book to page ten. We will have a test on Friday. Thank you for your help today! The cat sat on the warm window. We need to drink water and sleep well. Typing gets easier when you practise every day. What time does the bus leave in the morning?",
+      "levels": [
+        { "minWpm": 0, "minAcc": 0, "startLesson": 0, "note": "由第 0 課開始，先學指法。" },
+        { "minWpm": 8, "minAcc": 85, "startLesson": 6, "note": "基準鍵和上排已經熟習，可由第 6 課開始。" },
+        { "minWpm": 15, "minAcc": 90, "startLesson": 12, "note": "字母都熟了，由第 12 課（Shift 與大寫）開始。" },
+        { "minWpm": 25, "minAcc": 92, "startLesson": 15, "note": "已經很流暢，直接做第 15、16 課，然後去練習區練速度。" }
+      ]
+    },
+    {
+      "id": "zh-placement", "lang": "zh", "kind": "placement", "title": "速成分級測驗", "subtitle": "3 分鐘，看看你已經到哪個程度",
+      "timeLimit": 180, "pass": {},
+      "text": "今天天氣很好，我們一起去公園跑步。上課的時候，請大家專心聽老師講解。香港的交通十分方便，乘坐地鐵和巴士可以到達不同的地方。學習打字需要耐心，先求準確，再求速度。",
+      "levels": [
+        { "minWpm": 0, "minAcc": 0, "startLesson": 0, "note": "由第 0 課開始，先認字根。" },
+        { "minWpm": 4, "minAcc": 80, "startLesson": 8, "note": "字根已經認得，由第 8 課（取碼次序）開始學拆字。" },
+        { "minWpm": 8, "minAcc": 88, "startLesson": 12, "note": "拆字已上手，由第 12 課（常用字）開始練速度。" },
+        { "minWpm": 15, "minAcc": 92, "startLesson": 15, "note": "已經很流暢，做第 15 課後去練習區練速度。" }
+      ]
+    },
+    { "id": "en-s1", "lang": "en", "kind": "test", "title": "英文評測：中一", "subtitle": "2 分鐘，目標 10 WPM、準確率 90%", "timeLimit": 120, "pass": { "wpm": 10, "accuracy": 90 },
+      "text": "My school is near the park. Every morning I walk there with my friend. We like to play football after lunch. The library is a quiet place to read. Our teacher says that practice makes perfect. Today we learn to type with ten fingers. It is slow at first, but it gets faster every day." },
+    { "id": "en-s2", "lang": "en", "kind": "test", "title": "英文評測：中二", "subtitle": "2 分鐘，目標 20 WPM、準確率 90%", "timeLimit": 120, "pass": { "wpm": 20, "accuracy": 90 },
+      "text": "Hong Kong is a busy city with many tall buildings. People travel by train, bus and ferry every day. On weekends, families go hiking in the country parks or swimming at the beach. The weather is hot in summer and cool in winter. Many students join clubs after school to learn music, sports or coding." },
+    { "id": "en-s3", "lang": "en", "kind": "test", "title": "英文評測：中三", "subtitle": "2 分鐘，目標 30 WPM、準確率 90%", "timeLimit": 120, "pass": { "wpm": 30, "accuracy": 90 },
+      "text": "Learning a new skill takes patience and good habits. At the beginning, everyone is slow and makes mistakes; that is normal. The important thing is to find out where you often go wrong and practise those parts again. If you keep going for ten minutes a day, you will notice real progress within a few weeks. Remember: accuracy first, then speed." },
+    { "id": "zh-s1", "lang": "zh", "kind": "test", "title": "速成評測：中一", "subtitle": "2 分鐘，目標每分鐘 6 字、準確率 90%", "timeLimit": 120, "pass": { "wpm": 6, "accuracy": 90 },
+      "text": "我是中一學生，今年九月開始學打字。老師說，先求準確，再求速度。每天練習十分鐘，手指就會記住字根的位置。放學後，我和同學一起去圖書館做功課，然後回家吃晚飯。" },
+    { "id": "zh-s2", "lang": "zh", "kind": "test", "title": "速成評測：中二", "subtitle": "2 分鐘，目標每分鐘 12 字、準確率 90%", "timeLimit": 120, "pass": { "wpm": 12, "accuracy": 90 },
+      "text": "香港是一個國際城市，交通十分方便。乘坐地鐵和巴士，可以到達不同的地方。週末的時候，很多人會去海灘游泳，或者到山頂看風景。天氣好的日子，公園裏總是有很多家庭在野餐。" },
+    { "id": "zh-s3", "lang": "zh", "kind": "test", "title": "速成評測：中三", "subtitle": "2 分鐘，目標每分鐘 18 字、準確率 90%", "timeLimit": 120, "pass": { "wpm": 18, "accuracy": 90 },
+      "text": "學習一種新技能需要耐心和方法。開始的時候，速度一定比較慢，犯錯也很平常。重要的是找出自己常錯的地方，針對弱點反覆練習。只要堅持下去，進步會在不知不覺間出現。記住，準確比快更重要。" }
+  ]
+}

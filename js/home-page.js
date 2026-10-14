@@ -1,4 +1,4 @@
-import { getProgress } from './storage.js';
+import { getProgress, getSetting } from './storage.js';
 import { loadCompanions, art, getChoice, nickOf, summary, stageOf, nextGoal } from './companion.js';
 
 const data = await loadCompanions();
@@ -35,6 +35,7 @@ for (const [w, info] of Object.entries(data.worlds)) {
     </div>${growth}`;
 
   const prog = getProgress(info.lang);
+  const placement = getSetting(`placement:${info.lang}`, null);
   const ul = document.createElement('ul');
   ul.className = 'map';
   for (const l of lessonsOf[info.lang]) {
@@ -42,13 +43,15 @@ for (const [w, info] of Object.entries(data.worlds)) {
     const li = document.createElement('li');
     li.innerHTML = `<a class="node${p?.done ? ' done' : ''}" href="type.html?lang=${info.lang}&mode=lesson&id=${l.id}">
       <span class="num">${p?.done ? '✓' : l.id}</span>
-      <span class="t"><b>第 ${l.id} 課：${l.title}</b><span>${l.subtitle}</span></span>
+      <span class="t"><b>第 ${l.id} 課：${l.title}</b><span>${l.subtitle}${placement === l.id ? '　<b class="badge">分級測驗建議由這裏開始</b>' : ''}</span></span>
       <span class="s" aria-label="${p?.stars ?? 0} 粒星">${p?.stars ? '★'.repeat(p.stars) : ''}</span></a>`;
     ul.append(li);
   }
   card.append(ul);
   card.insertAdjacentHTML('beforeend', `<ul class="map"><li><a class="node" href="practice.html?lang=${info.lang}">
-    <span class="num">練</span><span class="t"><b>練習區</b><span>自由操練、弱項加強${info.lang === 'zh' ? '、真實輸入法' : ''}</span></span></a></li></ul>`)
+    <span class="num">練</span><span class="t"><b>練習區</b><span>自由操練、弱項加強${info.lang === 'zh' ? '、真實輸入法' : ''}</span></span></a></li>
+    <li><a class="node" href="tests.html?lang=${info.lang}">
+    <span class="num">測</span><span class="t"><b>評測區</b><span>分級測驗、限時評測（只做一次）</span></span></a></li></ul>`)
   if (info.lang === 'zh') {
     card.insertAdjacentHTML('beforeend', `
       <ul class="map"><li><a class="node" href="zh/lookup.html">
