@@ -20,7 +20,10 @@ PUNCT = set('，。；：？！「」、')
 SHAPES = json.load(open('data/zh-shapes.json', encoding='utf-8'))['keys']
 import os
 # 有雙色拆碼圖（首碼紅、尾碼藍）的字：組合練習優先用這些字
-COLORED = set(chr(int(f[:-5], 16)) for f in os.listdir('assets/glyphs') if f.endswith('.json'))
+COLORED = set()
+for f in os.listdir('assets/glyphs'):
+    if f.endswith('.json') and '"r"' in open(f'assets/glyphs/{f}', encoding='utf-8').read():
+        COLORED.add(chr(int(f[:-5], 16)))
 
 def idx(ch):
     q = first[ch]
@@ -65,7 +68,7 @@ def shape_slides(keys):
              'shapeKey': k} for k in keys if k != 'x']
 
 def roots_lesson(lid, title, new, learned, extra_hint):
-    chars = pool(learned, new)
+    chars = pool(learned, new, colored=True)
     combo = pool(learned, new, maxidx=99, top=3000, n=80, colored=True, two=True)
     selfsplit = pool(learned, learned, maxidx=99, top=3000, n=80, colored=True, two=True)
     selfsplit = ''.join(c for c in selfsplit if c not in combo[:20]) or selfsplit
