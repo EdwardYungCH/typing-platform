@@ -1,6 +1,14 @@
 import { getProgress, getSetting } from './storage.js';
 import { loadCompanions, art, getChoice, nickOf, summary, stageOf, nextGoal } from './companion.js';
 import { dailyProgress } from './daily.js';
+import { start as syncStart } from './sync.js';
+
+const me = await syncStart();
+if (me) {
+  const a = document.getElementById('acct');
+  a.href = 'me.html'; a.textContent = `${me.name}（${me.className ?? me.sid}）`;
+  document.getElementById('note').textContent = `已登入 ${me.name}：紀錄會自動同步到伺服器。共用電腦練完記得在「我的帳戶」登出。`;
+}
 
 const data = await loadCompanions();
 const [en, zhL] = await Promise.all(['en', 'zh'].map((l) => fetch(`data/${l}-lessons.json`).then((r) => r.json())));

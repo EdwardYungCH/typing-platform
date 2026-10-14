@@ -1,10 +1,6 @@
-// 平台設定。第 1–3 階段用 free 模式（紀錄存在瀏覽器）；
-// 第 4 階段接上 Supabase 後改為 school，並填入連線資料。
+// 平台設定。紀錄一律先存在瀏覽器；學生登入後由 js/sync.js 同步到伺服器（Cloudflare Worker + D1）。
 
 export const CONFIG = {
-  MODE: 'free',            // 'free' 或 'school'
-  SUPABASE_URL: '',        // 第 4 階段填寫
-  SUPABASE_ANON_KEY: '',   // 第 4 階段填寫（公開金鑰，可放在網頁）
 
   // 學生可在設定中更改的預設值
   defaults: {

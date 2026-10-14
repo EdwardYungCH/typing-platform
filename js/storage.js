@@ -20,11 +20,16 @@ function writeAll(data) {
   } catch {
     // 私密瀏覽或空間不足時無法儲存，網站照常運作
   }
+  notifyChanged();
+}
+
+/** 通知同步程式（js/sync.js）有改動；未登入時沒有人在聽，不影響。 */
+export function notifyChanged() {
+  try { window.dispatchEvent(new CustomEvent('tp:changed')); } catch { /* ignore */ }
 }
 
 /** 儲存一次作答的結果（不存按鍵細節，免得佔空間）。 */
 export function saveAttempt({ lang, mode, lessonId, step, stats, stars }) {
-  if (CONFIG.MODE !== 'free') throw new Error('school 模式於第 4 階段加入');
   const data = readAll();
   data.attempts.push({
     at: new Date().toISOString(),

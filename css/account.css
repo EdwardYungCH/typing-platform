@@ -1,0 +1,17 @@
+/* 登入頁、我的帳戶頁、教師後台共用的表單樣式 */
+.form-card { max-width: 440px; margin: 16px auto 0; padding: 22px; display: grid; gap: 14px; }
+.form-card h2 { margin: 0; font-size: 22px; }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 14px; color: var(--ink-2); }
+.field input, .field select, .field textarea {
+  font: inherit; padding: 10px 12px; border-radius: 12px; width: 100%; box-sizing: border-box;
+  background: var(--surface-2); color: var(--ink); border: 1px solid var(--line);
+}
+.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.form-msg { min-height: 1.4em; font-size: 14px; color: var(--bad); }
+.form-msg.ok { color: var(--ok); }
+.form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.acct { display: grid; gap: 14px; max-width: 640px; }
+.acct .row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; border-bottom: 1px solid var(--line); padding: 8px 0; }
+.acct .row b { font-size: 16px; }
+.hint { font-size: 14px; color: var(--ink-2); margin: 0; }

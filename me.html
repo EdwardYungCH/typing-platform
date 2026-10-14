@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-Hant-HK" data-world="planet">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我的帳戶</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/world.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/account.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="index.html">打字練習平台</a>
+      <span class="spacer"></span>
+      <a class="btn ghost" href="index.html">回首頁</a>
+    </header>
+    <h1 style="margin:0">我的帳戶</h1>
+    <section class="card form-card acct" id="info" style="margin-left:0"></section>
+    <form class="card form-card" id="pwform" style="margin-left:0" hidden>
+      <h2>更改密碼</h2>
+      <p class="hint" id="first-hint" hidden>這是老師派發的初始密碼，建議先改成自己記得的密碼（至少 6 個字元）。</p>
+      <div class="field"><label for="old">舊密碼</label><input id="old" type="password" autocomplete="current-password" required></div>
+      <div class="field"><label for="new1">新密碼</label><input id="new1" type="password" autocomplete="new-password" minlength="6" required></div>
+      <div class="field"><label for="new2">再輸入一次</label><input id="new2" type="password" autocomplete="new-password" minlength="6" required></div>
+      <p class="form-msg" id="pwmsg" aria-live="polite"></p>
+      <div class="form-actions"><button class="btn primary" type="submit">更改密碼</button><a class="btn ghost" id="skip" href="index.html" hidden>之後再改</a></div>
+    </form>
+  </div>
+  <script type="module" src="js/me-page.js"></script>
+</body>
+</html>

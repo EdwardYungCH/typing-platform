@@ -17,6 +17,8 @@ import { generateZh } from './zh-gen.js';
 import { buildPractice } from './practice.js';
 import * as mastery from './mastery.js';
 import { buildDaily, dailyProgress } from './daily.js';
+import { start as syncStart } from './sync.js';
+import { api } from './api.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -45,6 +47,7 @@ init().catch((err) => {
 });
 
 async function init() {
+  state.user = await syncStart();   // 登入了就先拉取伺服器紀錄
   const [, lessonsData, levels] = await Promise.all([
     loadFingers(),
     fetch(`data/${lang}-lessons.json`).then((r) => r.json()),
@@ -64,7 +67,18 @@ async function init() {
   if (TEST) {
     const tests = (await fetch('data/tests.json').then((r) => r.json())).tests;
     state.test = tests.find((t) => t.id === params.get('id') && t.lang === lang);
-    if (state.test && store.getTestResult(state.test.id) && !params.get('again')) {
+    if (state.test && state.user) {
+      // 登入了：由伺服器發題和記時，交卷後由伺服器重新計分；每個評測只可做一次
+      try {
+        const st = await api('/api/test/start', { method: 'POST', body: { testId: state.test.id } });
+        state.attemptId = st.attemptId;
+        state.test = { ...state.test, text: st.text, timeLimit: st.timeLimit };
+      } catch (err) {
+        $('lesson-title').textContent = err.status === 409 ? '這個評測已經做過' : '暫時不能開始評測';
+        $('step-hint').innerHTML = `${err.message}。<a href="tests.html?lang=${lang}">回到評測區</a>`;
+        return;
+      }
+    } else if (state.test && store.getTestResult(state.test.id) && !params.get('again')) {
       $('lesson-title').textContent = '這個評測已經做過';
       $('step-hint').innerHTML = '每個評測只可以做一次。要重做請找老師。<a href="tests.html?lang=' + lang + '">回到評測區</a>';
       return;
@@ -816,7 +830,7 @@ function clock(sec) {
 
 // ---------- 完成步驟 ----------
 
-function onTypingDone(step, eng) {
+async function onTypingDone(step, eng) {
   const stats = statsOf(eng);
   const typingTotal = store.addTypingTime(stats.seconds);
   let stars = null;
@@ -824,12 +838,20 @@ function onTypingDone(step, eng) {
     stars = starsFor(stats, step.pass ?? {}, state.levels.stars);
     state.testResult = { stats, stars };
   }
+  if (TEST && state.attemptId) {
+    // 交卷：伺服器用按鍵紀錄重新計分，畫面顯示伺服器的成績
+    const r = await submitTest(eng, stats);
+    if (!r) return;
+    stats.netWpm = r.wpm; stats.grossWpm = r.wpm; stats.accuracy = r.accuracy; stats.seconds = r.seconds; stats.errors = r.errors;
+    stars = r.stars;
+    state.testResult = { stats, stars };
+  }
   store.saveAttempt({
     lang, mode: PRACTICE ? 'practice' : TEST ? 'test' : DAILY ? 'daily' : 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
   });
   if (TEST) {
-    // 保留按鍵紀錄，日後 school 模式由伺服器重新計分
-    store.saveTestResult(state.test.id, { wpm: stats.netWpm, accuracy: stats.accuracy, seconds: stats.seconds, stars: stars ?? 0, keystrokes: eng.keystrokes.slice(0, 3000) });
+    // 本機也記一份（登入時是伺服器核實後的成績；按鍵紀錄由伺服器保存）
+    store.saveTestResult(state.test.id, { wpm: stats.netWpm, accuracy: stats.accuracy, seconds: stats.seconds, stars: stars ?? 0, verified: !!state.attemptId });
   }
   if (!PRACTICE && !DAILY) store.saveStepResult(lang, lessonId, state.stepIndex + 1, {
     accuracy: stats.accuracy, wpm: stats.netWpm, stars, unit: state.unit,
@@ -838,6 +860,26 @@ function onTypingDone(step, eng) {
   mastery.record(lang, masteryResults(eng));
   if (DAILY) mastery.markDailyDone(lang, step.daily ?? `step${state.stepIndex}`);
   finishStep({ stats, stars, step, rest: typingTotal >= CONFIG.restReminderMinutes * 60 });
+}
+
+/** 把按鍵紀錄送去伺服器計分；失敗時顯示重試按鈕，回傳 null。 */
+async function submitTest(eng, stats) {
+  const payload = { attemptId: state.attemptId, keystrokes: eng.keystrokes.map((k) => ({ t: k.t, key: k.key })), client: { wpm: stats.netWpm, accuracy: stats.accuracy, seconds: stats.seconds } };
+  for (;;) {
+    try {
+      const r = await api('/api/test/submit', { method: 'POST', body: payload });
+      return r.result;
+    } catch (err) {
+      if (err.status === 409 || err.status === 404 || err.status === 410) {
+        showPanel({ title: '未能交卷', msg: err.message, stars: null, stats: [], actions: [['回到評測區', () => (location.href = `tests.html?lang=${lang}`), true]] });
+        return null;
+      }
+      const again = await new Promise((resolve) => showPanel({ title: '交卷失敗', msg: `${err.message}。你的作答仍在這一頁，請檢查網絡後再試。`, stars: null, stats: [],
+        actions: [['再試一次', () => resolve(true), true]] }));
+      if (!again) return null;
+      hidePanel();
+    }
+  }
 }
 
 /** 掌握度：把這一步每個題目（字根 r:、輔助字形 s:、字 c:、英文鍵 k:）的對錯整理出來。 */

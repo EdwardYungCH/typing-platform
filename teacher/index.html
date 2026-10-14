@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-Hant-HK" data-world="planet">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>教師後台</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/world.css">
+  <link rel="stylesheet" href="../css/home.css">
+  <link rel="stylesheet" href="../css/account.css">
+  <link rel="stylesheet" href="../css/teacher.css">
+</head>
+<body>
+  <div class="page wide">
+    <header class="topbar">
+      <a class="brand" href="../index.html">打字練習平台</a>
+      <span class="muted">教師後台</span>
+      <span class="spacer"></span>
+      <span id="who" class="muted"></span>
+      <button class="btn ghost" id="logout" type="button" hidden>登出</button>
+    </header>
+    <main id="app"><p class="muted">載入中…</p></main>
+  </div>
+  <section id="print" class="slips" hidden></section>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

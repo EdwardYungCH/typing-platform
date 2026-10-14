@@ -5,6 +5,8 @@ import { ROOTS, loadZh, chartGlyphs } from './zh-codes.js';
 import { getProgress } from './storage.js';
 import * as mastery from './mastery.js';
 import { dailyProgress } from './daily.js';
+import { start as syncStart } from './sync.js';
+await syncStart();
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);

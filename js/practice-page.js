@@ -1,6 +1,8 @@
 import { applyWorld } from './world.js';
 import { ROOTS, ROOT_GROUPS } from './zh-codes.js';
 import { getWeak } from './storage.js';
+import { start as syncStart } from './sync.js';
+await syncStart();
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);

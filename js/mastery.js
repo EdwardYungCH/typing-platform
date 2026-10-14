@@ -2,6 +2,8 @@
 // 第一次就答對 → 升一盒，下次隔更久才出現；答錯 → 跌兩盒，很快再出現。
 // 盒子 0..5 的間隔（日）：0 即日、1 一日、2 三日、3 七日、4 十四日、5 三十日。盒子 3 或以上算「掌握」。
 
+import { notifyChanged } from './storage.js';
+
 const KEY = 'typing-platform:mastery:v1';
 const INTERVAL_DAYS = [0, 1, 3, 7, 14, 30];
 export const MASTER_BOX = 3;
@@ -11,6 +13,7 @@ function readAll() {
 }
 function writeAll(d) {
   try { localStorage.setItem(KEY, JSON.stringify(d)); } catch { /* 無法儲存時照常運作 */ }
+  notifyChanged();
 }
 
 const DAY = 86400000;
@@ -90,5 +93,6 @@ export function markDailyDone(lang, part) {
   }
   for (const k of Object.keys(s.done)) if (Number(k) < t - 60) delete s.done[k];
   try { localStorage.setItem(DKEY, JSON.stringify(all)); } catch { /* ignore */ }
+  notifyChanged();
   return s;
 }

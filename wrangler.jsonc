@@ -1,12 +1,31 @@
 {
-  // Cloudflare Workers 設定：只發佈 npm run build 產生的 dist/ 資料夾。
+  // Cloudflare Workers 設定：網頁檔案由 npm run build 產生的 dist/ 發佈，
+  // /api/* 由 worker/index.js 處理（登入、進度同步、評測計分、教師後台）。
   // 名稱要與 Cloudflare 上的項目名稱一致。
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "sphrc-typing-platform",
+  "main": "worker/index.js",
   "compatibility_date": "2026-10-06",
   // 開啟 xxx.workers.dev 網址；日後加學校網域時仍可保留
   "workers_dev": true,
   "assets": {
-    "directory": "./dist"
-  }
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // 這些路徑先交給 worker，其餘直接出靜態檔
+    "run_worker_first": ["/api/*"]
+  },
+  // 讓 worker 可以把 migrations/*.sql 當文字讀入，第一次有人用 API 時自動建立資料表
+  "rules": [{ "type": "Text", "globs": ["**/*.sql"] }],
+  // D1 資料庫：在 Cloudflare 後台 Storage & Databases → D1 建立一個叫 typing-platform 的資料庫，
+  // 然後把下面整段的 /* 和 */ 刪掉，並把 database_id 換成它的 Database ID。
+  /*
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "typing-platform",
+      "database_id": "請貼上你的 D1 Database ID"
+    }
+  ],
+  */
+  "observability": { "enabled": true }
 }

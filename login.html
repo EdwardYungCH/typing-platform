@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant-HK" data-world="planet">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登入</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/world.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/account.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="index.html">打字練習平台</a>
+      <span class="spacer"></span>
+      <a class="btn ghost" href="index.html">回首頁</a>
+    </header>
+    <form class="card form-card" id="form" autocomplete="off">
+      <h2>學生登入</h2>
+      <p class="hint">用老師派發的學號和密碼登入，紀錄會在不同電腦之間同步。沒有帳號也可以直接練習，紀錄只存在這部電腦。</p>
+      <div class="field"><label for="sid">學號</label><input id="sid" name="username" autocomplete="username" required placeholder="例如 s27001" autocapitalize="none" spellcheck="false"></div>
+      <div class="field"><label for="pw">密碼</label><input id="pw" name="password" type="password" autocomplete="current-password" required></div>
+      <p class="form-msg" id="msg" aria-live="polite"></p>
+      <div class="form-actions">
+        <button class="btn primary" type="submit" id="go">登入</button>
+        <a class="btn ghost" href="index.html">不登入，先練習</a>
+      </div>
+      <p class="hint">忘記密碼？請找老師在後台重設。</p>
+    </form>
+  </div>
+  <script type="module" src="js/login-page.js"></script>
+</body>
+</html>

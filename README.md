@@ -2,7 +2,7 @@
 
 中一至中三學生的打字練習網站，分英文打字和中文速成，每部分循「課堂 → 練習 → 評測」由零練到流暢。
 
-目前進度：**第 1 階段（英文核心）**，已完成打字畫面、虛擬鍵盤、手形提示，以及英文第 0、1 課。紀錄暫時只存在學生自己的瀏覽器。
+目前進度：課堂、練習區、評測區、掌握度／每日任務／里程碑都已完成；**第 4 階段（帳戶與教師後台）**程式已寫好，等 Cloudflare 的 D1 資料庫設定好就可以用。未登入時紀錄只存在學生自己的瀏覽器；登入後同步到伺服器。
 
 ## 網站如何更新
 
@@ -19,7 +19,44 @@
 | Build command | `npm run build` |
 | Deploy command | `npx wrangler deploy` |
 
-`npm run build` 用 `build.mjs` 壓縮程式並輸出到 `dist/`；`wrangler.jsonc` 指定只發佈 `dist/`。新增上線的資料夾時，要同時加入 `build.mjs` 的 `SITE_DIRS`。
+`npm run build` 用 `build.mjs` 壓縮程式並輸出到 `dist/`；`wrangler.jsonc` 指定發佈 `dist/`，並把 `/api/*` 交給 `worker/index.js`。新增上線的資料夾時，要同時加入 `build.mjs` 的 `SITE_DIRS`。
+
+### 開通帳戶功能（一次過，老師要做的事）
+
+帳號、進度和評測成績存在 Cloudflare 的 **D1** 資料庫（跟網站同一個帳戶，免費額度每日 500 萬次讀取、10 萬次寫入）。
+
+1. Cloudflare 後台 → **Storage & Databases → D1 SQL Database → Create**，名稱填 `typing-platform`。建立後複製它的 **Database ID**。
+2. 在 GitHub 上打開 `wrangler.jsonc`，把 `"database_id": "請貼上你的 D1 Database ID"` 改成剛複製的 ID，儲存（commit）。
+3. Cloudflare 後台 → Workers & Pages → 這個項目 → **Settings → Build**，把 Deploy command 改成：
+
+   ```
+   npx wrangler d1 migrations apply typing-platform --remote && npx wrangler deploy
+   ```
+
+   這樣每次發佈都會先建立或更新資料表（`migrations/` 資料夾），再發佈網站。
+4. 等發佈完成，打開 `https://<你的網址>/teacher/`，網站會請你**建立第一個教師帳號**（只有資料庫空白時才會出現這一頁）。
+5. 登入教師後台 → 新增班級 → 匯入學生（貼上「學號 姓名」名單）→ 列印帳號紙條派給學生。
+
+學生用 `login.html` 以學號和密碼登入；忘記密碼由老師在後台重設。
+
+### 伺服器做甚麼
+
+| 功能 | 說明 |
+| --- | --- |
+| 登入 | 密碼以 PBKDF2 雜湊儲存；輸錯 8 次鎖 10 分鐘；session 存在 D1，cookie 只有 HttpOnly |
+| 進度同步 | 學生每次有改動，瀏覽器整份紀錄（課堂、步驟、掌握度、每日任務、夥伴）延遲 1.5 秒送到伺服器；開頁時先拉取；登出會清掉這部電腦的紀錄 |
+| 評測 | 開始時由伺服器發題和記時；交卷只送按鍵紀錄，伺服器用同一套引擎重新計算速度和準確率，並標記可疑情況（速度超出上限、按鍵間隔過分平均、用時不符、瀏覽器分數與伺服器重計相差很大）；每個評測只可做一次，老師可允許重做 |
+| 教師後台 | 班級、匯入學生、重設密碼、帳號紙條、班級進度表（含評測核實標記）、匯出 CSV、新增教師 |
+
+### 在自己電腦試伺服器功能
+
+需要 Node 22 以上：
+
+```
+node --experimental-sqlite tools/dev-server.mjs 8787
+```
+
+然後開 `http://localhost:8787`。這個模擬伺服器用 Node 內置的 SQLite 代替 D1，資料只在記憶體（加第三個參數可存成檔案，例如 `tools/dev-server.mjs 8787 dev.sqlite`）。
 
 ## 在自己電腦試用
 
@@ -39,7 +76,13 @@ python -m http.server 8000
 | `type.html` | 打字畫面，所有課堂共用；網址例子 `type.html?lang=en&mode=lesson&id=1&step=2` |
 | `css/base.css` | 全站顏色、字體、按鈕；深色模式 |
 | `css/type.css` | 打字畫面、虛擬鍵盤、手形、結果彈窗 |
-| `js/config.js` | 平台設定（free／school 模式、預設設定） |
+| `js/config.js` | 平台設定（預設設定、休息提示） |
+| `js/api.js`、`js/sync.js` | 跟伺服器溝通；登入狀態和進度同步 |
+| `login.html`、`me.html` | 學生登入、我的帳戶（改密碼、登出） |
+| `teacher/` | 教師後台（單頁程式） |
+| `worker/` | Cloudflare Worker：`index.js` 學生 API、`teacher.js` 教師 API、`auth.js` 密碼和 session、`score.js` 伺服器重新計分 |
+| `migrations/` | D1 資料表（部署時自動執行） |
+| `tools/dev-server.mjs` | 本機模擬伺服器 |
 | `js/engine.js` | 打字引擎：比對、計時、記錄按鍵；題目產生 |
 | `js/keyboard.js` | 虛擬鍵盤和手形提示 |
 | `js/stats.js` | 速度、準確率、星級計算 |
@@ -72,11 +115,11 @@ python -m http.server 8000
 
 ## 開發階段
 
-1. 英文核心（2026 年 11–12 月）← 現時
-2. 速成核心（2027 年 1–2 月）
-3. 練習、評測與手機模式（2027 年 3–4 月）
-4. 帳戶與教師後台（2027 年 5–6 月）
-5. 徽章、訪客模式與試用（2027 年 7–8 月）
+1. 英文核心 ✓
+2. 速成核心 ✓
+3. 練習、評測、掌握度與每日任務 ✓
+4. 帳戶與教師後台 ✓（程式完成，待開通 D1）
+5. 徽章、訪客模式與試用
 6. 第二年：高中二周目、課堂比賽模式
 
 詳細規劃見「打字練習平台 — 功能規劃」文件。

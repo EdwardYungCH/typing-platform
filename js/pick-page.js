@@ -1,5 +1,7 @@
 import { applyWorld } from './world.js';
 import { loadCompanions, art, getChoice, setChoice, nickOf, setNick, summary, stageOf, isLocked, validNick } from './companion.js';
+import { start as syncStart } from './sync.js';
+await syncStart();
 
 const $ = (id) => document.getElementById(id);
 const data = await loadCompanions();
