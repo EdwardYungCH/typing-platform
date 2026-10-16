@@ -25,9 +25,23 @@ lyrics download downloads sitemap login website websites online forum forums blo
 tel fax ext info nr no inc hr dept dir lt gt amp quot nbsp bin dat txt doc zip exe dll tmp ing'''.split())
 BAD = set('sexy nude nudes naked escort escorts erotic fetish bondage lesbian gay penis anal tits boob boobs cock cocks dick \
 hardcore teens teen porno sluts slut whore rape rapes drug drugs cocaine heroin cigarette cigarettes tobacco alcohol beer wine \
-vodka drunk kill kills killed killing murder murders gun guns weapon weapons bomb bombs war wars dead death die dies'.split())
+vodka drunk kill kills killed killing murder murders gun guns weapon weapons bomb bombs war wars dead death die dies \
+sexual sexually sexo condom condoms gamble bet bets betting dating shit damn hell crap fuck suck sucks kiss kissing'.split())
+# 專有名詞（第 12 課才教大寫，之前不應以小寫出現）、網上用語、太冷門的字
+PROPER = set('''texas mexico asia china america american americans canada canadian london paris india indian japan japanese
+california florida europe european africa african australia australian english french german germany british britain
+january february march april may june july august september october november december monday tuesday wednesday thursday
+friday saturday sunday christmas easter god jesus christian bible islam york washington chicago boston houston dallas
+virginia georgia carolina ohio michigan jersey arizona colorado oregon kansas iowa utah nevada idaho maine alaska hawaii
+john david michael james robert paul mark peter smith brown johnson williams jones davis miller wilson taylor
+el la le los las del des du der von san santa st ford dell sony apple'''.split())
+WEB = set('''pm am xp ex copyright url id ok fyi asap lol omg diy rsvp vip ceo cfo hiv aids sms mms gps html faq
+login logout signup username password spam cookies cookie privacy terms webmaster admin api seo'''.split())
+OBSCURE = set('flak lass sass alas fad fads dada ala aka'.split())
+# 「am」是常用詞（I am），保留
+WEB.discard('am')
 allw = [w.strip().lower() for w in open(WORDS_PATH) if w.strip()]
-allw = [w for w in allw if w.isalpha() and w not in JUNK and w not in BAD and (len(w) >= 2 or w in ('a', 'i'))]
+allw = [w for w in allw if w.isalpha() and w not in JUNK and w not in BAD and w not in PROPER and w not in WEB and w not in OBSCURE and (len(w) >= 2 or w in ('a', 'i'))]
 allw = allw[:4000]
 rank = {w: i for i, w in enumerate(allw)}
 
@@ -104,7 +118,7 @@ lessons.append({
          "display": "big", "text": "F J D K S L A ;".replace(';', 'J')},
         {"type": "drill", "title": "單鍵", "hint": "每個大寫字母打兩下，Shift 用對側尾指。", "text": "AA SS DD FF JJ KK LL AA SS DD FF JJ KK LL"},
         {"type": "drill", "title": "組合", "hint": "大寫和小寫交替，Shift 放開後手指回到基準位。",
-         "gen": {"kind": "words", "words": ['Ad', 'Jaff', 'Dad', 'Sal', 'Kal', 'Lad', 'Ask', 'Fall', 'Flask', 'Jill', 'Kids', 'Dale'], "count": 14}},
+         "gen": {"kind": "words", "words": ['Ad', 'Add', 'Dad', 'Sal', 'Sad', 'Lad', 'Ask', 'Fall', 'Salad', 'Jill', 'Kids', 'Dale'], "count": 14}},
         {"type": "drill", "title": "詞語", "hint": "人名和星期，第一個字母大寫。",
          "gen": {"kind": "words", "words": names, "count": 16}},
         {"type": "test", "title": "過關小測", "hint": "45 秒內打得愈多愈好，準確率達 90% 即過關。", "timeLimit": 45,
