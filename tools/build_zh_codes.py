@@ -36,6 +36,10 @@ for ch, code in read_table(msq_path):
         continue
     quick[code].append(ch)
     q_codes[ch].append(code)
+# 老師在 Windows 微軟速成核實、rime 表沒有的候選字（碼: [(字, 位置)]）
+for code, items in {'l': [('丨', 1)]}.items():
+    for ch, i in items:
+        if ch not in quick[code]: quick[code].insert(i, ch); q_codes[ch].append(code)
 
 # 2. 倉頡全碼：取首尾碼跟速成一致的那個
 cj_all = defaultdict(list)

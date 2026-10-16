@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """把 tools/src/shape-chart.jpg（老師提供的字根與輔助字形表）切成每個字形一張透明 PNG，
 存到 assets/shapes/<鍵>-<序號>.png；網頁用 CSS mask 上色，所以深色淺色主題都清楚。
-注意：h-2.png（竹字頭）不在字根表內，是另外由 Make Me a Hanzi 畫出，重新切圖後要保留，並把 data/zh-shapes.json 的 chart.h 設回 3。
+注意：h-2.png（竹字頭）不在字根表內，是另外由 Make Me a Hanzi 畫出，重新切圖後要保留，並把 data/zh-shapes.json 的 chart.h 設回 3；o-5.png（丘字頭）同理，chart.o 設回 6。
 分割方法：每列找出有墨水的範圍，再按字與字之間的空隙切開。"""
 from PIL import Image
 import json, os
