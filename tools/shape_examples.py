@@ -74,22 +74,22 @@ INFO = {
     't-0': ('草花頭', '艾芯花', 'f'),
     't-1': ('一橫兩豎', '弁戒卉', 'l'),
     't-2': ('點、撇加長橫', '羊美前', 'f'),
-    't-3': ('廿字下橫延長', '甘昔共', 'f'),
-    't-4': ('兩豎加長橫', '皿冊世', 'l'),
-    't-5': ('业字頭', '業對並', 'f'),
-    'u-0': ('山字中豎變撇', '豈凱豐', 'f'),
+    't-3': ('廿字下橫延長', '昔共其', 'f'),
+    't-4': ('兩豎加長橫（業 上面左右兩點不計）', '業', 'f'), 't-4L': ('兩豎加長橫（業 上面左右兩點不計）', '皿溫', 'l'),
+    't-5': ('业字頭', '聯關', 'l'),
+    'u-0': ('山字中豎變撇', '艸', 'f'), 'u-0L': ('山字中豎變撇', '逆趨', 'l'),
     'u-1': ('豎折、豎', '出兇', 'f'), 'u-1L': ('豎折、豎', '屈', 'l'),
     'u-2': ('豎彎鈎', '七己孔', 'l'),
     'v-0': ('撇折（絲字邊上方）', '紅給經', 'f'),
-    'v-1': ('豎折', '亡忙芒', 'l'),
-    'v-2': ('豎提', '以收糾', 'f'),
+    'v-1': ('豎折', '亡忙渴', 'l'),
+    'v-2': ('豎提', '以收', 'f'),
     'v-4': ('豎提加撇、捺', '艮長衣', 'l'),
     'w-0': ('大口框', '囚四因', 'f'),
     'w-1': ('母字框', '母', 'f'),
     'y-0': ('點變橫', '上貞卡占', 'f'),
     'y-1': ('點、橫', '文六立', 'f'),
     'y-2': ('走字底', '這過選', 'f'),
-    'y-3': ('兩點', '斥冬寒', 'l'),
+    'y-3': ('兩點', '冬寒終', 'l'),
 }
 info, bad = {}, []
 for key, (name, chars, side) in INFO.items():
@@ -104,8 +104,43 @@ for key, (name, chars, side) in INFO.items():
         gj = json.load(open(g)) if os.path.exists(g) else {}
         has = side in gj.get('r', '') or any(side in c[2:] for c in gj.get('c', {}).values())   # c＝切開的筆
         e['examples'].append([c, side, 1 if has else 0])
+# ---- 字根本體例字：每個字根揀 3 個常用字，盡量不同位置和結構（左右作首碼、上下／包圍作首碼、作尾碼）----
+# 來源 tools/out/components.json（build_zh_glyphs 產生：哪些字的首／尾碼正是字根本身），只收有雙色圖的字。
+ROOTS = dict(zip('abcdefghijklmnopqrstuvwy', '日月金木水火土竹戈十大中一弓人心手口尸廿山女田卜'))
+ROOT_PICK = {'c': '錢鑒欽', 'p': '想志意', 'g': '去幸在', 'u': '崗密岩', 't': '黃燕鞋', 'y': '卡外朴', 'm': '下本旦', 'w': '略當男', 'e': '泉', 'o': '坐閃企', 'r': '吧品知'}   # 人手指定（自動揀的不夠好或不夠 3 個）
+COMP = json.load(open('tools/out/components.json', encoding='utf-8'))
+RANK = {c: i for i, c in enumerate(Z['common'][:2000])}
+DEC = {}
+for line in open('/home/claude/src/makemeahanzi/dictionary.txt', encoding='utf-8'):
+    o = json.loads(line); DEC[o['character']] = o.get('decomposition', '')
+used = {e[0] for v in info.values() for e in v['examples']}
+root_info = {}
+for k, r in ROOTS.items():
+    cands = [(c, side) for c, side in COMP.get(f'{k}|{r}', []) if c in RANK and c != r and c not in used]
+    cands.sort(key=lambda x: RANK[x[0]])
+    if k in ROOT_PICK:
+        picks = [(c, 'f' if Z['cj'][c][0] == k else 'l') for c in ROOT_PICK[k]]
+    else:
+        picks = []
+        want = [lambda c, s: s == 'f' and DEC.get(c, ' ')[0] == '⿰',
+                lambda c, s: s == 'f' and DEC.get(c, ' ')[0] != '⿰',
+                lambda c, s: s == 'l']
+        for w in want:
+            for c, side in cands:
+                if w(c, side) and c not in [x for x, _ in picks]: picks.append((c, side)); break
+        for c, side in cands:   # 不夠 3 個就補
+            if len(picks) >= 3: break
+            if c not in [x for x, _ in picks]: picks.append((c, side))
+    ex = []
+    for c, side in picks[:3]:
+        gj = json.load(open(f'assets/glyphs/{ord(c):x}.json')) if os.path.exists(f'assets/glyphs/{ord(c):x}.json') else {}
+        has = side in gj.get('r', '') or any(side in cc[2:] for cc in gj.get('c', {}).values())
+        ex.append([c, side, 1 if has else 0])
+    root_info[k] = {'name': '字根本體', 'examples': ex}
+
 S = json.load(open('data/zh-shapes.json', encoding='utf-8'))
 S['chartInfo'] = info
+S['rootInfo'] = root_info
 json.dump(S, open('data/zh-shapes.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 print('字形', len(info), '；核對不符：', bad)
 print('未有例字的字形（不教）：', [f'{k}-{i}' for k, n in S['chart'].items() if k != 'x' for i in range(n) if f'{k}-{i}' not in info])

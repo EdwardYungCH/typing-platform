@@ -63,6 +63,7 @@ async function init() {
     state.shapes = sh.keys;
     state.chart = sh.chart;
     state.chartInfo = sh.chartInfo ?? {};
+    state.rootInfo = sh.rootInfo ?? {};
   }
   if (TEST) {
     const tests = (await fetch('data/tests.json').then((r) => r.json())).tests;
@@ -255,7 +256,7 @@ function runGuide(step) {
     }
     if (s.shapeKey && !s._loaded) {
       s._loaded = true;
-      const chars = Object.entries(state.chartInfo).filter(([img]) => img[0] === s.shapeKey).flatMap(([, v]) => v.examples.filter((e) => e[2]).map((e) => e[0]));
+      const chars = [...Object.entries(state.chartInfo).filter(([img]) => img[0] === s.shapeKey), ['r', state.rootInfo[s.shapeKey] ?? { examples: [] }]].flatMap(([, v]) => v.examples.filter((e) => e[2]).map((e) => e[0]));
       preloadGlyphs(chars).then(() => Promise.all(chars.map((c) => glyphData(c)))).then(render);
     }
     box.innerHTML = `
@@ -484,8 +485,7 @@ async function runSplit(step) {
   $('start-hint').hidden = false;
   $('start-hint').textContent = isTest
     ? '自行拆字：按首碼和尾碼兩個鍵。打錯了可以按 Backspace 刪走再打。右邊有字根和輔助字形表可以參考。'
-    : step.colored ? '看字，拆出首碼和尾碼（不用選字）。答對後看清楚拆法，按 Enter 到下一個字。'
-    : '看字，拆出首碼和尾碼，按對兩個鍵就會到下一題（不用選字）。';
+    : '看字，拆出首碼和尾碼（不用選字）。答對後看清楚拆法，按 Enter 到下一個字。';
   $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
   updateMeters(null, step);
   state.pairWrong = 0;
@@ -494,7 +494,7 @@ async function runSplit(step) {
     text,
     zh: state.zh,
     pick: false,
-    confirm: !!step.colored && !isTest,   // 組合：答對後看清楚拆碼，按 Enter 才到下一個字
+    confirm: !isTest,   // 組合／拆字練習：答對後看清楚拆碼，按 Enter 才到下一個字（評測不用）
     errorMode: isTest ? 'continue' : 'block',
     timeLimit: step.timeLimit ?? 0,
     onIme: () => { $('pair-hint').innerHTML = '<span class="warn" style="color:var(--bad)">偵測到系統中文輸入法：請按 Shift 或 Win＋空白鍵切換回英文。</span>'; },
@@ -1157,21 +1157,24 @@ function exampleHtml(ch) {
 function shapeLessonHtml(k) {
   const n = state.chart?.[k] ?? 0;
   const rows = [];
-  for (let i = 0; i < n; i++) {
-    const info = state.chartInfo[`${k}-${i}`];
-    if (!info) continue;   // 不會出現在首尾碼的字形不教
-    const img = `<span class="shape-img">${chartGlyphs(k, 1).replace(`${k}-0.png`, `${k}-${i}.png`)}</span>`;
-    const ex = info.examples.map(([c, side, has]) => {
+  const exHtml = (info) => info.examples.map(([c, side, has]) => {
       const g = has ? glyphNow(c) : null;
       const cj = state.zh.cjOf(c) ?? '';
       const tag = side === 'f' ? '<b class="c-first">首碼</b>' : '<b class="c-last">尾碼</b>';
       if (g) return `<figure class="sx">${glyphSvg(g, side)}<figcaption>${c}・${tag}</figcaption></figure>`;
       const mark = side === 'f' ? 0 : cj.length - 1;
       return `<figure class="sx"><span class="sx-t">${c}</span><figcaption>${[...cj].map((x, j) => j === mark ? `<b class="${side === 'f' ? 'c-first' : 'c-last'}">${ROOTS[x]}</b>` : ROOTS[x]).join('')}</figcaption></figure>`;
-    }).join('');
-    rows.push(`<div class="shape-row2">${img}<div class="sx-name">${info.name}</div><div class="sx-list">${ex}</div></div>`);
+  }).join('');
+  // 第一行：字根本體（字根本身作部件）
+  const root = state.rootInfo?.[k];
+  if (root?.examples?.length) rows.push(`<div class="shape-row2 root"><span class="shape-img"><span class="sx-root" lang="zh-Hant-HK">${ROOTS[k]}</span></span><div class="sx-name">字根本體</div><div class="sx-list">${exHtml(root)}</div></div>`);
+  for (let i = 0; i < n; i++) {
+    const info = state.chartInfo[`${k}-${i}`];
+    if (!info) continue;   // 不會出現在首尾碼的字形不教
+    const img = `<span class="shape-img">${chartGlyphs(k, 1).replace(`${k}-0.png`, `${k}-${i}.png`)}</span>`;
+    rows.push(`<div class="shape-row2">${img}<div class="sx-name">${info.name}</div><div class="sx-list">${exHtml(info)}</div></div>`);
   }
-  return `<div class="shape-lesson"><div class="shape-head">${zcap(k, 'key')}<span>字根「${ROOTS[k]}」的輔助字形：例字中<b class="c-first">紅色</b>是作首碼的位置，<b class="c-last">藍色</b>是作尾碼的位置。</span></div>${rows.join('') || '<p class="muted">這個字根沒有輔助字形，認住字根本身就可以。</p>'}</div>`;
+  return `<div class="shape-lesson"><div class="shape-head">${zcap(k, 'key')}<span>字根「${ROOTS[k]}」本身和它的輔助字形：例字中<b class="c-first">紅色</b>是作首碼的位置，<b class="c-last">藍色</b>是作尾碼的位置。</span></div>${rows.join('') || '<p class="muted">這個字根沒有輔助字形，認住字根本身就可以。</p>'}</div>`;
 }
 
 /** 規則例字卡：字（有雙色圖就上色）、倉頡碼（首紅尾藍）、速成碼、說明。 */

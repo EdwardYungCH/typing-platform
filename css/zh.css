@@ -105,6 +105,8 @@
 .shape-head { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--ink-2); }
 .shape-row2 { display: grid; grid-template-columns: 52px 9em 1fr; gap: 10px; align-items: center; padding: 6px 10px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
 .shape-img { font-size: 40px; line-height: 1; color: var(--ink); }
+.sx-root { font-size: 34px; font-weight: 700; font-family: 'Noto Serif TC', 'Noto Sans TC', serif; }
+.shape-row2.root { border-color: var(--accent); }
 .sx-name { font-weight: 700; font-size: 14px; }
 .sx-list { display: flex; flex-wrap: wrap; gap: 10px; }
 .sx { margin: 0; width: 64px; text-align: center; font-size: 12px; color: var(--ink-2); }

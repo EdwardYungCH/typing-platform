@@ -5,3 +5,11 @@
 
 /data/*
   Cache-Control: public, max-age=300
+
+# 程式、樣式、字形圖每次都向伺服器核對（有更新就即時拿到新版，避免學生和老師看到舊版）
+/js/*
+  Cache-Control: no-cache
+/css/*
+  Cache-Control: no-cache
+/assets/glyphs/*
+  Cache-Control: no-cache

@@ -43,6 +43,37 @@ def pool(keys, need, maxidx=5, top=2500, n=30, colored=False, two=False):
             out.append(ch)
     return ''.join(out[:n])
 
+# 每個字的首／尾碼由哪個部件構成（build_zh_glyphs 產生）：過關小測用來揀「考到各種輔助字形」的字
+PARTS = {}
+if os.path.exists('tools/out/components.json'):
+    for key, lst in json.load(open('tools/out/components.json', encoding='utf-8')).items():
+        k, comp = key.split('|', 1)
+        for ch, side in lst: PARTS.setdefault(ch, set()).add((side, k, comp))
+
+def quiz_pool(learned, new, n_new=36, n_review=12, top=1500):
+    """過關小測的字：常用 1500 字內、揀字在第一頁；盡量每個字考到未出現過的部件（輔助字形優先），
+    大部分字包含今課新字根，另加少量複習前課。"""
+    seen, out = set(), []
+    def pick(cands, n):
+        cands = list(cands)
+        while cands and n > 0:
+            def gain(ch):
+                parts = PARTS.get(ch, set())
+                return sum((2 if comp != ROOTS[k] else 1) for side, k, comp in parts if (k, comp) not in seen)
+            best = max(cands, key=lambda c: (gain(c), -RANK[c]))
+            if gain(best) == 0: break
+            out.append(best); cands.remove(best); n -= 1
+            for side, k, comp in PARTS.get(best, set()): seen.add((k, comp))
+        # 部件都考過了：用最常用的字補足
+        for c in cands:
+            if n <= 0: break
+            if c not in out: out.append(c); n -= 1
+    base = [c for c in COMMON[:top] if first.get(c) and set(first[c]) <= set(learned) and idx(c) <= 9 and c in PARTS]
+    pick([c for c in base if set(first[c]) & set(new)], n_new)
+    prev = set(learned) - set(new)
+    if prev: pick([c for c in base if c not in out and not set(first[c]) & set(new)], n_review)
+    return ''.join(out)
+
 def code_keys(chars):
     """這些字要用到的數字鍵（揀字）。"""
     ks = set()
@@ -68,7 +99,7 @@ def shape_slides(keys):
              'shapeKey': k} for k in keys if k != 'x']
 
 def roots_lesson(lid, title, new, learned, extra_hint):
-    chars = pool(learned, new, colored=True)
+    chars = quiz_pool(learned, new) or pool(learned, new, colored=True)
     combo = pool(learned, new, maxidx=99, top=3000, n=80, colored=True, two=True)
     selfsplit = pool(learned, learned, maxidx=99, top=3000, n=80, colored=True, two=True)
     selfsplit = ''.join(c for c in selfsplit if c not in combo[:20]) or selfsplit
