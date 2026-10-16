@@ -597,7 +597,7 @@ function prevHtml(ch, title = '上一題') {
 
 function chartMini(keys) {
   return `<div class="chart-mini">${[...keys].filter((k) => k !== 'x').map((k) => `
-    <div>${zcap(k)}${chartGlyphs(k, state.chart?.[k] ?? 0)}</div>`).join('')}</div>`;
+    <div>${zcap(k)}${chartGlyphs(k, state.chart?.[k] ?? 0)}</div>`).join('')}${keys.includes('x') ? `<div>${zcap('x')}<small class="muted">齊 肅 臼 卍 的難拆部分</small></div>` : ''}</div>`;
 }
 
 // ---------- 速成（內置選字窗）----------

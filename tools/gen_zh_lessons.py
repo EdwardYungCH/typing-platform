@@ -164,64 +164,57 @@ def text_lesson(lid, title, subtitle, texts, hint, test_pass, limit=90, unit='�
     return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': [], 'pass': test_pass, 'steps': steps}
 
 
-L = []
-learned = ''
-for lid, title, new, tip in [
-    (1, '哲理類字根', 'abcdefg', '日月金木水火土住在 A 至 G。'),
-    (2, '筆畫類字根（上）', 'hijk', '竹戈十大住在 H 至 K，由右手食指和中指負責。'),
-    (3, '筆畫類字根（下）', 'lmn', '中一弓住在 L、M、N。'),
-    (4, '人體類字根', 'opqr', '人心手口住在 O 至 R。'),
-    (5, '字形類字根（上）', 'stu', '尸廿山住在 S、T、U。'),
-    (6, '字形類字根（下）', 'vwy', '女田卜住在 V、W、Y。'),
-]:
-    learned += new
-    L.append(roots_lesson(lid, title, new, learned, tip))
-
-# 第 7 課：難字鍵 X 與全部字根複習
-learned += 'x'
-x_chars = pool(learned, 'x', 5, 3000, 10) + pool(learned, learned, 3, 300, 20)
-l7 = roots_lesson(7, '難字鍵與總複習', 'x', learned, '難字鍵 X 用於難以拆分的部分，例如「齊」「舊」。')
-l7['subtitle'] = '難 X ＋ 全部字根'
-del l7['steps'][0]   # 第 7 課本身就是總複習，不另加「複習前課」
 ALL = 'abcdefghijklmnopqrstuvwyx'
-l7['steps'][0]['text'] = 'xxx'
-l7['steps'][1]['text'] = 'xxxxxx'
-l7['steps'][2] = guide('總複習', [{'title': '全部字根和輔助字形', 'points': ['24 個字根，加難字鍵 X', '下面是全部輔助字形，不記得的可以回到第 1 至 6 課重溫'], 'shapes': 'abcdefghijklmnopqrstuvwy'}])
-l7['steps'][3]['gen']['keys'] = ALL.replace('x', '')
-l7['steps'][3]['hint'] = '全部輔助字形隨機出現：看字形，按鍵。'
-for i in (4, 5):
-    l7['steps'][i]['chartKeys'] = ALL
-l7['steps'][4]['gen']['chars'] = pool(ALL, ALL, maxidx=99, top=3000, n=120, colored=True, two=True)
-l7['steps'][5]['gen']['chars'] = pool(ALL, ALL, maxidx=99, top=3000, n=200, colored=True, two=True)[60:]
-l7['steps'][6]['gen']['chars'] = x_chars + pool(ALL, ALL, 5, 1000, 40)
-l7['newKeys'] = []
-L.append(l7)
 
-def split_lesson(lid, title, subtitle, slides, chars, hint, test_pass={'accuracy': 90}, n=20):
-    chars = ''.join(dict.fromkeys(chars))
-    return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': keycodes(ALL), 'pass': test_pass,
-            'steps': [guide(title, slides),
-                      {'type': 'drill', 'mode': 'split', 'colored': True, 'title': '看顏色拆字', 'hint': '紅色部件是首碼，藍色部件是尾碼。', 'gen': {'kind': 'chars', 'chars': ''.join(c for c in chars if c in COLORED) or chars, 'count': n}},
-                      {'type': 'drill', 'mode': 'split', 'hints': 'less', 'chartKeys': ALL, 'title': '自行拆字', 'hint': hint + ' 打錯要改正才可繼續。', 'gen': {'kind': 'chars', 'chars': chars, 'count': n, 'unique': True}},
-                      {'type': 'test', 'mode': 'split', 'title': '過關小測', 'timeLimit': 60, 'pass': test_pass, 'chartKeys': ALL,
+def fits(c, keys):
+    """速成碼的鍵全部已學"""
+    return c in first and set(first[c]) <= set(keys)
+
+def rule_chars(chars, keys=ALL):
+    return ''.join(c for c in chars if fits(c, keys))
+
+def split_lesson(lid, title, subtitle, slides, chars, hint, keys=ALL, test_pass={'accuracy': 90}, n=20, extra=()):
+    """取碼原則課：導覽 → 看顏色拆字（附字形表）→ 自行拆字 → 過關小測。chars 只收速成碼已學的字。"""
+    # 只收有雙色拆碼圖的字：答對後「上一題」一定看得到紅藍拆法
+    chars = ''.join(dict.fromkeys(c for c in chars if fits(c, keys) and c in COLORED))
+    colored = chars
+    return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': keycodes(keys.replace('x', '')) + (['KeyX'] if 'x' in keys else []), 'pass': test_pass,
+            'steps': [guide(title, slides), *extra,
+                      {'type': 'drill', 'mode': 'split', 'colored': True, 'chartKeys': keys, 'title': '看顏色拆字', 'hint': '紅色部件是首碼，藍色部件是尾碼。答對後看清楚拆法，按 Enter 到下一題。', 'gen': {'kind': 'chars', 'chars': colored, 'count': n}},
+                      {'type': 'drill', 'mode': 'split', 'hints': 'less', 'chartKeys': keys, 'title': '自行拆字', 'hint': hint + ' 打錯要改正才可繼續。', 'gen': {'kind': 'chars', 'chars': chars, 'count': n, 'unique': True}},
+                      {'type': 'test', 'mode': 'split', 'title': '過關小測', 'timeLimit': 60, 'pass': test_pass, 'chartKeys': keys,
                        'hint': f'60 秒內自行拆字，沒有提示，可參考字根表。{pass_text(test_pass)}', 'gen': {'kind': 'chars', 'chars': chars, 'count': 80}}]}
-
-# 第 8 課：單碼字與取碼次序
-singles = ''.join(c for c in COMMON[:3000] if len(first[c]) == 1 and idx(c) == 1)
-two = ''.join(c for c in COMMON[:800] if len(Z['cj'].get(c, '')) == 2)[:30]
-L.append({'id': 8, 'title': '單碼字與取碼次序', 'subtitle': '上至下、左至右、外至內', 'newKeys': keycodes(ALL), 'pass': {'accuracy': 90},
-    'steps': [
-        guide('取碼次序', [
-            {'title': '一個鍵就打到的字', 'points': ['字本身就是一個字根，例如 日、月、木、口、人', '按一個鍵就可以'], 'show': 'keyboard', 'rootLabels': True, 'example': '人'},
-            {'title': '取碼的次序', 'points': ['由上至下：例如 昌 ＝ 日（上）…日（下）', '由左至右：例如 林 ＝ 木（左）…木（右）', '由外至內：例如 回 ＝ 田字框（外）…口（內）', '一個字可以同時用到幾個次序'], 'show': 'keyboard', 'rootLabels': True, 'example': '回'},
-            {'title': '兩個部件的字', 'points': ['先把字分成兩部分，再按次序取碼', '明 ＝ 日＋月，林 ＝ 木＋木，吉 ＝ 士＋口', '接下來只要拆碼，打對兩個鍵就自動上屏，不用選字'], 'show': 'keyboard', 'rootLabels': True, 'example': '吉'}]),
-        {'type': 'drill', 'mode': 'split', 'title': '單碼字', 'hint': '這些字本身就是字根：按一個鍵。', 'gen': {'kind': 'chars', 'chars': singles, 'count': 16}},
-        {'type': 'drill', 'mode': 'split', 'title': '兩個部件', 'hint': '每個字由兩個字根組成：按次序打兩個鍵。', 'gen': {'kind': 'chars', 'chars': two, 'count': 20}},
-        {'type': 'test', 'mode': 'split', 'title': '過關小測', 'timeLimit': 60, 'pass': {'accuracy': 90},
-         'hint': '60 秒內拆得愈多愈好，沒有提示。準確率達 90% 即過關。', 'gen': {'kind': 'chars', 'chars': singles + two, 'count': 80}}]})
 
 # 拆碼說明（按 docs/cangjie-rules.md；顯示在規則卡、拆字答案和「上一題」）
 NOTES = {
+    # 取碼次序（第 2 課）
+    '昌': '上至下：上面的日是首碼，下面的日是尾碼。',
+    '炎': '上至下：兩個火，上火是首碼、下火是尾碼。',
+    '林': '左至右：兩個木，左木是首碼、右木是尾碼。',
+    '明': '左至右：左邊日是首碼，右邊月是尾碼。',
+    # 連體字（第 5 課）
+    '早': '連體字：日和十連在一起，首碼日、尾碼十。',
+    '白': '連體字：頂上一撇（竹）是首碼，日是尾碼。',
+    '太': '連體字：大是首碼，下面的點（戈）是尾碼。',
+    '字': '分體字：字首「宀」＝十，字身「子」＝弓木，尾碼木。',
+    # 難字（第 10 課）
+    '齊': '首難：上面「亠」＝卜，下面難拆的部分用 X → 卜難。',
+    '濟': '字首水，字身「齊」的尾碼是 X → 水難。',
+    '擠': '字首手，字身「齊」的尾碼是 X → 手難。',
+    '臍': '字首月，字身「齊」的尾碼是 X → 月難。',
+    '肅': '首難：上面聿字頭＝中，下面難拆 → 中難。',
+    '蕭': '字首艹（廿），字身「肅」的尾碼是 X → 廿難。',
+    '繡': '字首糹（女），字身「肅」的尾碼是 X → 女難。',
+    '簫': '字首竹字頭（竹），字身「肅」的尾碼是 X → 竹難。',
+    '嘯': '字首口，字身「肅」的尾碼是 X → 口難。',
+    '臼': '首難：第一撇＝竹，其餘難拆 → 竹難。',
+    '舀': '字首爫（月），字身「臼」的尾碼是 X → 月難。',
+    '滔': '字首水，字身「舀」→「臼」的尾碼是 X → 水難。',
+    '稻': '字首禾（竹），最後的「臼」尾碼是 X → 竹難。',
+    '插': '字首手，字身「臿」最後的「臼」尾碼是 X → 手難。',
+    '陷': '字首阝（弓），字身「臽」最後的「臼」尾碼是 X → 弓難。',
+    '舊': '字首艹（廿），最後的「臼」尾碼是 X → 廿難。',
+    '卍': '首難：第一筆像弓，其餘難拆 → 弓難。',
     # 字首看位置，不看部首
     '鵬': '左右型：字首是左邊的「月」，不是「朋」。尾碼是鳥底的四點＝火。',
     '雌': '字首是左邊的「止」（卜），不是「此」。尾碼是隹的最後部件＝土。',
@@ -284,30 +277,85 @@ NOTES = {
     '養': '特別的字首＝廿人；字身尾碼＝女。',
 }
 
-def rule_chars(keys):
-    return ''.join(c for c in keys if c in first)
 
-# 第 9 課：拆字（一）：字首字身、次序、原則
-basic = ''.join(c for c in COMMON[:700] if len(Z['cj'].get(c, '')) >= 3 and len(first[c]) == 2)[:60]
-l9_rule = rule_chars('鵬雌翁剪馳參疊求我成式戒王夫九青生')
-L.append(split_lesson(9, '拆字（一）', '字首、字身與取碼次序', [
-    {'title': '中間的部件不用打', 'points': ['按「上至下、左至右、外至內」把字拆開', '速成只取第一個和最後一個部件，中間有多少個都不理', '分體字：字首（左、上或外）的第一個部件是首碼；字身的最後一個部件是尾碼'], 'show': 'keyboard', 'rootLabels': True, 'example': '校'},
-    {'title': '字首看位置，不看部首', 'points': ['字首是按次序第一個能切出來的部分，跟部首或字義無關', '以下都是常見的陷阱'], 'codes': rule_chars('鵬雌翁剪馳參疊')},
-    {'title': '右上角的點先取', 'points': ['戈、成、我、式 這類字，右上角的點是第一碼', '筆順和取碼次序不同時，以取碼次序為準'], 'codes': rule_chars('求我成式戒')},
-    {'title': '三個取碼原則', 'points': ['精簡：有幾種拆法時，碼數最少的才對', '完整：優先取涵蓋筆劃較多的字形', '字形特徵：分割點落在直筆上，不要把鉤切掉'], 'codes': rule_chars('王夫九青生')}],
-    basic + l9_rule, '自己拆出首碼和尾碼。記住：字首看位置，右上角的點先取。'))
+L = []
+learned = ''
+def add_roots(lid, title, new, tip):
+    global learned
+    learned += new
+    L.append(roots_lesson(lid, title, new, learned, tip))
 
-# 第 10 課：拆字（二）：輔助字形與尾碼陷阱
+# ---- 新課序（2026-10-16 老師定）：取碼原則分三段，穿插在字根課之間；難字放在全部字根之後 ----
+add_roots(1, '哲理類字根', 'abcdefg', '日月金木水火土住在 A 至 G。')
+
+# 第 2 課：取碼原則（一）只打首尾、取碼次序、單碼字（只用第 1 課的字根）
+K2 = learned
+singles2 = ''.join(c for c in COMMON[:3000] if len(first[c]) == 1 and idx(c) == 1 and fits(c, K2))
+two2 = ''.join(c for c in COMMON[:2500] if fits(c, K2) and len(first[c]) == 2 and c in COLORED)[:40]
+L.append(split_lesson(2, '取碼原則（一）', '只打首尾、取碼次序、單碼字', [
+    {'title': '速成只打首尾兩碼', 'points': ['倉頡把字拆成幾個字根；速成只打第一個和最後一個', '中間有多少個部件都不理', '紅色是首碼，藍色是尾碼'], 'show': 'keyboard', 'rootLabels': True, 'example': '明'},
+    {'title': '單碼字：一個鍵就打到', 'points': ['字本身就是一個字根，例如 日、月、木、水、火', '按一個鍵就可以（打字時只有一個候選字就按空白鍵出字）'], 'show': 'keyboard', 'rootLabels': True, 'example': '木'},
+    {'title': '取碼次序', 'points': ['由上至下：昌、炎、圭', '由左至右：明、林、炒', '由外至內：回、同（之後學了田、口就會遇到）', '一個字可以同時用到幾個次序'], 'codes': rule_chars('昌炎林明', K2)},
+    {'title': '兩個部件的字', 'points': ['先把字分成兩部分，再按次序取碼', '左邊或上面那部分的第一碼是首碼；右邊或下面那部分的最後一碼是尾碼', '接下來只要拆碼，打對兩個鍵就自動上屏，不用選字']}],
+    two2, '按「上至下、左至右」找出第一個和最後一個部件。', keys=K2,
+    extra=[{'type': 'drill', 'mode': 'split', 'title': '單碼字', 'chartKeys': K2, 'hint': '這些字本身就是字根：按一個鍵。', 'gen': {'kind': 'chars', 'chars': singles2, 'count': 14}}]))
+
+add_roots(3, '筆畫類字根（上）', 'hijk', '竹戈十大住在 H 至 K，由右手食指和中指負責。')
+add_roots(4, '筆畫類字根（下）', 'lmn', '中一弓住在 L、M、N。')
+
+# 第 5 課：取碼原則（二）連體與分體、字首與字身、右上角的點、三個原則（只用第 1–4 課的字根）
+K5 = learned
+basic5 = ''.join(c for c in COMMON[:1500] if fits(c, K5) and len(Z['cj'].get(c, '')) >= 3 and len(first[c]) == 2)[:50]
+r5 = '早白太我求九生字明林鵬翁參式王'
+L.append(split_lesson(5, '取碼原則（二）', '連體與分體、字首與字身', [
+    {'title': '連體字：整個字連在一起', 'points': ['筆劃交連、不能切開的字（早、白、太、我）', '首碼＝第一個部件，尾碼＝最後一個部件'], 'codes': rule_chars('早白太我', K5)},
+    {'title': '分體字：字首和字身', 'points': ['可以切開的字：左、上或外面的部分是「字首」，其餘是「字身」', '速成首碼＝字首的第一碼；尾碼＝字身的最後一碼'], 'codes': rule_chars('明林字', K5)},
+    {'title': '字首看位置，不看部首', 'points': ['字首是按次序第一個能切出來的部分，跟部首或字義無關', '以下都是常見的陷阱'], 'codes': rule_chars('鵬翁參', K5)},
+    {'title': '右上角的點先取', 'points': ['求、我、式 這類字，右上角的點（戈）是第一碼', '筆順和取碼次序不同時，以取碼次序為準'], 'codes': rule_chars('求我式', K5)},
+    {'title': '三個取碼原則', 'points': ['精簡：有幾種拆法時，碼數最少的才對（王＝一土）', '完整：優先取涵蓋筆劃較多的字形（生＝竹手一）', '字形特徵：分割點落在直筆上，不在轉角切，不要把鉤切掉（九＝大弓）'], 'codes': rule_chars('王生九', K5)}],
+    basic5 + rule_chars(r5, K5), '自己拆出首碼和尾碼。記住：字首看位置，右上角的點先取。', keys=K5))
+
+add_roots(6, '人體類字根', 'opqr', '人心手口住在 O 至 R。')
+add_roots(7, '字形類字根（上）', 'stu', '尸廿山住在 S、T、U。')
+add_roots(8, '字形類字根（下）', 'vwy', '女田卜住在 V、W、Y。')
+
+# 第 9 課：取碼原則（三）包含省略、複合字、特殊字、特別的字首（全部字根）
+K9 = learned
 aux = ''.join(ch for k in SHAPES for sh in SHAPES[k] if sh['shape'] != ROOTS[k] for ch in sh['examples'] if ch in first)
 aux = ''.join(dict.fromkeys(aux))
-l10_rule = rule_chars('海船滿急搞侮夠欄問們間相眼推進陳隊塊雞機東末速拳夷屯秉學氣應感壓歷養')
-L.append(split_lesson(10, '拆字（二）', '輔助字形與尾碼陷阱', [
-    {'title': '部件不像字根？查輔助字形', 'points': ['很多部件是字根的變形：氵 水、扌 手、亻 人、忄 心、宀 十、辶 卜、艹 廿', '冂 冖 爫 都是月，囗 是田，幺 是女，灬 是火', '不認識的部件，開「速成查碼」查一查'], 'shapes': 'eqopjytbwvf'},
-    {'title': '包含省略：被框住的部件不算', 'points': ['字首超過 2 碼或字身超過 3 碼時，最後一個部件如果被三面或四面包住，就省去它，取外框作尾碼', '外框有 囗 冂 コ 匚 廿 几 乃 凵 ク', '同一個部件單獨成字時碼數不超限，就不用省略（母 田卜戈，但 海 水人田卜）'], 'codes': rule_chars('海船滿急搞母')},
-    {'title': '複合字：永遠只取首尾兩碼', 'points': ['門＝日弓、目＝月山、隹＝人土、阝＝弓中、鬼＝竹戈、鬥＝中弓、幾＝女戈、虍＝卜心', '作字身時，速成尾碼就是複合字的尾碼'], 'codes': rule_chars('問們相推進陳塊')},
-    {'title': '特殊字：重疊的先取木火大心戈', 'points': ['木、火、大、心（七形）、戈 與其他字形重疊時，先取它們，再取疊在上面的字形'], 'codes': rule_chars('東末拳夷屯')},
-    {'title': '特別的字首', 'points': ['有些字的上半部整塊當字首，取它的首尾兩碼', '學＝竹月、氣＝人弓、應＝戈土、感＝戈口、壓＝一大'], 'codes': rule_chars('學氣應感壓')}],
-    aux + l10_rule, '先認出部件，再想它屬哪個鍵；留意包含省略和複合字的尾碼。'))
+r9 = '雌剪馳疊成戒夫青海船滿急搞侮夠欄問們間相眼推進陳隊塊雞機東末速拳夷屯秉學氣應感壓歷養'
+L.append(split_lesson(9, '取碼原則（三）', '包含省略、複合字、特殊字、特別字首', [
+    {'title': '先溫習：字首和原則', 'points': ['字首看位置（雌、剪、馳、疊）；右上角的點先取（成、戒）', '完整原則：夫＝手人、青＝手一月'], 'codes': rule_chars('雌剪馳疊成戒夫青', K9)},
+    {'title': '包含省略：被框住的部件不算', 'points': ['字首超過 2 碼或字身超過 3 碼時，最後一個部件如果被三面或四面包住，就省去它，取外框作尾碼', '外框有 囗 冂 コ 匚 廿 几 乃 凵 ク', '同一個部件單獨成字時碼數不超限，就不用省略（母 田卜戈，但 海 水人田卜）'], 'codes': rule_chars('海船滿急搞母', K9)},
+    {'title': '複合字：永遠只取首尾兩碼', 'points': ['門＝日弓、目＝月山、隹＝人土、阝＝弓中、鬼＝竹戈、鬥＝中弓、幾＝女戈、虍＝卜心', '作字身時，速成尾碼就是複合字的尾碼'], 'codes': rule_chars('問們相推進陳塊', K9)},
+    {'title': '特殊字：重疊的先取木火大心戈', 'points': ['木、火、大、心（七形）、戈 與其他字形重疊時，先取它們，再取疊在上面的字形'], 'codes': rule_chars('東末拳夷屯', K9)},
+    {'title': '特別的字首', 'points': ['有些字的上半部整塊當字首，取它的首尾兩碼', '學＝竹月、氣＝人弓、應＝戈土、感＝戈口、壓＝一大'], 'codes': rule_chars('學氣應感壓', K9)}],
+    aux + rule_chars(r9, K9), '先認出部件，再想它屬哪個鍵；留意包含省略和複合字的尾碼。', keys=K9))
+
+# 第 10 課：難字 X 與總複習
+learned += 'x'
+X_TYPES = [('齊類：卜＋難', '齊濟擠臍', '齊 的上面是「亠」（卜），下面難拆的部分用 X 代替'),
+           ('肅類：中＋難', '肅蕭繡簫嘯', '肅 的上面是聿字頭（中），下面的「淵」形用 X 代替'),
+           ('臼類：竹＋難', '臼舀滔稻插陷舊', '臼 的第一撇是竹，其餘用 X 代替；舀、滔、稻、插、陷、舊 都有 臼'),
+           ('卍：弓＋難', '卍', '卍 只有第一筆像弓，其餘用 X 代替')]
+xchars = ''.join(c for _, cs, _ in X_TYPES for c in cs if c in first)
+l10 = roots_lesson(10, '難字與總複習', 'x', learned, '難字鍵 X 代替難拆的部分。')
+l10['subtitle'] = '難 X（齊、肅、滔、卍）＋ 全部字根'
+del l10['steps'][0]   # 本課就是總複習，不另加「複習前課」
+l10['steps'][0]['text'] = 'xxx'
+l10['steps'][1]['text'] = 'xxxxxx'
+l10['steps'][2] = guide('難字 X', [{'title': t, 'points': [pt, '速成：首碼照常取，尾碼按 X'], 'codes': cs} for t, cs, pt in X_TYPES] +
+    [{'title': '全部字根和輔助字形', 'points': ['24 個字根，加難字鍵 X', '下面是全部輔助字形，不記得的可以回到字根課重溫'], 'shapes': 'abcdefghijklmnopqrstuvwy'}])
+l10['steps'].insert(3, {'type': 'drill', 'mode': 'split', 'colored': True, 'chartKeys': ALL, 'title': '難字拆字', 'hint': '這些字的尾碼都是 X（難）：紅色是首碼，藍色是 X 代替的部分。', 'gen': {'kind': 'chars', 'chars': xchars, 'count': 14}})
+l10['steps'][4]['gen']['keys'] = ALL.replace('x', '')
+l10['steps'][4]['hint'] = '全部輔助字形隨機出現：看字形，按鍵。'
+for i in (5, 6):
+    l10['steps'][i]['chartKeys'] = ALL
+l10['steps'][5]['gen']['chars'] = pool(ALL, ALL, maxidx=99, top=3000, n=120, colored=True, two=True)
+l10['steps'][6]['gen']['chars'] = pool(ALL, ALL, maxidx=99, top=3000, n=200, colored=True, two=True)[60:]
+l10['steps'][7]['gen']['chars'] = ''.join(c for c in xchars if idx(c) <= 9) + quiz_pool(ALL, ALL, n_new=50, n_review=0)
+l10['newKeys'] = ['KeyX']
+L.append(l10)
 
 # 第 11 課：選字與標點
 pick_chars = ''.join(c for c in COMMON[:800] if 2 <= idx(c) <= 9)[:40]
