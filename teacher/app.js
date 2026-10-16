@@ -61,6 +61,10 @@ function renderMain() {
           <button class="btn" type="submit">新增</button>
         </form><p class="form-msg" id="cmsg"></p>
       </section>
+      <section class="card"><h2>自訂練習</h2>
+        <p class="hint">貼一段文章或一批字，學生在「練習區」的「老師出的練習」就會看到。</p>
+        <div class="form-actions"><button class="btn" id="practice" type="button">管理自訂練習</button></div>
+      </section>
       <section class="card"><h2>帳戶</h2>
         <div class="form-actions"><button class="btn" id="addteacher" type="button">新增教師</button><button class="btn" id="mypw" type="button">改密碼</button></div>
       </section>
@@ -77,7 +81,42 @@ function renderMain() {
     async () => { await api('/api/teacher/add', { method: 'POST', body: { username: $('u').value, name: $('n').value, password: $('p').value } }); return '已新增。'; });
   $('mypw').onclick = () => dialog(`<h2>更改我的密碼</h2><form id="df"><div class="field"><label>舊密碼</label><input id="o" type="password" required></div><div class="field"><label>新密碼（至少 8 個字元）</label><input id="p" type="password" required minlength="8"></div><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">更改</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
     async () => { await api('/api/teacher/password', { method: 'POST', body: { old: $('o').value, password: $('p').value } }); return '已更改。'; });
+  $('practice').onclick = practiceDialog;
   renderClass();
+}
+
+const P_KINDS = { zh: [['text', '整段打字（連標點，要揀字）'], ['chars', '字表打字（隨機出字，要揀字）'], ['split', '字表拆字（只打首尾碼）']],
+                  en: [['text', '整段打字'], ['words', '詞語（用空格或逗號分隔）']] };
+async function practiceDialog() {
+  const { practices } = await api('/api/teacher/practice');
+  const kindName = (p) => (P_KINDS[p.lang].find(([k]) => k === p.kind) ?? [, p.kind])[1];
+  const list = practices.length ? `<table class="tbl"><thead><tr><th>標題</th><th>語言／類型</th><th>對象</th><th>內容</th><th></th></tr></thead><tbody>${practices.map((p) => `<tr data-id="${p.id}">
+      <td>${html(p.title)}</td><td class="mini">${p.lang === 'zh' ? '中文' : '英文'}・${html(kindName(p))}</td><td class="mini">${p.class_name ? html(`${p.class_year} ${p.class_name}`) : '全部學生'}</td>
+      <td class="mini">${html([...p.content].slice(0, 24).join(''))}${[...p.content].length > 24 ? '…' : ''}（${[...p.content].length} 字）</td>
+      <td class="act"><button class="btn" data-del="${p.id}">刪除</button></td></tr>`).join('')}</tbody></table>` : '<p class="muted">還沒有自訂練習。</p>';
+  dialog(`<h2>自訂練習</h2><div class="result-list">${list}</div>
+    <h3 style="margin:14px 0 6px">新增</h3>
+    <form id="df" class="import-box">
+      <div class="inline-form"><div class="field"><label>標題</label><input id="pt" required maxlength="40" placeholder="例如：中一 第一單元詞語"></div>
+        <div class="field"><label>語言</label><select id="pl"><option value="zh">中文速成</option><option value="en">英文</option></select></div>
+        <div class="field"><label>類型</label><select id="pk"></select></div>
+        <div class="field"><label>給</label><select id="pc"><option value="">全部學生</option>${classes.map((c) => `<option value="${c.id}" ${current?.id === c.id ? 'selected' : ''}>${html(c.year)} ${html(c.name)}</option>`).join('')}</select></div></div>
+      <div class="field"><label>內容</label><textarea id="pcn" required placeholder="貼上文章或字表"></textarea></div>
+      <p class="hint">中文：碼表沒有的字和符號會自動刪去；英文半形標點可以照用。</p>
+      <p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">新增</button><button class="btn ghost" type="button" id="close">關閉</button></div></form>`,
+    async () => {
+      const r = await api('/api/teacher/practice', { method: 'POST', body: { title: $('pt').value, lang: $('pl').value, kind: $('pk').value, classId: $('pc').value || null, content: $('pcn').value } });
+      $('dlg').dataset.keep = '1';
+      setTimeout(practiceDialog, 900);
+      return `已新增（${r.length} 字）${r.removed ? `；以下字元打不到，已刪去：${r.removed}` : ''}`;
+    });
+  const syncKinds = () => { $('pk').innerHTML = P_KINDS[$('pl').value].map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); };
+  $('pl').onchange = syncKinds; syncKinds();
+  $('dlg').querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => {
+    if (!confirm('刪除這個練習？')) return;
+    await api(`/api/teacher/practice/${b.dataset.del}`, { method: 'DELETE' });
+    practiceDialog();
+  });
 }
 
 function dialog(inner, onSubmit) {

@@ -90,11 +90,14 @@ async function init() {
                 timeLimit: state.test.timeLimit, pass: state.test.pass, text: state.test.text }],
     };
   } else if (DAILY) state.lesson = buildDaily({ lang, zh: state.zh, lessons: state.lessons, chartInfo: state.chartInfo });
+  else if (PRACTICE && params.get('kind') === 'custom') state.lesson = await buildCustom(Number(params.get('cid')));
   else state.lesson = PRACTICE
     ? buildPractice(params, { lang, zh: state.zh, enLessons: state.lessons })
     : state.lessons.find((l) => l.id === lessonId);
   if (!state.lesson) {
-    $('lesson-title').textContent = PRACTICE ? '弱項還未夠資料' : DAILY ? '先完成第一課' : '找不到這一課';
+    const CUSTOM = PRACTICE && params.get('kind') === 'custom';
+    $('lesson-title').textContent = CUSTOM ? '找不到這個練習' : PRACTICE ? '弱項還未夠資料' : DAILY ? '先完成第一課' : '找不到這一課';
+    if (CUSTOM) { $('step-hint').innerHTML = '練習可能已被老師刪除，或者你未登入。回到<a href="practice.html">練習區</a>看看。'; return; }
     $('step-hint').innerHTML = PRACTICE ? '先做幾課或幾次練習，網站記錄到你常錯的鍵和字後，這裏才會出題。'
       : DAILY ? `每日任務會重溫你學過的字根和字。先去<a href="index.html">首頁</a>完成第 1 課吧。` : '';
     return;
@@ -657,6 +660,26 @@ function runQuick(step) {
   paint(spans, engine);
   renderIme(engine, isTest, false);
   engine.attach();
+}
+
+/** 老師自訂練習：由伺服器取內容，做成一份練習（不計星，可再來一組） */
+async function buildCustom(cid) {
+  let p;
+  try { p = ((await api('/api/practice')).practices ?? []).find((x) => x.id === cid); } catch { return null; }
+  if (!p) return null;
+  const chars = [...p.content];
+  let step;
+  if (p.lang === 'zh') {
+    if (p.kind === 'text') step = { type: 'drill', mode: 'quick', text: p.content };
+    else if (p.kind === 'split') step = { type: 'drill', mode: 'split', hints: 'less', chartKeys: 'abcdefghijklmnopqrstuvwyx', gen: { kind: 'chars', chars: p.content, count: Math.min(chars.length, 30), unique: true } };
+    else step = { type: 'drill', mode: 'quick', gen: { kind: 'chars', chars: p.content, count: Math.min(Math.max(chars.length, 10), 40) } };
+  } else if (p.kind === 'words') {
+    const words = p.content.split(' ');
+    step = { type: 'drill', gen: { kind: 'words', words, count: Math.min(Math.max(words.length, 10), 40) } };
+  } else step = { type: 'drill', text: p.content };
+  step.title = p.title;
+  step.hint = `${p.teacher}老師出的練習：不計星，做完可以再來一組。`;
+  return { id: 0, title: p.title, subtitle: '老師出的練習', newKeys: [], practice: true, steps: [step] };
 }
 
 function shapeNote(ch) {

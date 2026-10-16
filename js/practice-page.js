@@ -2,7 +2,10 @@ import { applyWorld } from './world.js';
 import { ROOTS, ROOT_GROUPS } from './zh-codes.js';
 import { getWeak } from './storage.js';
 import { start as syncStart } from './sync.js';
-await syncStart();
+import { api } from './api.js';
+const me = await syncStart();
+let custom = [];
+if (me) { try { custom = (await api('/api/practice')).practices ?? []; } catch { /* 離線就不顯示 */ } }
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -25,12 +28,12 @@ const EN_KINDS = [
 ];
 const ZH_RANGES = [
   ['abcdefg', '第 1 課：日月金木水火土'],
-  ['abcdefghijk', '第 1–2 課：＋竹戈十大'],
-  ['abcdefghijklmn', '第 1–3 課：＋中一弓'],
-  ['abcdefghijklmnopqr', '第 1–4 課：＋人心手口'],
-  ['abcdefghijklmnopqrstu', '第 1–5 課：＋尸廿山'],
-  ['abcdefghijklmnopqrstuvwy', '第 1–6 課：＋女田卜'],
-  ['abcdefghijklmnopqrstuvwyx', '全部字根'],
+  ['abcdefghijk', '第 1–3 課：＋竹戈十大'],
+  ['abcdefghijklmn', '第 1–4 課：＋中一弓'],
+  ['abcdefghijklmnopqr', '第 1–6 課：＋人心手口'],
+  ['abcdefghijklmnopqrstu', '第 1–7 課：＋尸廿山'],
+  ['abcdefghijklmnopqrstuvwy', '第 1–8 課：＋女田卜'],
+  ['abcdefghijklmnopqrstuvwyx', '全部字根（連難字 X）'],
 ];
 
 function opt(name, value, label, sub, checked) {
@@ -58,8 +61,19 @@ function render() {
   }
   $('form').onchange = () => { const k = $('form').kind.value; $('sec-range').hidden = ['weak', 'ime', 'sentences'].includes(k); };
   $('form').onchange();
+  renderCustom();
   renderWeak();
 }
+
+const KIND_NAME = { zh: { text: '整段打字', chars: '字表打字', split: '字表拆字' }, en: { text: '整段打字', words: '詞語' } };
+function renderCustom() {
+  const list = custom.filter((p) => p.lang === lang);
+  $('custom').hidden = !list.length;
+  $('custom').innerHTML = `<h2>老師出的練習</h2><div class="pr-custom">${list.map((p) => `
+    <a class="pr-cu" href="type.html?${new URLSearchParams({ lang, mode: 'practice', kind: 'custom', cid: p.id })}">
+      <b>${esc(p.title)}</b><small>${KIND_NAME[p.lang]?.[p.kind] ?? ''}・${p.kind === 'words' ? `${p.content.split(' ').length} 個詞` : p.lang === 'en' ? `${p.content.split(' ').length} 個字` : `${[...p.content].length} 字`}・${esc(p.teacher)}老師</small></a>`).join('')}</div>`;
+}
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 function renderWeak() {
   const weak = getWeak(lang).slice(0, 12);

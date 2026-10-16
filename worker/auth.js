@@ -81,3 +81,36 @@ export async function destroySession(db, req, kind) {
 export async function sweepSessions(db) {
   await db.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(new Date().toISOString()).run();
 }
+
+// ---------- 登入次數限制 ----------
+// 同一個網絡（IP）：10 分鐘內失敗 60 次就暫停 10 分鐘（學校全校共用一個對外 IP，所以上限較寬）；
+// 教師帳號：失敗 5 次鎖 15 分鐘；學生帳號另有 8 次鎖 10 分鐘（worker/index.js）。
+export const LIMITS = { ip: { max: 60, windowMin: 10, lockMin: 10 }, teacher: { max: 5, windowMin: 15, lockMin: 15 } };
+
+export function clientIp(req) {
+  return req.headers.get('CF-Connecting-IP') ?? req.headers.get('X-Forwarded-For')?.split(',')[0].trim() ?? 'local';
+}
+
+/** 這個 key 現在是否被鎖：回傳解鎖時間（ISO）或 null */
+export async function lockedUntil(db, key) {
+  const r = await db.prepare('SELECT locked_until FROM login_fails WHERE key = ?').bind(key).first();
+  return r?.locked_until && r.locked_until > new Date().toISOString() ? r.locked_until : null;
+}
+
+/** 記一次失敗；超過上限就鎖 */
+export async function recordFail(db, key, { max, windowMin, lockMin }) {
+  const now = new Date();
+  const r = await db.prepare('SELECT * FROM login_fails WHERE key = ?').bind(key).first();
+  const fresh = !r || new Date(r.window_start).getTime() < now.getTime() - windowMin * 60000;
+  const count = fresh ? 1 : r.count + 1;
+  const start = fresh ? now.toISOString() : r.window_start;
+  const lock = count >= max ? new Date(now.getTime() + lockMin * 60000).toISOString() : null;
+  await db.prepare(`INSERT INTO login_fails (key, count, window_start, locked_until) VALUES (?, ?, ?, ?)
+    ON CONFLICT(key) DO UPDATE SET count = excluded.count, window_start = excluded.window_start, locked_until = excluded.locked_until`)
+    .bind(key, lock ? 0 : count, lock ? now.toISOString() : start, lock).run();
+  return lock;
+}
+
+export async function clearFails(db, key) {
+  await db.prepare('DELETE FROM login_fails WHERE key = ?').bind(key).run();
+}

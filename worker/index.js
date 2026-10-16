@@ -6,7 +6,10 @@ import * as auth from './auth.js';
 import { verify } from './score.js';
 import { teacherRoutes } from './teacher.js';
 import { json, fail, body } from './http.js';
-import schema from '../migrations/0001_init.sql';
+import schema1 from '../migrations/0001_init.sql';
+import schema2 from '../migrations/0002_limits.sql';
+import schema3 from '../migrations/0003_custom.sql';
+const schema = [schema1, schema2, schema3].join('\n');
 
 // 資料表：第一次有請求時建立（全部 CREATE IF NOT EXISTS，重複執行沒有影響）
 let ready = null;
@@ -49,9 +52,12 @@ async function studentRoutes(req, env, path, student) {
     const sid = String(b?.sid ?? '').trim().toLowerCase();
     const pw = String(b?.password ?? '');
     if (!sid || !pw) return fail('請輸入學號和密碼');
+    const ipKey = `ip:${auth.clientIp(req)}`;
+    if (await auth.lockedUntil(db, ipKey)) return fail('這個網絡的登入錯誤太多，請 10 分鐘後再試', 429);
     const s = await db.prepare('SELECT * FROM students WHERE sid = ?').bind(sid).first();
     if (s?.locked_until && s.locked_until > now) return fail('輸錯太多次，請 10 分鐘後再試', 429);
     if (!s || !(await auth.verifyPassword(pw, s.salt, s.pass_hash))) {
+      await auth.recordFail(db, ipKey, auth.LIMITS.ip);
       if (s) {
         const n = (s.fail_count ?? 0) + 1;
         const lock = n >= 8 ? new Date(Date.now() + 10 * 60000).toISOString() : null;
@@ -105,6 +111,13 @@ async function studentRoutes(req, env, path, student) {
       ON CONFLICT(student_id) DO UPDATE SET data = excluded.data, summary = excluded.summary, updated_at = excluded.updated_at`)
       .bind(student.id, JSON.stringify(data), summary, now).run();
     return json({ ok: true, updatedAt: now });
+  }
+
+  // ----- 老師自訂練習 -----
+  if (path === '/api/practice' && req.method === 'GET') {
+    const rows = (await db.prepare(`SELECT p.id, p.title, p.lang, p.kind, p.content, p.created_at, t.name AS teacher FROM custom_practice p JOIN teachers t ON t.id = p.teacher_id
+      WHERE p.class_id IS NULL OR p.class_id = ? ORDER BY p.id DESC LIMIT 50`).bind(student.class_id ?? -1).all()).results;
+    return json({ practices: rows });
   }
 
   // ----- 評測 -----

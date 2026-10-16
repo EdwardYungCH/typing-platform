@@ -2,6 +2,7 @@
 
 import * as auth from './auth.js';
 import { json, fail, body } from './http.js';
+import { quickOf } from './score.js';
 
 const SID_RE = /^[a-z0-9_-]{3,20}$/;
 
@@ -13,6 +14,26 @@ async function setPassword(db, id, pw, h) {
   h ??= await auth.hashPassword(pw);
   await db.prepare('UPDATE students SET pass_hash = ?, salt = ?, initial_pw = ?, fail_count = 0, locked_until = NULL WHERE id = ?').bind(h.hash, h.salt, pw, id).run();
   await db.prepare("DELETE FROM sessions WHERE kind = 'student' AND user_id = ?").bind(id).run();
+}
+
+/** 整理老師貼上的練習內容：中文只留碼表有的字和中文標點；英文只留可打的 ASCII。 */
+const ZH_PUNCT = '，。；：？！「」、';
+function cleanPractice(lang, kind, raw) {
+  const removed = new Set();
+  let content;
+  if (lang === 'zh') {
+    const keep = (c) => ZH_PUNCT.includes(c) || quickOf(c);
+    const src = raw.replace(/,/g, '，').replace(/\?/g, '？').replace(/!/g, '！').replace(/:/g, '：').replace(/;/g, '；').replace(/\s+/g, kind === 'text' ? '' : '');
+    content = [...src].filter((c) => { if (keep(c)) return true; removed.add(c); return false; }).join('');
+    if (kind !== 'text') content = [...new Set([...content].filter((c) => !ZH_PUNCT.includes(c)))].join('');
+  } else {
+    content = raw.replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2013\u2014]/g, '-');
+    content = [...content].filter((c) => { if (/[ -~\n]/.test(c)) return true; removed.add(c); return false; }).join('');
+    content = kind === 'words' ? [...new Set(content.split(/[\s,]+/).filter(Boolean))].join(' ') : content.replace(/\s+/g, ' ').trim();
+  }
+  if (content.length < (lang === 'zh' ? 2 : 3)) return { error: '內容太短（中文至少 2 個字、英文至少 3 個字母）' };
+  if (content.length > 3000) return { error: '內容太長（最多 3000 字）' };
+  return { content, removed: [...removed].filter((c) => !/\s/.test(c)).join(''), length: [...content].length };
 }
 
 export async function teacherRoutes(req, env, path, teacher) {
@@ -32,8 +53,17 @@ export async function teacherRoutes(req, env, path, teacher) {
 
   if (path === '/api/teacher/login' && req.method === 'POST') {
     const b = await body(req);
-    const t = await db.prepare('SELECT * FROM teachers WHERE username = ?').bind(String(b?.username ?? '').trim().toLowerCase()).first();
-    if (!t || !(await auth.verifyPassword(String(b?.password ?? ''), t.salt, t.pass_hash))) return fail('帳號或密碼不對', 401);
+    const username = String(b?.username ?? '').trim().toLowerCase();
+    const ipKey = `ip:${auth.clientIp(req)}`, tKey = `t:${username}`;
+    if (await auth.lockedUntil(db, ipKey)) return fail('這個網絡的登入錯誤太多，請 10 分鐘後再試', 429);
+    if (await auth.lockedUntil(db, tKey)) return fail('這個教師帳號輸錯太多次，請 15 分鐘後再試', 429);
+    const t = await db.prepare('SELECT * FROM teachers WHERE username = ?').bind(username).first();
+    if (!t || !(await auth.verifyPassword(String(b?.password ?? ''), t.salt, t.pass_hash))) {
+      await auth.recordFail(db, ipKey, auth.LIMITS.ip);
+      await auth.recordFail(db, tKey, auth.LIMITS.teacher);
+      return fail('帳號或密碼不對', 401);
+    }
+    await auth.clearFails(db, tKey);
     const { header } = await auth.createSession(db, 'teacher', t.id);
     return json({ ok: true, user: { username: t.username, name: t.name } }, 200, { 'set-cookie': header });
   }
@@ -115,6 +145,32 @@ export async function teacherRoutes(req, env, path, teacher) {
       lines.push(cells.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','));
     }
     return new Response('﻿' + lines.join('\r\n'), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${cls.year}-${cls.name}.csv"` } });
+  }
+
+  // ----- 自訂練習 -----
+  if (path === '/api/teacher/practice' && req.method === 'GET') {
+    const rows = (await db.prepare(`SELECT p.*, c.name AS class_name, c.year AS class_year, t.name AS teacher FROM custom_practice p
+      LEFT JOIN classes c ON c.id = p.class_id JOIN teachers t ON t.id = p.teacher_id ORDER BY p.id DESC`).all()).results;
+    return json({ practices: rows });
+  }
+  if (path === '/api/teacher/practice' && req.method === 'POST') {
+    const b = await body(req);
+    const title = String(b?.title ?? '').trim().slice(0, 40);
+    const lang = b?.lang === 'en' ? 'en' : 'zh';
+    const kinds = lang === 'zh' ? ['text', 'chars', 'split'] : ['text', 'words'];
+    const kind = kinds.includes(b?.kind) ? b.kind : kinds[0];
+    const r = cleanPractice(lang, kind, String(b?.content ?? ''));
+    if (!title) return fail('請輸入標題');
+    if (r.error) return fail(r.error);
+    const classId = b?.classId ? Number(b.classId) : null;
+    if (classId && !(await db.prepare('SELECT id FROM classes WHERE id = ?').bind(classId).first())) return fail('找不到這個班別');
+    const res = await db.prepare('INSERT INTO custom_practice (teacher_id, class_id, title, lang, kind, content) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(teacher.id, classId, title, lang, kind, r.content).run();
+    return json({ ok: true, id: res.meta?.last_row_id, removed: r.removed, length: r.length });
+  }
+  if ((mm = m(/^\/api\/teacher\/practice\/(\d+)$/)) && req.method === 'DELETE') {
+    await db.prepare('DELETE FROM custom_practice WHERE id = ?').bind(mm[1]).run();
+    return json({ ok: true });
   }
 
   // ----- 學生 -----

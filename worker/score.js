@@ -11,7 +11,7 @@ const KEY_OF_PUNCT = Object.fromEntries(Object.entries(PUNCT).map(([k, v]) => [v
 const CAP = { en: 150, zh: 120 };   // 合理上限：英文 WPM、中文 字／分鐘
 
 let quickOfMap = null;
-function quickOf(ch) {
+export function quickOf(ch) {
   if (!quickOfMap) {
     quickOfMap = new Map();
     for (const code of Object.keys(zhCodes.quick).sort()) for (const c of zhCodes.quick[code]) if (!quickOfMap.has(c)) quickOfMap.set(c, code);
