@@ -116,7 +116,7 @@ async function renderClass() {
     <h2>${html(current.year)} ${html(current.name)}　<small class="muted">${students.length} 人</small></h2>
     <div class="t-toolbar">
       <button class="btn primary" id="import">匯入學生</button>
-      <button class="btn" id="slips">列印帳號紙條</button>
+      <button class="btn" id="slips">列印帳號紙條</button><button class="btn" id="classpw">全班統一密碼</button>
       <a class="btn" href="../api/teacher/classes/${current.id}/export.csv">匯出 CSV</a>
       <button class="btn" id="refresh">重新整理</button>
       ${students.length ? '' : `<button class="btn" id="delclass">刪除班級</button>`}
@@ -130,6 +130,8 @@ async function renderClass() {
   </section>`;
   $('import').onclick = importDialog;
   $('slips').onclick = printSlips;
+  $('classpw').onclick = () => dialog(`<h2>${html(current.name)} 全班改用同一個密碼</h2><form id="df"><div class="field"><label>新密碼（4–64 個字元）</label><input id="cp" required minlength="4" autocomplete="off"></div><p class="hint">全班學生的舊密碼會失效，已登入的裝置會被登出。</p><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">更改</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
+    async () => { const r = await api(`/api/teacher/classes/${current.id}/password`, { method: 'POST', body: { password: $('cp').value.trim() } }); try { localStorage.setItem('teacher.commonPw', $('cp').value.trim()); } catch {} renderClass(); return `已更改 ${r.count} 人。`; });
   $('refresh').onclick = renderClass;
   $('delclass')?.addEventListener('click', async () => { if (confirm('刪除這個班級？')) { await api(`/api/teacher/classes/${current.id}`, { method: 'DELETE' }); location.hash = ''; location.reload(); } });
   main.querySelectorAll('button[data-act]').forEach((b) => b.onclick = () => studentAction(b.dataset.act, b.closest('tr').dataset));
@@ -137,8 +139,10 @@ async function renderClass() {
 
 async function studentAction(act, { id, sid, name }) {
   if (act === 'reset') {
-    if (!confirm(`重設 ${name}（${sid}）的密碼？舊密碼會失效。`)) return;
-    const r = await api(`/api/teacher/students/${id}/reset`, { method: 'POST', body: {} });
+    let last = ''; try { last = localStorage.getItem('teacher.commonPw') ?? ''; } catch {}
+    const pw = prompt(`重設 ${name}（${sid}）的密碼。\n輸入新密碼（留空＝隨機產生）：`, last);
+    if (pw === null) return;
+    const r = await api(`/api/teacher/students/${id}/reset`, { method: 'POST', body: { password: pw.trim() } });
     dialog(`<h2>新密碼</h2><p>${html(name)}（${html(sid)}）的新密碼：</p><p class="pw" style="font-size:24px">${r.password}</p><p class="hint">請抄給學生；學生登入後可以自己再改。「列印帳號紙條」也會印出這個密碼。</p><div class="form-actions"><button class="btn primary" id="close">關閉</button></div>`);
     renderClass();
   } else if (act === 'retake') {
@@ -168,15 +172,23 @@ function parseRows(text) {
 
 function importDialog() {
   dialog(`<h2>匯入學生到 ${html(current.name)}</h2>
-    <p class="hint">每行一個學生：<b>學號 姓名</b>（可加班號在最前或最後；用空格、逗號或 Tab 分隔，從 Excel 直接複製貼上也可以）。學號會成為登入帳號，密碼由系統隨機產生。</p>
+    <p class="hint">每行一個學生：<b>學號 姓名</b>（可加班號在最前或最後；用空格、逗號或 Tab 分隔，從 Excel 直接複製貼上也可以）。學號會成為登入帳號。</p>
     <form id="df" class="import-box"><div class="field"><textarea id="rows" placeholder="1 s27001 陳大文\n2 s27002 李小明"></textarea></div>
     <div class="field"><label>或選擇 CSV 檔</label><input type="file" id="file" accept=".csv,.txt"></div>
+    <div class="field"><label>密碼</label>
+      <label class="check"><input type="radio" name="pwmode" value="common" checked> 全部用同一個密碼</label>
+      <input id="cpw" autocomplete="off" placeholder="例如 sphrc2027（4–64 個字元）">
+      <label class="check"><input type="checkbox" id="applyold"> 已在系統內的學生也改用這個密碼</label>
+      <label class="check"><input type="radio" name="pwmode" value="random"> 每人隨機產生</label></div>
     <p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">匯入</button><button class="btn ghost" type="button" id="close">取消</button></div></form>
     <div class="result-list" id="res"></div>`,
     async () => {
       const rows = parseRows($('rows').value);
       if (!rows.length) throw new Error('沒有讀到任何學生');
-      const r = await api('/api/teacher/import', { method: 'POST', body: { classId: current.id, rows } });
+      const common = document.querySelector('input[name="pwmode"]:checked').value === 'common';
+      const password = common ? $('cpw').value.trim() : '';
+      if (common && password.length < 4) throw new Error('請輸入統一密碼（至少 4 個字元），或選「每人隨機產生」');
+      const r = await api('/api/teacher/import', { method: 'POST', body: { classId: current.id, rows, password, applyToExisting: common && $('applyold').checked } });
       $('res').innerHTML = `<table class="tbl"><thead><tr><th>學號</th><th>姓名</th><th>密碼</th><th>結果</th></tr></thead><tbody>${r.rows.map((x) => `<tr><td>${html(x.sid)}</td><td>${html(x.name)}</td><td class="pw">${html(x.password ?? '')}</td><td class="mini">${html(x.status)}</td></tr>`).join('')}</tbody></table><p class="hint">密碼之後可在「列印帳號紙條」再看。</p>`;
       $('dlg').dataset.keep = '1';
       classes = (await api('/api/teacher/classes')).classes; current = classes.find((c) => c.id === current.id);
@@ -185,6 +197,10 @@ function importDialog() {
       return `完成：新增 ${r.rows.filter((x) => x.password).length} 人，關閉這個視窗後可見名單`;
     });
   $('file').onchange = async (e) => { const f = e.target.files[0]; if (f) $('rows').value = await f.text(); };
+  try { const last = localStorage.getItem('teacher.commonPw'); if (last) $('cpw').value = last; } catch {}
+  $('cpw').oninput = () => { try { localStorage.setItem('teacher.commonPw', $('cpw').value); } catch {} };
+  const sync = () => { const on = document.querySelector('input[name="pwmode"]:checked').value === 'common'; $('cpw').disabled = !on; $('applyold').disabled = !on; };
+  document.querySelectorAll('input[name="pwmode"]').forEach((r) => r.onchange = sync);
 }
 
 async function printSlips() {

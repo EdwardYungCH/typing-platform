@@ -35,3 +35,6 @@ dialog.t-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
   .slip b { font-size: 15px; }
   .slip .pw { font-size: 18px; }
 }
+.field label.check { display: flex; justify-content: flex-start; gap: 8px; align-items: center; font-weight: 400; margin: 6px 0; cursor: pointer; color: var(--ink); }
+.field label.check input { width: 18px; height: 18px; flex: none; margin: 0; padding: 0; box-shadow: none; accent-color: var(--accent); }
+.field label.check + input { margin: 2px 0 4px 24px; width: calc(100% - 24px); }

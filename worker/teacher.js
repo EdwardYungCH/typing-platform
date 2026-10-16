@@ -5,6 +5,16 @@ import { json, fail, body } from './http.js';
 
 const SID_RE = /^[a-z0-9_-]{3,20}$/;
 
+const PW_OK = (pw) => pw.length >= 4 && pw.length <= 64;
+const PW_MSG = '學生密碼要 4–64 個字元';
+
+/** 設定學生密碼（記下 initial_pw 讓紙條印得出），並登出該學生所有裝置 */
+async function setPassword(db, id, pw, h) {
+  h ??= await auth.hashPassword(pw);
+  await db.prepare('UPDATE students SET pass_hash = ?, salt = ?, initial_pw = ?, fail_count = 0, locked_until = NULL WHERE id = ?').bind(h.hash, h.salt, pw, id).run();
+  await db.prepare("DELETE FROM sessions WHERE kind = 'student' AND user_id = ?").bind(id).run();
+}
+
 export async function teacherRoutes(req, env, path, teacher) {
   const db = env.DB;
   const m = (re) => path.match(re);
@@ -114,6 +124,10 @@ export async function teacherRoutes(req, env, path, teacher) {
     const cls = await db.prepare('SELECT id FROM classes WHERE id = ?').bind(classId).first();
     if (!cls) return fail('請先選班別');
     const rows = Array.isArray(b?.rows) ? b.rows.slice(0, 200) : [];
+    // 老師可指定全部學生用同一個密碼；留空就每人隨機
+    const common = b?.password ? String(b.password) : '';
+    if (common && !PW_OK(common)) return fail(PW_MSG);
+    const commonHash = common ? await auth.hashPassword(common) : null;
     const out = [];
     for (const r of rows) {
       const sid = String(r.sid ?? '').trim().toLowerCase();
@@ -123,11 +137,14 @@ export async function teacherRoutes(req, env, path, teacher) {
       const exist = await db.prepare('SELECT id FROM students WHERE sid = ?').bind(sid).first();
       if (exist) {
         await db.prepare('UPDATE students SET name = ?, class_id = ?, class_no = ? WHERE id = ?').bind(name, classId, no, exist.id).run();
-        out.push({ sid, name, no, status: '已存在，更新了班別和姓名（密碼不變）' });
+        if (common && b?.applyToExisting) {
+          await setPassword(db, exist.id, common, commonHash);
+          out.push({ sid, name, no, password: common, status: '已存在，更新了班別、姓名和密碼' });
+        } else out.push({ sid, name, no, status: '已存在，更新了班別和姓名（密碼不變）' });
         continue;
       }
-      const pw = auth.randomPassword();
-      const h = await auth.hashPassword(pw);
+      const pw = common || auth.randomPassword();
+      const h = commonHash ?? await auth.hashPassword(pw);
       await db.prepare('INSERT INTO students (sid, name, class_id, class_no, pass_hash, salt, initial_pw) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(sid, name, classId, no, h.hash, h.salt, pw).run();
       out.push({ sid, name, no, password: pw, status: '新增' });
     }
@@ -141,11 +158,22 @@ export async function teacherRoutes(req, env, path, teacher) {
   }
 
   if ((mm = m(/^\/api\/teacher\/students\/(\d+)\/reset$/)) && req.method === 'POST') {
-    const pw = auth.randomPassword();
-    const h = await auth.hashPassword(pw);
-    await db.prepare('UPDATE students SET pass_hash = ?, salt = ?, initial_pw = ?, fail_count = 0, locked_until = NULL WHERE id = ?').bind(h.hash, h.salt, pw, mm[1]).run();
-    await db.prepare("DELETE FROM sessions WHERE kind = 'student' AND user_id = ?").bind(mm[1]).run();
+    const b = await body(req);
+    const pw = b?.password ? String(b.password) : auth.randomPassword();
+    if (!PW_OK(pw)) return fail(PW_MSG);
+    await setPassword(db, Number(mm[1]), pw);
     return json({ ok: true, password: pw });
+  }
+
+  // 全班改用同一個密碼
+  if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/password$/)) && req.method === 'POST') {
+    const b = await body(req);
+    const pw = String(b?.password ?? '');
+    if (!PW_OK(pw)) return fail(PW_MSG);
+    const h = await auth.hashPassword(pw);
+    const ids = (await db.prepare('SELECT id FROM students WHERE class_id = ?').bind(mm[1]).all()).results;
+    for (const { id } of ids) await setPassword(db, id, pw, h);
+    return json({ ok: true, count: ids.length });
   }
 
   if ((mm = m(/^\/api\/teacher\/students\/(\d+)\/retake$/)) && req.method === 'POST') {
