@@ -27,6 +27,7 @@ export function glyphNow(ch) { return ready.get(ch) ?? null; }
 /**
  * 畫字。mode：plain（全部同色）、color（首紅尾藍，其他淡灰）、f（只亮首碼部件）、l（只亮尾碼部件）。
  */
+let clipSeq = 0;
 export function glyphSvg(g, mode = 'plain') {
   const cls = (r) => {
     if (mode === 'plain' || !g.r) return 'g-ink';
@@ -35,6 +36,16 @@ export function glyphSvg(g, mode = 'plain') {
     if (mode === 'l') return r === 'l' ? 'g-last' : 'g-ink';
     return 'g-ink';
   };
-  const paths = g.s.map((d, i) => `<path class="${cls(g.r?.[i])}" d="${d}"/>`).join('');
-  return `<svg class="glyph" viewBox="0 0 1024 1024" aria-hidden="true"><g transform="scale(1,-1) translate(0,-900)">${paths}</g></svg>`;
+  // 切開的一筆（r 為 's'）：g.c[i] = [軸 'x'|'y', 值, 細於該值那段的角色, 大於等於那段的角色]，用兩個半平面裁切分開上色
+  let defs = '';
+  const paths = g.s.map((d, i) => {
+    const c = g.r?.[i] === 's' && g.c?.[i];
+    if (!c || mode === 'plain') return `<path class="${cls(g.r?.[i] === 's' ? '.' : g.r?.[i])}" d="${d}"/>`;
+    const [ax, v, lo, hi] = c;
+    const id = `gc${++clipSeq}`;
+    const rect = (a, b) => ax === 'x' ? `<rect x="${a}" y="-400" width="${b - a}" height="1800"/>` : `<rect x="-400" y="${a}" width="1800" height="${b - a}"/>`;
+    defs += `<clipPath id="${id}a" clipPathUnits="userSpaceOnUse">${rect(-400, v)}</clipPath><clipPath id="${id}b" clipPathUnits="userSpaceOnUse">${rect(v, 1400)}</clipPath>`;
+    return `<path class="${cls(lo)}" d="${d}" clip-path="url(#${id}a)"/><path class="${cls(hi)}" d="${d}" clip-path="url(#${id}b)"/>`;
+  }).join('');
+  return `<svg class="glyph" viewBox="0 0 1024 1024" aria-hidden="true"><g transform="scale(1,-1) translate(0,-900)">${defs ? `<defs>${defs}</defs>` : ''}${paths}</g></svg>`;
 }

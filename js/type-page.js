@@ -483,7 +483,8 @@ async function runSplit(step) {
   $('pair').hidden = false;
   $('start-hint').hidden = false;
   $('start-hint').textContent = isTest
-    ? '自行拆字：按首碼和尾碼兩個鍵。右邊有字根和輔助字形表可以參考。'
+    ? '自行拆字：按首碼和尾碼兩個鍵。打錯了可以按 Backspace 刪走再打。右邊有字根和輔助字形表可以參考。'
+    : step.colored ? '看字，拆出首碼和尾碼（不用選字）。答對後看清楚拆法，按 Enter 到下一個字。'
     : '看字，拆出首碼和尾碼，按對兩個鍵就會到下一題（不用選字）。';
   $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
   updateMeters(null, step);
@@ -493,6 +494,7 @@ async function runSplit(step) {
     text,
     zh: state.zh,
     pick: false,
+    confirm: !!step.colored && !isTest,   // 組合：答對後看清楚拆碼，按 Enter 才到下一個字
     errorMode: isTest ? 'continue' : 'block',
     timeLimit: step.timeLimit ?? 0,
     onIme: () => { $('pair-hint').innerHTML = '<span class="warn" style="color:var(--bad)">偵測到系統中文輸入法：請按 Shift 或 Win＋空白鍵切換回英文。</span>'; },
@@ -544,7 +546,9 @@ function renderPair(eng, step, isTest, wrongNow) {
 
   // 逐步提示：答錯一次亮出部件，兩次顯示答案（評測沒有提示）
   let hint = '';
-  if (!isTest) {
+  if (eng.awaitEnter) {
+    hint = `<b style="color:var(--good)">✔ 答對！</b>${splitExplain(ch)}<br>看清楚紅藍部件，按 <b>Enter</b> 到下一個字。`;
+  } else if (!isTest) {
     const want = code[eng.comp.length];
     const part = pending === 'f' ? '<b class="c-first">紅色</b>' : '<b class="c-last">藍色</b>';
     if (eng.misses === 0) {
@@ -565,18 +569,27 @@ function renderPair(eng, step, isTest, wrongNow) {
   $('pair-count').textContent = `第 ${eng.pos + 1} / ${total} 題　一次答啱 ${right}　答錯 ${state.pairWrong}`;
 
   // 右邊：評測顯示字形表；練習顯示上一題的雙色拆碼
-  const chart = step.chartKeys ? `<h4 style="margin-top:12px">字根和輔助字形表</h4>${chartMini(step.chartKeys)}` : '';
-  if (isTest) $('pair-side').innerHTML = `<h4>字根和輔助字形表</h4>${chartMini(step.chartKeys ?? 'abcdefghijklmnopqrstuvwyx')}`;
-  else $('pair-side').innerHTML = (eng.lastDone ? prevHtml(eng.lastDone.ch) : `<h4>上一題</h4><p class="muted">答對後，這裏會用顏色顯示怎樣拆：<b class="c-first">紅色</b>是首碼部件，<b class="c-last">藍色</b>是尾碼部件。</p>`) + chart;
-  showNextKey(eng.misses >= (lessHints ? 3 : 2) && !isTest ? eng.nextKey() : null);
+  // 右邊只放字根和輔助字形表（多欄，一眼看完）；上一題的雙色拆碼放左邊提示下面
+  const prevBox = eng.lastDone ? prevHtml(eng.lastDone.ch) : `<h4>上一題</h4><p class="muted">答對後，這裏會用顏色顯示怎樣拆：<b class="c-first">紅色</b>是首碼部件，<b class="c-last">藍色</b>是尾碼部件。</p>`;
+  const chartKeys = isTest ? (step.chartKeys ?? 'abcdefghijklmnopqrstuvwyx') : step.chartKeys;
+  const sideKey = `${chartKeys ?? ''}|${isTest}`;
+  if (chartKeys) {
+    if ($('pair-side').dataset.k !== sideKey) { $('pair-side').innerHTML = `<h4>字根和輔助字形表</h4>${chartMini(chartKeys)}`; $('pair-side').dataset.k = sideKey; }
+    $('pair-prev').innerHTML = isTest || eng.awaitEnter ? '' : prevBox;
+  } else {
+    $('pair-side').dataset.k = '';
+    $('pair-side').innerHTML = eng.awaitEnter ? prevHtml(ch, '這一題') : prevBox;
+    $('pair-prev').innerHTML = '';
+  }
+  showNextKey(eng.awaitEnter ? 'Enter' : eng.misses >= (lessHints ? 3 : 2) && !isTest ? eng.nextKey() : null);
 }
 
-function prevHtml(ch) {
+function prevHtml(ch, title = '上一題') {
   const g = glyphNow(ch);
   const q = state.zh.quickOf(ch);
   const cj = state.zh.cjOf(ch) ?? q;
   const note = state.notes[ch] || shapeNote(ch);
-  return `<h4>上一題</h4><div class="prev">
+  return `<h4>${title}</h4><div class="prev">
     <div class="pg">${g ? glyphSvg(g, 'color') : ch}</div>
     <div>倉頡：${[...cj].map((k, i) => i === 0 ? `<b class="c-first">${ROOTS[k]}</b>` : i === cj.length - 1 ? `<b class="c-last">${ROOTS[k]}</b>` : ROOTS[k]).join(' ')}<br>
     速成：<b class="c-first">${ROOTS[q[0]]} ${q[0].toUpperCase()}</b>${q[1] ? ` ＋ <b class="c-last">${ROOTS[q[1]]} ${q[1].toUpperCase()}</b>` : ''}${note ? `<br><span class="muted">${note}</span>` : ''}</div></div>`;
@@ -594,7 +607,9 @@ const zcap = (k, cls = '') => `<span class="zcap ${cls}"><b>${ROOTS[k] ?? k}</b>
 function pickHint(ch) {
   if (KEY_OF_PUNCT[ch]) return `按 ${KEY_OF_PUNCT[ch]}`;
   const code = state.zh.quickOf(ch);
-  const idx = state.zh.candidates(code).indexOf(ch);
+  const cands = state.zh.candidates(code);
+  if (cands.length === 1) return '只有一個字，按空白鍵直接出字';
+  const idx = cands.indexOf(ch);
   if (idx < PAGE) return `按 ${idx + 1}`;
   const pg = Math.floor(idx / PAGE);
   return `按空白鍵${pg > 1 ? ` ${pg} 次` : ''}翻到第 ${pg + 1} 頁，再按 ${(idx % PAGE) + 1}`;
@@ -612,6 +627,7 @@ function runQuick(step) {
   $('start-hint').hidden = false;
   $('start-hint').textContent = state.mode === 'split'
     ? '看字，自己拆出首碼和尾碼，按對兩個鍵就會自動上屏（不用選字）。'
+    : isTest ? '請先切換到英文輸入。打錯碼按 Backspace 刪除；揀錯字可以在組字框空着時按 Backspace 刪走再打。'
     : '請先切換到英文輸入（不要開系統的速成），網站內置了速成選字窗。';
   $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
   updateMeters(null, step);
@@ -632,7 +648,7 @@ function runQuick(step) {
       paint(spans, eng);
       renderIme(eng, isTest, imeWarn);
       updateMeters(eng, step);
-      if (eng.lastKey.ok === false) flashError(spans[eng.errorMode === 'block' ? eng.pos : Math.max(0, eng.pos - 1)]);
+      if (eng.lastKey.ok === false) flashError(spans[eng.lastKey.errPos ?? eng.pos]);
     },
     onTick: (eng) => updateMeters(eng, step),
     onFinish: (eng) => { $('ime').hidden = true; onTypingDone(step, eng); },
@@ -773,6 +789,11 @@ function showNextKey(ch) {
     state.hands.setFinger(['R5'], '碼打錯了：用右手尾指按 Backspace 刪除');
     return;
   }
+  if (ch === 'Enter') {
+    state.kb.setNext(['Enter']);
+    state.hands.setFinger(['R5'], '答對了：用右手尾指按 Enter 到下一個字');
+    return;
+  }
   if (ch === 'PageDown' || ch === 'PageUp') {
     state.kb.setNext([]);
     state.hands.setFinger([], `要找的字不在這一頁：按 ${ch} 翻頁`);
@@ -796,7 +817,7 @@ function showNextKey(ch) {
   let label = `用${fingerName(info.finger)}按 ${keyText}`;
   if (lang === 'zh' && ROOTS[ch] && state.kb.root.classList.contains('roots')) label += `（${ROOTS[ch]}）`;
   if (lang === 'zh' && /^[1-9]$/.test(ch)) label = `用${fingerName(info.finger)}按 ${ch} 揀字`;
-  if (lang === 'zh' && ch === ' ') label = '要找的字不在這一頁：用拇指按空白鍵翻頁';
+  if (lang === 'zh' && ch === ' ') label = state.engine?.candidates?.length === 1 ? '只有一個字：用拇指按空白鍵直接出字' : '要找的字不在這一頁：用拇指按空白鍵翻頁';
   if (lang === 'zh' && ch === '1') label = `用${fingerName(info.finger)}按 1 揀第 1 個字`;
   if (info.finger === 'TH') label = '用拇指按空白鍵';
   if (info.shiftFinger) label = `${fingerName(info.shiftFinger)}按住 Shift，${fingerName(info.finger)}按 ${ch}`;

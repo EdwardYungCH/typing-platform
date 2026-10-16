@@ -1,7 +1,8 @@
 // 內置速成引擎：模擬微軟速成「打碼 → 選字」，並記錄每一下按鍵。
 // 介面跟 TypingEngine 相同（pos、status、keystrokes、elapsedMs…），打字頁可以共用。
 // block 模式（課堂練習）：按錯的鍵不會入組字框，揀錯字不會上屏；
-// continue 模式（評測）：可以打錯、揀錯，錯字照樣上屏並記錄。
+// continue 模式（評測）：可以打錯、揀錯，錯字照樣上屏並記錄；組字框空着時按 Backspace 可刪走剛上屏的錯字再打。
+// confirm＝true（拆字「組合」步）：碼打齊後先停下讓學生看拆碼圖，按 Enter 才到下一個字。
 
 export const PAGE = 9; // 微軟速成每頁 9 個候選字
 
@@ -16,8 +17,10 @@ export class QuickEngine {
    * @param {object} o.zh   loadZh() 的結果
    */
   /** pick=false 是「拆字模式」：只打首尾碼，碼一對就自動上屏，不用選字。 */
-  constructor({ text, zh, errorMode = 'block', timeLimit = 0, pick = true, onKey, onFinish, onTick, onIme }) {
+  constructor({ text, zh, errorMode = 'block', timeLimit = 0, pick = true, confirm = false, onKey, onFinish, onTick, onIme }) {
     this.pick = pick;
+    this.confirm = confirm;
+    this.awaitEnter = false; // confirm 模式：答對了，等學生按 Enter
     this.misses = 0;     // 目前這個字打錯了幾次（拆字模式逐步提示用）
     this.chars = [...text];
     this.text = this.chars;              // 打字頁用 text[pos] 和 text.length
@@ -72,13 +75,16 @@ export class QuickEngine {
   nextKey() {
     const ch = this.expectedChar;
     if (ch === undefined) return null;
+    if (this.awaitEnter) return 'Enter';
     if (KEY_OF_PUNCT[ch]) return this.comp ? 'Backspace' : KEY_OF_PUNCT[ch];
     const code = this.expectedCode;
     if (!code) return null;
     if (!code.startsWith(this.comp)) return 'Backspace';
     if (this.comp.length < code.length) return code[this.comp.length];
     if (!this.pick) return null;
-    const idx = this.zh.candidates(code).indexOf(ch);
+    const cands = this.zh.candidates(code);
+    if (cands.length === 1 && cands[0] === ch) return ' ';   // 只有一個候選字：空白鍵直接出字
+    const idx = cands.indexOf(ch);
     const page = Math.floor(idx / PAGE);
     if (page > this.page) return ' ';
     if (page < this.page) return 'PageUp';
@@ -117,6 +123,19 @@ export class QuickEngine {
     const isPick = this.pick && /^[1-9]$/.test(key);
     const isNav = key === 'PageDown' || key === 'PageUp' || key === 'Backspace' || key === 'Escape' || (key === ' ' && this.pick);
     const isPunct = !!PUNCT[key] && !this.comp;
+    if (this.awaitEnter) {
+      // 等按 Enter：其他鍵不理
+      if (key !== 'Enter' && key !== ' ') return;
+      e.preventDefault();
+      if (e.repeat) return;
+      this.awaitEnter = false;
+      this._log(e, 'Enter', 'Enter', null);
+      this._commit(this.expectedChar, true);
+      this.lastKey = { key, code: e.code, ok: null, errPos: null };
+      this.onKey?.(e, this);
+      if (this.pos >= this.chars.length) this.finish();
+      return;
+    }
     if (!isLetter && !isPick && !isNav && !isPunct) return;
     e.preventDefault();
     if (e.repeat) return;
@@ -124,12 +143,31 @@ export class QuickEngine {
 
     const want = this.nextKey();
     let ok = true;
+    let errPos = this.pos;   // 打錯時，錯在哪一個字（給打字頁閃紅用）
 
-    if (key === 'Backspace' || key === 'Escape') {
+    if (key === 'Backspace' && !this.comp && this.errorMode === 'continue' && this.pos > 0 && this.status[this.pos - 1] === 'bad') {
+      // 評測：刪走剛上屏的錯字，改正後算「已改正」
+      this.pos -= 1;
+      this.committed.pop();
+      this.status[this.pos] = 'todo';
+      this.page = 0;
+      this._log(e, key, want, null);
+    } else if (key === 'Backspace' || key === 'Escape') {
       if (!this.comp) return;
       this.comp = key === 'Escape' ? '' : this.comp.slice(0, -1);
       this.page = 0;
       this._log(e, key, want, null);
+    } else if (key === ' ' && this.comp && this.candidates.length === 1) {
+      // 微軟速成：只有一個候選字時，空白鍵直接出字（例如 一、心）
+      const pick = this.candidates[0];
+      const right = pick === this.expectedChar;
+      ok = right;
+      this._log(e, key, want, ok);
+      if (right) this._commit(pick, true);
+      else {
+        this.errorAt.add(this.pos);
+        if (this.errorMode === 'continue') this._commit(pick, false);
+      }
     } else if (key === ' ' || key === 'PageDown' || key === 'PageUp') {
       const pages = Math.ceil(this.candidates.length / PAGE);
       if (!pages) return;
@@ -152,10 +190,11 @@ export class QuickEngine {
       else if (ok || this.errorMode === 'continue') { this.comp += key; this.page = 0; }
       this._log(e, key, want, ok);
       if (!ok) { this.errorAt.add(this.pos); this.misses += 1; }
-      // 拆字模式：碼打齊就自動上屏
+      // 拆字模式：碼打齊就自動上屏（confirm 模式先等 Enter）
       if (!this.pick) {
         const code = this.expectedCode;
-        if (this.comp === code) this._commit(this.expectedChar, true);
+        if (this.comp === code && this.confirm) this.awaitEnter = true;
+        else if (this.comp === code) this._commit(this.expectedChar, true);
         else if (this.errorMode === 'continue' && this.comp.length >= code.length) this._commit(this.expectedChar, false);
       }
     } else if (isPick) {
@@ -171,7 +210,7 @@ export class QuickEngine {
       }
     }
 
-    this.lastKey = { key, code: e.code, ok };
+    this.lastKey = { key, code: e.code, ok, errPos: ok === false ? errPos : null };
     this.onKey?.(e, this);
     if (this.pos >= this.chars.length) this.finish();
   }

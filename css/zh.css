@@ -58,7 +58,7 @@
 
 /* 首尾碼練習卡（拆字模式） */
 .pair { display: grid; gap: 16px; margin-top: 8px; }
-@media (min-width: 820px) { .pair { grid-template-columns: minmax(260px, 1fr) 1.2fr; align-items: start; } }
+@media (min-width: 820px) { .pair { grid-template-columns: minmax(260px, 1fr) 1.5fr; align-items: start; } }
 .pair-main { display: grid; justify-items: center; gap: 10px; }
 .pair-glyph {
   width: 168px; height: 168px; display: grid; place-items: center; padding: 10px;
@@ -84,10 +84,17 @@
 .pair-side h4 { margin: 0 0 8px; font-size: 14px; color: var(--ink-2); }
 .prev { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; }
 .prev .pg { width: 96px; height: 96px; font-size: 76px; line-height: 1; display: grid; place-items: center; }
-.chart-mini { display: grid; gap: 4px; }
-.chart-mini div { display: flex; align-items: center; gap: 8px; font-size: 26px; }
-.chart-mini .zcap { min-width: 34px; height: 36px; }
-.chart-mini .zcap b { font-size: 15px; }
+/* 字根和輔助字形表：多欄排列，一眼看完，不用上下捲動 */
+.chart-mini { display: grid; gap: 3px 10px; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); }
+.chart-mini div { display: flex; align-items: center; gap: 4px 5px; font-size: 18px; min-width: 0; flex-wrap: wrap; }
+.chart-mini .zcap { min-width: 26px; height: 27px; }
+.chart-mini .zcap b { font-size: 12px; }
+.chart-mini .zcap small { font-size: 9px; }
+.pair-prev { width: 100%; max-width: 32em; }
+.pair-prev:empty { display: none; }
+.pair-prev h4 { margin: 4px 0 4px; font-size: 13px; color: var(--ink-2); }
+.pair-prev .prev, .pair-side .prev { grid-template-columns: 64px 1fr; gap: 10px; font-size: 14px; }
+.pair-prev .prev .pg, .pair-side .prev .pg { width: 64px; height: 64px; font-size: 52px; }
 .zcap.key.first { border-color: var(--code-first); background: color-mix(in srgb, var(--code-first) 18%, transparent); }
 .zcap.key.first small { color: var(--code-first); }
 .zcap.key.last { border-color: var(--code-last); background: color-mix(in srgb, var(--code-last) 18%, transparent); }

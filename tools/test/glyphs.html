@@ -1,0 +1,10 @@
+<!-- 拆碼圖檢查頁：在專案根目錄開本機伺服器（埠 8765），再開 /tools/test/glyphs.html?c=力久史 -->
+<meta charset="utf-8"><style>body{display:flex;flex-wrap:wrap;gap:6px;font:16px sans-serif;margin:6px;background:#fff}span{display:flex;flex-direction:column;align-items:center;border:1px solid #ddd;width:130px}.glyph{width:120px;height:120px}.g-first{fill:#e00000}.g-last{fill:#0040ff}.g-dim{fill:#d0d0d0}.g-ink{fill:#222}</style>
+<div id="o"></div>
+<script type="module">
+import { glyphData, glyphSvg } from '../../js/zh-glyph.js';
+const chars = new URLSearchParams(location.search).get('c');
+const o = document.getElementById('o'); document.body.replaceChildren();
+for (const ch of chars) { const g = await glyphData(ch, '../../'); const s = document.createElement('span'); s.innerHTML = (g ? glyphSvg(g, 'color') : ch) + `<b>${ch}</b>`; document.body.append(s); }
+document.body.dataset.done = 1;
+</script>

@@ -22,6 +22,7 @@ dic = {}
 for line in open(f'{MM}/dictionary.txt', encoding='utf-8'):
     o = json.loads(line); dic[o['character']] = o
 gfx = {}
+MED = {}   # 每字每筆的中線（切筆用）
 need = set(Z['common'][:3000])
 COMMON_KEEP = set(Z['common'][:1500])   # 常用 1500 字就算未能上色也保留筆畫，令練習區、每日任務的字體一致
 LESSON_CHARS = set()
@@ -39,13 +40,14 @@ for line in open(f'{MM}/graphics.txt', encoding='utf-8'):
     o = json.loads(line)
     if o['character'] in need or o['character'] in dic:
         gfx[o['character']] = o['strokes']
+        MED[o['character']] = o['medians']
 
 # 部件 → 字根鍵（只接受「整個部件就是一個字根」的情況）
 EXTRA = {'氵': 'e', '亻': 'o', '扌': 'q', '忄': 'p', '艹': 't', '宀': 'j', '辶': 'y', '灬': 'f', '⺌': 'f', '⺍': 'f',
          '冖': 'b', '冂': 'b', '爫': 'b', '⺈': 'n', '厶': 'i', '广': 'i', '疒': 'k', '犭': 'k', '衤': 'l', '礻': 'y',
          '囗': 'w', '匚': 's', '尸': 's', '丷': 'c', '八': 'c', '亠': 'y', '丶': 'i', '丿': 'h', '丨': 'l', '乚': 'u',
          '凵': 'u', '幺': 'v', '匕': 'p',
-         '⺻': 'l', '龶': 'q', '⺗': 'p', '乛': 'n', '亅': 'n', '𠂉': 'o', '丆': 'm', '𠂇': 'k', '勹': 'p', '乂': 'k', '工': 'm', '厂': 'm', '士': 'g', '曰': 'a', '又': 'e', '釒': 'c', '⺼': 'b', '飠': 'o', '訁': 'y', '糹': 'v', '𥫗': 'h', '几': 'uc', '匸': 's'}
+         '⺻': 'l', '龶': 'q', '⺗': 'p', '乛': 'n', '亅': 'n', '𠂉': 'o', '丆': 'm', '𠂇': 'k', '勹': 'p', '乂': 'k', '工': 'm', '厂': 'm', '士': 'g', '曰': 'a', '又': 'e', '釒': 'c', '⺼': 'b', '飠': 'o', '訁': 'y', '糹': 'v', '𥫗': 'h', '几': 'uc', '匸': 's', '⺮': 'h'}
 def keys_of(c):
     ks = set()
     for k, r in ROOTS.items():
@@ -76,10 +78,10 @@ def strokes_of_child(matches, path, depth_idx):
 # 部分部件：只有前幾筆才是該字根（例如 ⺮ 的左半是竹、夕 的頭兩筆是弓的輔助字形）
 UNKNOWN_OK = set('左右有友灰刀己畏')
 # 值：正數＝頭幾筆、負數＝尾幾筆、清單＝指定第幾筆（負數由尾數起）。筆順依 Make Me a Hanzi。
-PARTIAL = {('⺮', 'h', 'f'): 3, ('夕', 'n', 'f'): 2, ('幺', 'v', 'f'): 1,
+PARTIAL = {('夕', 'n', 'f'): 2, ('幺', 'v', 'f'): 1,
            ('阝', 'n', 'f'): 1, ('阝', 'l', 'l'): -1, ('彳', 'h', 'f'): 1, ('寸', 'i', 'l'): -1, ('寸', 'd', 'f'): 2,
-           ('隹', 'o', 'f'): 2, ('隹', 'g', 'l'): -3, ('艮', 'a', 'f'): 3, ('艮', 'v', 'l'): -3, ('子', 'd', 'l'): -1, ('子', 'n', 'f'): 2,
-           ('力', 'k', 'f'): 1, ('力', 's', 'l'): -1, ('斤', 'l', 'l'): -1, ('斤', 'h', 'f'): 1, ('車', 'j', 'f'): [0, -1], ('車', 'j', 'l'): [-2, -1],
+           ('隹', 'o', 'f'): 2, ('隹', 'g', 'l'): -3, ('艮', 'a', 'f'): 3, ('艮', 'v', 'l'): -3, ('子', 'd', 'l'): -2, ('子', 'n', 'f'): 1,
+            ('斤', 'l', 'l'): -1, ('斤', 'h', 'f'): 2, ('車', 'j', 'f'): [0, -1], ('車', 'j', 'l'): [-2, -1],
            ('羊', 't', 'f'): 3, ('羊', 'q', 'l'): -3, ('皿', 'b', 'f'): 2, ('皿', 't', 'l'): -3, ('門', 'a', 'f'): 4, ('門', 'n', 'l'): -4,
            ('巾', 'l', 'f'): [2], ('巾', 'b', 'l'): [0, 1], ('虫', 'l', 'f'): 4, ('虫', 'i', 'l'): -1, ('衣', 'y', 'f'): 2, ('衣', 'v', 'l'): -3,
            ('礻', 'i', 'f'): 1, ('礻', 'f', 'l'): -3, ('虍', 'y', 'f'): 2, ('罒', 'w', 'f'): [0, 1, 2, -1], ('罒', 'l', 'l'): [3],
@@ -91,14 +93,14 @@ PARTIAL = {('⺮', 'h', 'f'): 3, ('夕', 'n', 'f'): 2, ('幺', 'v', 'f'): 1,
            ('犬', 'k', 'l'): [0, 1, 2], ('犬', 'i', 'l'): -1, ('舟', 'h', 'f'): 1, ('舟', 'i', 'l'): -1, ('卩', 's', 'f'): 1, ('卩', 'l', 'l'): -1,
            ('豆', 'm', 'f'): 1, ('豆', 't', 'l'): -3, ('才', 'k', 'f'): [0, 2], ('才', 'd', 'f'): 2, ('才', 'h', 'l'): -1,
            ('丁', 'm', 'f'): 1, ('丁', 'n', 'l'): -1, ('豕', 'm', 'f'): 1, ('豕', 'o', 'l'): -2, ('之', 'i', 'f'): 1, ('之', 'o', 'l'): -2,
-           ('足', 'r', 'f'): 3, ('足', 'o', 'l'): -2, ('久', 'n', 'f'): 1, ('久', 'o', 'l'): -2, ('甲', 'w', 'f'): [0, 1, 2, 3], ('甲', 'l', 'l'): -1,
+           ('足', 'r', 'f'): 3, ('足', 'o', 'l'): -2,  ('甲', 'w', 'f'): [0, 1, 2, 3], ('甲', 'l', 'l'): -1,
            ('介', 'o', 'f'): 2, ('介', 'l', 'l'): -1, ('方', 'y', 'f'): 2, ('方', 's', 'l'): -2, ('用', 'b', 'f'): 2, ('用', 'q', 'l'): -3,
            ('年', 'o', 'f'): 2, ('年', 'q', 'l'): -4, ('以', 'v', 'f'): 1, ('以', 'o', 'l'): -2, ('白', 'h', 'f'): 1, ('白', 'a', 'l'): -4,
            ('先', 'h', 'f'): 1, ('先', 'u', 'l'): -1, ('向', 'h', 'f'): 1, ('向', 'r', 'l'): -3, ('戶', 'h', 'f'): 1, ('戶', 's', 'l'): -3,
-           ('制', 'h', 'f'): 1, ('制', 'n', 'l'): -1, ('學', 'h', 'f'): 1, ('學', 'd', 'l'): -1, ('身', 'h', 'f'): 1, ('身', 'h', 'l'): -1,
+           ('制', 'h', 'f'): 1, ('制', 'n', 'l'): -1, ('學', 'h', 'f'): 1, ('學', 'd', 'l'): -2, ('身', 'h', 'f'): 1, ('身', 'h', 'l'): -1,
            ('長', 's', 'f'): 2, ('長', 'v', 'l'): -3, ('司', 's', 'f'): 1, ('司', 'r', 'l'): -3, ('自', 'h', 'f'): 1, ('自', 'u', 'l'): [-1],
-           ('馬', 's', 'f'): 1, ('馬', 'f', 'l'): -4, ('聿', 'l', 'f'): [3], ('聿', 'q', 'l'): -3, ('雨', 'm', 'f'): 1, ('雨', 'y', 'l'): -4,
-           ('面', 'm', 'f'): 1, ('非', 'l', 'f'): 1, ('非', 'y', 'l'): -3, ('片', 'l', 'f'): [1], ('片', 'l', 'l'): -1,
+           ('馬', 's', 'f'): 1, ('馬', 'f', 'l'): -4, ('聿', 'q', 'l'): -3, ('雨', 'm', 'f'): 1, ('雨', 'y', 'l'): -4,
+           ('面', 'm', 'f'): 1, ('非', 'l', 'f'): 1, ('非', 'y', 'l'): -3, ('片', 'l', 'f'): [0], ('片', 'l', 'l'): -1,
            ('五', 'm', 'f'): 1, ('五', 'm', 'l'): -1, ('亞', 'm', 'f'): 1, ('亞', 'm', 'l'): -1, ('互', 'm', 'f'): 1, ('互', 'm', 'l'): -1,
            ('不', 'm', 'f'): 1, ('不', 'f', 'l'): -3, ('上', 'y', 'f'): 2, ('上', 'm', 'l'): -1, ('入', 'o', 'f'): 1, ('入', 'h', 'l'): -1,
            ('已', 's', 'f'): 1, ('已', 'u', 'l'): -1, ('而', 'm', 'f'): 2, ('而', 'l', 'l'): -1, ('七', 'j', 'f'): 1, ('七', 'u', 'l'): -1,
@@ -132,7 +134,42 @@ PARTIAL = {('⺮', 'h', 'f'): 3, ('夕', 'n', 'f'): 2, ('幺', 'v', 'f'): 1,
            ('君', 's', 'f'): 2, ('君', 'r', 'l'): -3, ('收', 'v', 'f'): [0], ('收', 'k', 'l'): -2, ('亡', 'y', 'f'): 2, ('亡', 'v', 'l'): -1,
            ('世', 'p', 'f'): [3, 4], ('世', 't', 'l'): [0, 1, 2], ('戒', 'i', 'f'): [0, 4, 5, 6], ('戒', 't', 'l'): [1, 2, 3],
            ('貞', 'y', 'f'): 2, ('貞', 'c', 'l'): -2, ('占', 'y', 'f'): 2, ('占', 'r', 'l'): -3, ('冬', 'h', 'f'): 1, ('冬', 'y', 'l'): -2,
-           ('寒', 'y', 'l'): -2, ('百', 'm', 'f'): 2}
+           ('寒', 'y', 'l'): -2, ('百', 'm', 'f'): 2, ('后', 'h', 'f'): 2, ('后', 'r', 'l'): -3,
+           ('存', 'k', 'f'): [0, 1], ('在', 'k', 'f'): [0, 1],
+           ('石', 'm', 'f'): 2, ('石', 'r', 'l'): -3, ('書', 'l', 'f'): [0, 1, 2, 4], ('畫', 'l', 'f'): [0, 1, 2, 4], ('盡', 'l', 'f'): [0, 1, 2, 3]}
+
+# ---- 切筆：速成拆字可以在直線上切開一筆（不在轉角切），例如 力 的橫、久 的撇、史 的撇 ----
+# 規則傳入該部件在整字的筆畫索引 idxs 和整字中線 M，回傳 [筆索引 或 ('cut', 筆索引, 'x'|'y', 值, 'lo'|'hi')]
+# 'lo'＝座標小於該值的一段、'hi'＝大於等於的一段（Make Me a Hanzi 座標：x 向右、y 向上）。
+def _cross(p, q):
+    """兩條中線第一個交點"""
+    for (a, b) in zip(p, p[1:]):
+        for (c, d) in zip(q, q[1:]):
+            den = (b[0]-a[0])*(d[1]-c[1]) - (b[1]-a[1])*(d[0]-c[0])
+            if not den: continue
+            t = ((c[0]-a[0])*(d[1]-c[1]) - (c[1]-a[1])*(d[0]-c[0])) / den
+            u = ((c[0]-a[0])*(b[1]-a[1]) - (c[1]-a[1])*(b[0]-a[0])) / den
+            if 0 <= t <= 1 and 0 <= u <= 1: return (a[0]+t*(b[0]-a[0]), a[1]+t*(b[1]-a[1]))
+    return None
+def _li(idxs, M, part):
+    # 力：idxs[0] 橫折鈎、idxs[1] 撇。撇和橫相交處直切：左邊一小段屬 大，其餘屬 尸
+    a, b = idxs[0], idxs[1]
+    pt = _cross(M[a], M[b])
+    if not pt: return None
+    return [b, ('cut', a, 'x', round(pt[0]), 'lo')] if part == 'k' else [('cut', a, 'x', round(pt[0]), 'hi')]
+def _jiu(idxs, M, part):
+    # 久：idxs[1] 橫撇。轉角之下、撇的直線上橫切：上段連 丿 屬 弓，下段連 捺 屬 人
+    a, b, c = idxs
+    cy = max(M[b], key=lambda p: p[0])[1] - 110
+    return [a, ('cut', b, 'y', round(cy), 'hi')] if part == 'n' else [c, ('cut', b, 'y', round(cy), 'lo')]
+def _shi(idxs, M, part):
+    # 史：口 下面那一橫處橫切長撇：上段連 口 屬 中，下段連 捺 屬 大
+    y = min(p[1] for p in M[idxs[2]]) - 25
+    return [idxs[0], idxs[1], idxs[2], ('cut', idxs[3], 'y', round(y), 'hi')] if part == 'l' else [idxs[4], ('cut', idxs[3], 'y', round(y), 'lo')]
+CUTS = {('力', 'k', 'f'): lambda i, M: _li(i, M, 'k'), ('力', 's', 'l'): lambda i, M: _li(i, M, 's'),
+        ('久', 'n', 'f'): lambda i, M: _jiu(i, M, 'n'), ('久', 'o', 'l'): lambda i, M: _jiu(i, M, 'o'),
+        ('史', 'l', 'f'): lambda i, M: _shi(i, M, 'l'), ('史', 'k', 'l'): lambda i, M: _shi(i, M, 'k')}
+
 def partial_idx(v, idxs):
     if isinstance(v, list): return [idxs[i] for i in v]
     return idxs[:v] if v > 0 else idxs[v:]
@@ -168,7 +205,7 @@ def comp_roles(char, want, side):
     r = find(char, list(range(n)), want, side, 1)
     MATCHED[:] = saved
     STACK.discard(char)
-    if r is not None and len(r) >= n: r = None   # 整個部件都算，等於沒拆
+    if r is not None and (len(r) >= n or any(isinstance(x, tuple) for x in r)): r = None   # 整個部件都算＝沒拆；切筆的座標不能搬到別的字
     ROLE_CACHE[ck] = r
     return r
 
@@ -179,6 +216,12 @@ def find(char, idxs, want, side, depth=0):
     if part and len(idxs) > (len(part) if isinstance(part, list) else abs(part)):
         MATCHED.append(char)
         return partial_idx(part, idxs)
+    cut = CUTS.get((char, want, side))
+    if cut and TOP[0] in MED and len(idxs) == len(gfx.get(char, [])):
+        r = cut(idxs, MED[TOP[0]])
+        if r:
+            MATCHED.append(char)
+            return r
     if want in keys_of(char) and depth > 0:
         MATCHED.append(char)
         return idxs
@@ -243,7 +286,7 @@ fails = []
 for ch in sorted(need):
     if ch not in gfx or ch not in first: continue
     strokes = gfx[ch]; n = len(strokes); q = first[ch]
-    roles = ['.'] * n
+    roles = ['.'] * n; cuts = {}
     if len(q) == 1:
         roles = ['f'] * n if q in keys_of(ch) or len(Z['cj'].get(ch, 'xx')) == 1 else roles
         good = roles[0] == 'f'
@@ -255,10 +298,22 @@ for ch in sorted(need):
         MATCHED.clear()
         l = find(ch, list(range(n)), q[1], 'l')
         lc = MATCHED[-1] if l and MATCHED else None
-        good = bool(f and l and not set(f) & set(l) and len(f) < n and len(l) < n)
+        cuts = {}
+        good = bool(f and l)
         if good:
-            for i in f: roles[i] = 'f'
-            for i in l: roles[i] = 'l'
+            fi = {x for x in f if not isinstance(x, tuple)}; li = {x for x in l if not isinstance(x, tuple)}
+            for role, lst, other in (('f', f, li), ('l', l, fi)):
+                for x in lst:
+                    if isinstance(x, tuple):
+                        _, i, ax, v, keep = x
+                        c = cuts.setdefault(i, [ax, v, '.', '.'])
+                        if i in other or c[0] != ax or c[1] != v or c[2 if keep == 'lo' else 3] != '.': good = False
+                        c[2 if keep == 'lo' else 3] = role
+            good = good and not fi & li and len(fi) < n and len(li) < n
+        if good:
+            for i in fi: roles[i] = 'f'
+            for i in li: roles[i] = 'l'
+            for i in cuts: roles[i] = 's'
             COMP.setdefault(f'{q[0]}|{fc}', []).append([ch, 'f'])
             COMP.setdefault(f'{q[1]}|{lc}', []).append([ch, 'l'])
     if good: ok += 1
@@ -267,6 +322,7 @@ for ch in sorted(need):
     if not good and ch not in LESSON_CHARS and ch not in COMMON_KEEP: continue
     out = {'s': strokes}
     if good: out['r'] = ''.join(roles)
+    if good and len(q) > 1 and cuts: out['c'] = {str(i): c for i, c in cuts.items()}
     json.dump(out, open(f'assets/glyphs/{ord(ch):x}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 os.makedirs('tools/out', exist_ok=True)
 json.dump(COMP, open('tools/out/components.json', 'w', encoding='utf-8'), ensure_ascii=False)

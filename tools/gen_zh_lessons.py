@@ -288,7 +288,7 @@ L.append({'id': 11, 'title': '選字與標點', 'subtitle': '數字鍵揀字、�
     'newKeys': keycodes(ALL) + ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Comma', 'Period', 'Slash', 'Semicolon', 'BracketLeft', 'BracketRight', 'Backslash', 'ShiftLeft', 'ShiftRight'],
     'steps': [
         guide('選字與標點', [
-            {'title': '同一組碼，很多個字', 'points': ['速成只有兩碼，很多字共用同一組碼', '打完碼後，看選字窗，按字旁邊的數字 1 至 9 揀字', '要找的字不在這一頁時，按空白鍵翻到下一頁'], 'show': 'keyboard', 'rootLabels': True, 'imeDemo': '校'},
+            {'title': '同一組碼，很多個字', 'points': ['速成只有兩碼，很多字共用同一組碼', '打完碼後，看選字窗，按字旁邊的數字 1 至 9 揀字', '要找的字不在這一頁時，按空白鍵翻到下一頁', '只有一個候選字（例如 一、心、月）時，按空白鍵直接出字'], 'show': 'keyboard', 'rootLabels': True, 'imeDemo': '校'},
             {'title': '中文標點', 'points': ['逗號「，」按 ,　句號「。」按 .　頓號「、」按 \\', '問號「？」按 Shift＋/　感嘆號「！」按 Shift＋1', '冒號「：」按 Shift＋;　引號「」按 [ 和 ]', '要先把字上屏，組字框空着才可以打標點'], 'show': 'keyboard',
              'highlight': ['Comma', 'Period', 'Backslash', 'Slash', 'Digit1', 'Semicolon', 'BracketLeft', 'BracketRight']}]),
         {'type': 'drill', 'mode': 'quick', 'title': '揀字', 'hint': '這些字都不是第 1 個候選字：打完碼，看清楚再按數字。', 'gen': {'kind': 'chars', 'chars': pick_chars, 'count': 20}},

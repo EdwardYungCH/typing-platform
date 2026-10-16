@@ -62,7 +62,17 @@ export function replayZh(text, keystrokes) {
     const key = k.key.length === 1 ? k.key.toLowerCase() : k.key;
     const expected = chars[pos];
     const code = quickOf(expected) ?? '';
+    // 組字框空着時 Backspace：刪走剛上屏的錯字（跟 js/quick-engine.js 一致）
+    if (key === 'Backspace' && !comp && pos > 0 && status[pos - 1] === 'bad') { pos -= 1; status[pos] = 'todo'; page = 0; continue; }
     if (key === 'Backspace' || key === 'Escape') { comp = key === 'Escape' ? '' : comp.slice(0, -1); page = 0; continue; }
+    if (key === ' ' && comp && candidates(comp).length === 1) {
+      // 只有一個候選字：空白鍵直接出字（跟 js/quick-engine.js 一致）
+      total += 1;
+      const right = candidates(comp)[0] === expected;
+      if (right) correct += 1; else errorAt.add(pos);
+      commit(right);
+      continue;
+    }
     if (key === ' ' || key === 'PageDown' || key === 'PageUp') {
       const pages = Math.ceil(candidates(comp).length / PAGE);
       if (!pages) continue;
@@ -78,7 +88,7 @@ export function replayZh(text, keystrokes) {
     }
     if (/^[a-z]$/.test(key)) {
       total += 1;
-      let ok = key === (code[comp.length] ?? '');
+      let ok = code.startsWith(comp) && key === (code[comp.length] ?? '');
       if (comp.length >= 2) ok = false; else { comp += key; page = 0; }
       if (ok) correct += 1; else errorAt.add(pos);
       continue;

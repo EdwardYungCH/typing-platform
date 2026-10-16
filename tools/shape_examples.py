@@ -27,7 +27,8 @@ INFO = {
     'g-0': ('提土旁', '地圩場', 'f'),
     'g-1': ('士字', '吉', 'f'), 'g-1L': ('士字', '仕壬', 'l'),
     'h-0': ('撇', '白牛夭', 'f'), 'h-0L': ('撇', '刀分少', 'l'),
-    'h-1': ('兩撇（竹字頭的一半）', '反筆第', 'f'),
+    'h-1': ('兩撇（形似厂）', '反后斤', 'f'),
+    'h-2': ('竹字頭（整個竹字頭屬竹）', '筆第等', 'f'),   # 圖片 h-2.png 由 Make Me a Hanzi 的 ⺮ 畫出（老師的字根表沒有這個字形）
     'i-0': ('點', '之', 'f'), 'i-0L': ('點', '太勺夕', 'l'),
     'i-1': ('私字邊（撇折、點）', '弁', 'f'), 'i-1L': ('私字邊（撇折、點）', '公去勾', 'l'),
     'i-2': ('廣字頭（點、橫、撇）', '店床度', 'f'),
@@ -42,8 +43,8 @@ INFO = {
     'l-3': ('衣字邊', '初複裙', 'f'),
     'm-0': ('提', '刁', 'l'),
     'm-1': ('工字', '扛左紅', 'l'),
-    'm-2': ('廠字頭', '仄石原', 'f'),
-    'm-3': ('一下加撇', '百而', 'f'),
+    'm-2': ('廠字頭', '仄原厚', 'f'),
+    'm-3': ('一下加撇', '石百而', 'f'),
     'n-0': ('橫鈎', '了子承', 'f'),
     'n-1': ('豎鈎', '小', 'f'), 'n-1L': ('豎鈎', '丁仃門', 'l'),
     'n-2': ('撇、橫鈎（刀字頭）', '久魚負', 'f'),
@@ -98,7 +99,8 @@ for key, (name, chars, side) in INFO.items():
         if not cj or (cj[0] if side == 'f' else cj[-1]) != k:
             bad.append(f'{img} {c} {cj} {side}'); continue
         g = f'assets/glyphs/{ord(c):x}.json'
-        has = os.path.exists(g) and side in json.load(open(g)).get('r', '')
+        gj = json.load(open(g)) if os.path.exists(g) else {}
+        has = side in gj.get('r', '') or any(side in c[2:] for c in gj.get('c', {}).values())   # c＝切開的筆
         e['examples'].append([c, side, 1 if has else 0])
 S = json.load(open('data/zh-shapes.json', encoding='utf-8'))
 S['chartInfo'] = info
