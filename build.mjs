@@ -1,5 +1,6 @@
 // 建置腳本：把網站檔案複製到 dist/，並壓縮 JS 和 CSS。
-// Cloudflare Pages 每次推送後會自動執行 `npm run build`，然後發佈 dist/。
+// Cloudflare Workers Builds 每次推送後會自動執行 `npm run build`，然後發佈 dist/。
+// target 用 es2022：各頁的 JS 有頂層 await（es2020 不支援，會令建置失敗）。
 // 平日修改的是原本易讀的檔案；學生在瀏覽器看到的是壓縮後的版本。
 
 import { build } from 'esbuild';
@@ -45,7 +46,7 @@ for (const dir of SITE_DIRS) {
         bundle: false,
         minify: true,
         format: ext === '.js' ? 'esm' : undefined,
-        target: ['es2020'],
+        target: ['es2022'],
         legalComments: 'none',
         logLevel: 'error',
       });

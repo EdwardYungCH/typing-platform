@@ -16,16 +16,13 @@
   },
   // 讓 worker 可以把 migrations/*.sql 當文字讀入，第一次有人用 API 時自動建立資料表
   "rules": [{ "type": "Text", "globs": ["**/*.sql"] }],
-  // D1 資料庫：在 Cloudflare 後台 Storage & Databases → D1 建立一個叫 typing-platform 的資料庫，
-  // 然後把下面整段的 /* 和 */ 刪掉，並把 database_id 換成它的 Database ID。
-  /*
+  // D1 資料庫（Cloudflare 後台 Storage & Databases → D1 → typing-platform）
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "typing-platform",
-      "database_id": "請貼上你的 D1 Database ID"
+      "database_id": "59418574-a16e-4683-b70d-aea2ad2201df"
     }
   ],
-  */
   "observability": { "enabled": true }
 }
