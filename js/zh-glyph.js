@@ -41,11 +41,17 @@ export function glyphSvg(g, mode = 'plain') {
   const paths = g.s.map((d, i) => {
     const c = g.r?.[i] === 's' && g.c?.[i];
     if (!c || mode === 'plain') return `<path class="${cls(g.r?.[i] === 's' ? '.' : g.r?.[i])}" d="${d}"/>`;
-    const [ax, v, lo, hi] = c;
-    const id = `gc${++clipSeq}`;
+    // c = [軸, 切點, 各段角色]；舊格式 [軸, 值, 低段, 高段] 照樣支援
+    const [ax, cut, ...rest] = c;
+    const bounds = Array.isArray(cut) ? cut : [cut];
+    const segs = Array.isArray(cut) ? rest[0] : rest;
+    const edges = [-400, ...bounds, 1400];
     const rect = (a, b) => ax === 'x' ? `<rect x="${a}" y="-400" width="${b - a}" height="1800"/>` : `<rect x="-400" y="${a}" width="1800" height="${b - a}"/>`;
-    defs += `<clipPath id="${id}a" clipPathUnits="userSpaceOnUse">${rect(-400, v)}</clipPath><clipPath id="${id}b" clipPathUnits="userSpaceOnUse">${rect(v, 1400)}</clipPath>`;
-    return `<path class="${cls(lo)}" d="${d}" clip-path="url(#${id}a)"/><path class="${cls(hi)}" d="${d}" clip-path="url(#${id}b)"/>`;
+    return segs.map((role, k) => {
+      const id = `gc${++clipSeq}`;
+      defs += `<clipPath id="${id}" clipPathUnits="userSpaceOnUse">${rect(edges[k], edges[k + 1])}</clipPath>`;
+      return `<path class="${cls(role)}" d="${d}" clip-path="url(#${id})"/>`;
+    }).join('');
   }).join('');
   return `<svg class="glyph" viewBox="0 0 1024 1024" aria-hidden="true"><g transform="scale(1,-1) translate(0,-900)">${defs ? `<defs>${defs}</defs>` : ''}${paths}</g></svg>`;
 }

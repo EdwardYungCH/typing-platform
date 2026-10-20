@@ -50,8 +50,8 @@ for f in [x for x in os.listdir('assets/glyphs') if x.endswith('.json')]:
     ch = chr(int(f[:-5], 16))
     if 'r' not in g or ch not in MED: continue
     r = g['r']
-    fi = [i for i, x in enumerate(r) if x == 'f' or (x == 's' and 'f' in g.get('c', {}).get(str(i), []))]
-    li = [i for i, x in enumerate(r) if x == 'l' or (x == 's' and 'l' in g.get('c', {}).get(str(i), []))]
+    fi = [i for i, x in enumerate(r) if x == 'f' or (x == 's' and 'f' in g.get('c', {}).get(str(i), [None, None, []])[-1])]
+    li = [i for i, x in enumerate(r) if x == 'l' or (x == 's' and 'l' in g.get('c', {}).get(str(i), [None, None, []])[-1])]
     if not fi or not li: continue
     def box(ix):
         pts = [p for i in ix for p in MED[ch][i]]
@@ -90,7 +90,7 @@ for x in flags_order:
     g = json.load(open(f'assets/glyphs/{ord(ch):x}.json', encoding='utf-8'))
     r, cuts = g['r'], g.get('c', {})
     idxs = next(i for rule, c, i, d in P[ch][side] if c == comp)
-    colored = [k for k, gi in enumerate(idxs) if r[gi] == side or (r[gi] == 's' and side in cuts.get(str(gi), []))]
+    colored = [k for k, gi in enumerate(idxs) if r[gi] == side or (r[gi] == 's' and side in cuts.get(str(gi), [None, None, []])[-1])]
     m = best_map(comp, ch, idxs)
     should = sorted(m[k] for k in colored)
     now = sorted(idxs[k] for k in colored)
@@ -108,7 +108,7 @@ for f in [x for x in os.listdir('assets/glyphs') if x.endswith('.json')]:
     cj = Z['cj'].get(ch, '')
     if 'r' not in g or len(cj) != 2: continue
     r = g['r']; cuts = g.get('c', {})
-    grey = [i for i, x in enumerate(r) if x == '.' or (x == 's' and '.' in cuts.get(str(i), [])[2:])]
+    grey = [i for i, x in enumerate(r) if x == '.' or (x == 's' and '.' in cuts.get(str(i), [None, None, []])[-1])]
     if grey: grey2.append({'ch': ch, 'cj': cj, 'grey': grey})
 grey2.sort(key=key)
 json.dump({'order': flags_order, 'position': flags_pos, 'order_effect': real, 'grey2': grey2}, open('tools/out/audit.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)

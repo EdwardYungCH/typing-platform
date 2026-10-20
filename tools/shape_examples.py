@@ -102,7 +102,7 @@ for key, (name, chars, side) in INFO.items():
             bad.append(f'{img} {c} {cj} {side}'); continue
         g = f'assets/glyphs/{ord(c):x}.json'
         gj = json.load(open(g)) if os.path.exists(g) else {}
-        has = side in gj.get('r', '') or any(side in c[2:] for c in gj.get('c', {}).values())   # c＝切開的筆
+        has = side in gj.get('r', '') or any(side in c[-1] for c in gj.get('c', {}).values())   # c＝切開的筆
         e['examples'].append([c, side, 1 if has else 0])
 # ---- 字根本體例字：每個字根揀 3 個常用字，盡量不同位置和結構（左右作首碼、上下／包圍作首碼、作尾碼）----
 # 來源 tools/out/components.json（build_zh_glyphs 產生：哪些字的首／尾碼正是字根本身），只收有雙色圖的字。
@@ -134,7 +134,7 @@ for k, r in ROOTS.items():
     ex = []
     for c, side in picks[:3]:
         gj = json.load(open(f'assets/glyphs/{ord(c):x}.json')) if os.path.exists(f'assets/glyphs/{ord(c):x}.json') else {}
-        has = side in gj.get('r', '') or any(side in cc[2:] for cc in gj.get('c', {}).values())
+        has = side in gj.get('r', '') or any(side in cc[-1] for cc in gj.get('c', {}).values())
         ex.append([c, side, 1 if has else 0])
     root_info[k] = {'name': '字根本體', 'examples': ex}
 
