@@ -34,7 +34,7 @@ january february march april may june july august september october november dec
 friday saturday sunday christmas easter god jesus christian bible islam york washington chicago boston houston dallas
 virginia georgia carolina ohio michigan jersey arizona colorado oregon kansas iowa utah nevada idaho maine alaska hawaii
 john david michael james robert paul mark peter smith brown johnson williams jones davis miller wilson taylor
-el la le los las del des du der von san santa st ford dell sony apple'''.split())
+el la le los las del des du der von san santa st ford dell sony apple xbox zealand nintendo playstation'''.split())
 WEB = set('''pm am xp ex copyright url id ok fyi asap lol omg diy rsvp vip ceo cfo hiv aids sms mms gps html faq
 login logout signup username password spam cookies cookie privacy terms webmaster admin api seo'''.split())
 OBSCURE = set('flak lass sass alas fad fads dada ala aka'.split())
@@ -45,8 +45,9 @@ allw = [w for w in allw if w.isalpha() and w not in JUNK and w not in BAD and w 
 allw = allw[:4000]
 rank = {w: i for i, w in enumerate(allw)}
 
+# 每課最多 3 個新鍵（2026-10-20 老師定：不要一課教四個鍵）；常用的 B N 提早到第 7 課
 ORDER = [('ei', 2, 'E I'), ('ru', 3, 'R U'), ('ty', 4, 'T Y'), ('gh', 5, 'G H'), ('wo', 6, 'W O'),
-         ('qp', 7, 'Q P'), ('c,', 8, 'C ,'), ('vm', 9, 'V M'), ('x.', 10, 'X .'), ('zbn/', 11, 'Z B N /')]
+         ('bn', 7, 'B N'), ('c,', 8, 'C ,'), ('vm', 9, 'V M'), ('qp/', 10, 'Q P /'), ('xz.', 11, 'X Z .')]
 base = set('asdfjkl;')
 
 def keycode(ch):
@@ -160,10 +161,19 @@ lessons.append({
     ]})
 
 # ---- 第 15 課：最常用 200 詞 ----
-c200 = [w for w in allw if len(w) >= 2 or w in ('a', 'i')][:200]
-c200 = [('I' if w == 'i' else w) for w in c200]
+# 學生常用 200 詞：按 Fry Instant Words 首 200 個改編（換走 America、oil 等不適合打字練習的字）
+c200 = '''the of and a to in is you that it he was for on are as with his they I at be this have from or one had by
+words but not what all were we when your can said there use an each which she do how their if will up other about out
+many then them these so some her would make like him into time has look two more write go see number no way could people
+my than first water been called who now find long down day did get come made may part over new sound take only little
+work know place years live me back give most very after things our just name good sentence man think say great where help
+through much before line right too means old any same tell boy follow came want show also around form three small set
+put end does another well large must big even such because turned here why asked went men read need land different home
+us move try kind hand picture again change off play spell air away animal house point page letter mother answer found
+study still learn should school world friend family'''.split()
+assert len(c200) == 200, len(c200)
 lessons.append({
-    "id": 15, "title": "最常用 200 詞", "subtitle": "整個詞一氣呵成", "newKeys": [],
+    "id": 15, "title": "最常用 200 詞", "subtitle": "學生最常用的英文詞", "newKeys": [],
     "pass": {"wpm": 8, "accuracy": 90}, "steps": [
         {"type": "drill", "title": "示範", "hint": "最常見的詞，用整個詞的節奏打，不要逐個字母想。", "display": "big", "text": "the of and to in is that for it you"},
         {"type": "drill", "title": "第 1–100 詞", "hint": "放鬆手腕，保持穩定的節奏。", "gen": {"kind": "words", "words": c200[:100], "count": 22}},
