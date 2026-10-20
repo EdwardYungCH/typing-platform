@@ -38,3 +38,24 @@ dialog.t-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 .field label.check { display: flex; justify-content: flex-start; gap: 8px; align-items: center; font-weight: 400; margin: 6px 0; cursor: pointer; color: var(--ink); }
 .field label.check input { width: 18px; height: 18px; flex: none; margin: 0; padding: 0; box-shadow: none; accent-color: var(--accent); }
 .field label.check + input { margin: 2px 0 4px 24px; width: calc(100% - 24px); }
+
+/* 全班報告 */
+.t-tabs { display: flex; gap: 6px; margin: 4px 0 12px; }
+.rp h3 { margin: 18px 0 8px; font-size: 16px; }
+.rp h4 { margin: 0 0 6px; font-size: 14px; color: var(--ink-2); }
+.rp-tiles { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 600px) { .rp-tiles { grid-template-columns: repeat(2, 1fr); } }
+.rp-tile { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.rp-tile small { color: var(--ink-2); font-size: 12px; }
+.rp-tile b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.rp-tile span { font-size: 12px; color: var(--ink-2); }
+.rp-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.rp-grid section { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.rp-dist { display: grid; grid-template-columns: repeat(17, 1fr); gap: 3px; height: 130px; align-items: end; }
+.rp-col { display: grid; grid-template-rows: 1fr auto auto; height: 100%; text-align: center; }
+.rp-col .rp-bar { align-self: end; display: block; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 0; }
+.rp-col i { font-style: normal; font-size: 11px; color: var(--ink-2); }
+.rp-col small { font-size: 10px; color: var(--ink-2); }
+.rp-names { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 14px; }
+.rp-names small { color: var(--ink-2); margin-left: 3px; }
+@media print { .rp-grid section { break-inside: avoid; } }

@@ -21,11 +21,16 @@ const fix = (v) => (v === undefined ? null : typeof v === 'boolean' ? (v ? 1 : 0
 class Stmt {
   constructor(sql) { this.sql = sql; this.args = []; }
   bind(...args) { this.args = args.map(fix); return this; }
-  async first() { return sqlite.prepare(this.sql).get(...this.args) ?? null; }
-  async all() { return { results: sqlite.prepare(this.sql).all(...this.args) }; }
-  async run() { const r = sqlite.prepare(this.sql).run(...this.args); return { meta: { last_row_id: Number(r.lastInsertRowid), changes: r.changes } }; }
+  async first() { Q.n++; return sqlite.prepare(this.sql).get(...this.args) ?? null; }
+  async all() { Q.n++; return { results: sqlite.prepare(this.sql).all(...this.args) }; }
+  async run() { Q.n++; return this._run(); }
+  _run() { const r = sqlite.prepare(this.sql).run(...this.args); return { meta: { last_row_id: Number(r.lastInsertRowid), changes: r.changes } }; }
 }
-const DB = { prepare: (sql) => new Stmt(sql), batch: async (stmts) => Promise.all(stmts.map((s) => s.run())), exec: async (sql) => sqlite.exec(sql) };
+// batch 跟 D1 一樣是一個交易：中途出錯就全部還原
+const DB = { prepare: (sql) => new Stmt(sql), exec: async (sql) => sqlite.exec(sql),
+  batch: async (stmts) => { Q.n++; sqlite.exec('BEGIN'); try { const out = []; for (const s of stmts) out.push(s._run()); sqlite.exec('COMMIT'); return out; } catch (e) { sqlite.exec('ROLLBACK'); throw e; } } };
+// 每個請求的資料庫查詢次數（batch 算一次），放在回應的 x-db-queries；Cloudflare 免費計劃上限 50
+const Q = { n: 0 };
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.csv': 'text/csv' };
 
@@ -59,8 +64,11 @@ createServer(async (req, res) => {
   const url = `http://localhost:${PORT}${req.url}`;
   const headers = new Headers();
   for (const [k, v] of Object.entries(req.headers)) if (typeof v === 'string') headers.set(k, v);
+  Q.n = 0;
   const r = await worker.fetch(new Request(url, { method: req.method, headers, body: ['GET', 'HEAD'].includes(req.method) ? undefined : bodyBuf }), env);
   res.statusCode = r.status;
+  res.setHeader('x-db-queries', String(Q.n));
+  if (Q.n > 50) console.warn(`⚠ ${req.method} ${req.url} 用了 ${Q.n} 次資料庫查詢（超過免費計劃 50 次）`);
   r.headers.forEach((v, k) => {
     // 本機沒有 https：去掉 Secure，cookie 才會生效
     if (k === 'set-cookie') v = v.replace('; Secure', '');

@@ -65,6 +65,10 @@ function renderMain() {
         <p class="hint">貼一段文章或一批字，學生在「練習區」的「老師出的練習」就會看到。</p>
         <div class="form-actions"><button class="btn" id="practice" type="button">管理自訂練習</button></div>
       </section>
+      <section class="card"><h2>備份</h2>
+        <p class="hint" id="bk-status">載入中…</p>
+        <div class="form-actions"><a class="btn" id="bk-dl" href="/api/teacher/backup" download>下載備份</a><button class="btn" id="bk-restore" type="button">還原備份</button></div>
+      </section>
       <section class="card"><h2>帳戶</h2>
         <div class="form-actions"><button class="btn" id="addteacher" type="button">新增教師</button><button class="btn" id="mypw" type="button">改密碼</button></div>
       </section>
@@ -82,7 +86,46 @@ function renderMain() {
   $('mypw').onclick = () => dialog(`<h2>更改我的密碼</h2><form id="df"><div class="field"><label>舊密碼</label><input id="o" type="password" required></div><div class="field"><label>新密碼（至少 8 個字元）</label><input id="p" type="password" required minlength="8"></div><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">更改</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
     async () => { await api('/api/teacher/password', { method: 'POST', body: { old: $('o').value, password: $('p').value } }); return '已更改。'; });
   $('practice').onclick = practiceDialog;
+  backupStatus();
+  $('bk-dl').addEventListener('click', () => setTimeout(backupStatus, 2500));
+  $('bk-restore').onclick = restoreDialog;
   renderClass();
+}
+
+async function backupStatus() {
+  try {
+    const r = await api('/api/teacher/backup/status');
+    const days = r.lastBackup ? Math.floor((Date.now() - new Date(r.lastBackup)) / 86400000) : null;
+    const when = r.lastBackup ? (days === 0 ? '今日' : `${days} 日前`) : '從未下載';
+    $('bk-status').innerHTML = `上次下載備份：<b${days === null || days > 7 ? ' style="color:var(--bad)"' : ''}>${when}</b>。現有 ${r.counts.classes} 班、${r.counts.students} 個學生、${r.counts.test_attempts} 次評測。<br>建議每星期下載一次，存在學校的雲端硬碟。備份檔包括密碼資料，不要公開分享。`;
+  } catch { $('bk-status').textContent = '未能讀取備份狀態。'; }
+}
+
+function restoreDialog() {
+  dialog(`<h2>還原備份</h2>
+    <p class="hint" style="color:var(--bad)"><b>注意：</b>還原會用備份檔<b>取代網站上現有的全部資料</b>（教師、班級、學生、進度、評測、自訂練習），之後要重新登入。只在資料遺失或出錯時才用。</p>
+    <form id="df"><div class="field"><label>備份檔（.json）</label><input type="file" id="bf" accept=".json,application/json" required></div>
+    <p class="hint" id="bf-info"></p>
+    <div class="field"><label>確認：請輸入「還原」兩個字</label><input id="bc" required autocomplete="off"></div>
+    <p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">還原</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
+    async () => {
+      const f = $('bf').files[0];
+      if (!f) throw new Error('請選擇備份檔');
+      let backup;
+      try { backup = JSON.parse(await f.text()); } catch { throw new Error('檔案不是有效的備份檔'); }
+      const r = await api('/api/teacher/restore', { method: 'POST', body: { confirm: $('bc').value.trim(), backup } });
+      $('dlg').dataset.keep = '1';
+      setTimeout(() => location.reload(), 1800);
+      return `已還原：${r.counts.classes ?? 0} 班、${r.counts.students ?? 0} 個學生。請重新登入。`;
+    });
+  $('bf').onchange = async () => {
+    try {
+      const d = JSON.parse(await $('bf').files[0].text());
+      $('bf-info').textContent = d.app === 'typing-platform'
+        ? `備份時間：${new Date(d.exportedAt).toLocaleString('zh-HK')}；${d.tables.classes?.length ?? 0} 班、${d.tables.students?.length ?? 0} 個學生、${d.tables.test_attempts?.length ?? 0} 次評測。`
+        : '這不是打字平台的備份檔。';
+    } catch { $('bf-info').textContent = '讀不到這個檔案。'; }
+  };
 }
 
 const P_KINDS = { zh: [['text', '整段打字（連標點，要揀字）'], ['chars', '字表打字（隨機出字，要揀字）'], ['split', '字表拆字（只打首尾碼）']],
@@ -129,6 +172,65 @@ function dialog(inner, onSubmit) {
   if (f) f.onsubmit = async (e) => { e.preventDefault(); try { const t = await onSubmit(); msg(d.querySelector('#m'), t, true); if (!d.dataset.keep) setTimeout(() => d.close(), 700); } catch (err) { msg(d.querySelector('#m'), err.message); } };
 }
 
+let view = 'list';
+const TEST_PASS = { 'en-s1': [10, 90], 'en-s2': [20, 90], 'en-s3': [30, 90], 'zh-s1': [6, 90], 'zh-s2': [12, 90], 'zh-s3': [18, 90] };
+
+/** 全班報告：只用名單已有的資料（進度摘要、評測成績），不另外向伺服器取資料 */
+function classReport(students) {
+  if (!students.length) return '<p class="muted">還沒有學生。</p>';
+  const n = students.length;
+  const now = Date.now();
+  const sm = (s) => s.summary ?? { en: { lessons: 0, bestWpm: 0 }, zh: { lessons: 0, bestWpm: 0 }, minutes: 0, lastActive: null };
+  const days = (s) => (sm(s).lastActive ? Math.floor((now - new Date(sm(s).lastActive)) / 86400000) : null);
+  const median = (xs) => { const a = [...xs].sort((x, y) => x - y); return a.length ? (a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2) : 0; };
+  const name = (s) => `${s.class_no ?? ''} ${html(s.name)}`;
+  const active7 = students.filter((s) => days(s) !== null && days(s) <= 7).length;
+  const never = students.filter((s) => !sm(s).lastActive);
+  const idle = students.filter((s) => days(s) !== null && days(s) > 14);
+  const med = { en: median(students.map((s) => sm(s).en.lessons)), zh: median(students.map((s) => sm(s).zh.lessons)) };
+  const behind = (lang) => students.filter((s) => sm(s).lastActive && sm(s)[lang].lessons <= med[lang] - 3);
+  const tile = (label, value, sub = '') => `<div class="rp-tile"><small>${label}</small><b>${value}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
+  // 完成課數分佈（0–16 課），每格一個長條
+  const dist = (lang) => {
+    const cnt = Array(17).fill(0);
+    for (const s of students) cnt[Math.min(16, sm(s)[lang].lessons)] += 1;
+    const max = Math.max(...cnt, 1);
+    return `<div class="rp-dist" role="img" aria-label="${lang === 'en' ? '英文' : '中文'}完成課數分佈">${cnt.map((c, i) => `<div class="rp-col" title="完成 ${i} 課：${c} 人"><span class="rp-bar" style="height:${(c / max) * 100}%"></span><i>${c || ''}</i><small>${i}</small></div>`).join('')}</div>`;
+  };
+  const list = (arr, extra = () => '') => arr.length ? `<ul class="rp-names">${arr.map((s) => `<li>${name(s)}${extra(s)}</li>`).join('')}</ul>` : '<p class="muted">沒有</p>';
+  const testRows = TESTS.map(([id, label]) => {
+    const done = students.filter((s) => s.tests[id]);
+    if (!done.length) return `<tr><td>${label}</td><td class="num">0 / ${n}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="mini">—</td></tr>`;
+    const w = done.map((s) => s.tests[id].wpm), a = done.map((s) => s.tests[id].accuracy);
+    const pass = TEST_PASS[id];
+    const passed = pass ? done.filter((s) => s.tests[id].wpm >= pass[0] && s.tests[id].accuracy >= pass[1]).length : null;
+    const flagged = done.filter((s) => s.tests[id].flags.length).length;
+    return `<tr><td>${label}</td><td class="num">${done.length} / ${n}</td><td class="num">${Math.round(median(w))}</td><td class="num">${Math.round(median(a))}%</td>
+      <td class="num">${passed === null ? '—' : `${passed}（${Math.round((passed / done.length) * 100)}%）`}</td><td class="mini">${flagged ? `⚠ ${flagged} 人` : ''}</td></tr>`;
+  }).join('');
+  return `<div class="rp">
+    <div class="rp-tiles">
+      ${tile('學生', n)}${tile('最近 7 日有練習', `${active7} 人`, `${Math.round((active7 / n) * 100)}%`)}
+      ${tile('英文完成課數（中位數）', med.en)}${tile('中文完成課數（中位數）', med.zh)}
+      ${tile('英文最佳速度（中位數）', `${Math.round(median(students.map((s) => sm(s).en.bestWpm)))} WPM`)}${tile('中文最佳速度（中位數）', `${Math.round(median(students.map((s) => sm(s).zh.bestWpm)))} 字/分`)}
+    </div>
+    <div class="rp-grid">
+      <section><h3>英文：完成課數分佈</h3>${dist('en')}<p class="hint">橫軸是完成了幾多課（0–16），長條是人數。</p></section>
+      <section><h3>中文：完成課數分佈</h3>${dist('zh')}</section>
+    </div>
+    <h3>需要留意</h3>
+    <div class="rp-grid">
+      <section><h4>從未登入練習（${never.length}）</h4>${list(never)}</section>
+      <section><h4>超過 14 日沒有練習（${idle.length}）</h4>${list(idle, (s) => `<small>${days(s)} 日</small>`)}</section>
+      <section><h4>英文落後全班 3 課或以上（${behind('en').length}）</h4>${list(behind('en'), (s) => `<small>${sm(s).en.lessons} 課</small>`)}</section>
+      <section><h4>中文落後全班 3 課或以上（${behind('zh').length}）</h4>${list(behind('zh'), (s) => `<small>${sm(s).zh.lessons} 課</small>`)}</section>
+    </div>
+    <h3>評測</h3>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>評測</th><th>已做</th><th>速度中位數</th><th>準確率中位數</th><th>達標</th><th>可疑</th></tr></thead><tbody>${testRows}</tbody></table></div>
+    <p class="hint">英文速度單位是 WPM，中文是每分鐘字數。達標＝同時達到該級的速度和準確率目標。</p>
+  </div>`;
+}
+
 async function renderClass() {
   const main = $('main');
   if (!current) { main.innerHTML = '<section class="card"><h2>先新增一個班級</h2><p class="hint">在左邊輸入班別和學年，然後匯入學生。</p></section>'; return; }
@@ -160,13 +262,15 @@ async function renderClass() {
       <button class="btn" id="refresh">重新整理</button>
       ${students.length ? '' : `<button class="btn" id="delclass">刪除班級</button>`}
     </div>
-    <div class="tbl-wrap"><table class="tbl"><thead><tr>
+    <div class="t-tabs" role="tablist"><button class="btn ${view === 'list' ? 'primary' : ''}" data-view="list" type="button">學生名單</button><button class="btn ${view === 'report' ? 'primary' : ''}" data-view="report" type="button">全班報告</button></div>
+    ${view === 'report' ? classReport(students) : `<div class="tbl-wrap"><table class="tbl"><thead><tr>
       <th>班號</th><th>學號</th><th>姓名</th><th>密碼</th>
       <th title="英文完成課數">英課</th><th>英星</th><th>英WPM</th><th title="中文完成課數">中課</th><th>中星</th><th>中字/分</th><th>分鐘</th><th>最後活動</th>
       ${TESTS.map(([, l]) => `<th>${l}</th>`).join('')}<th></th></tr></thead>
       <tbody>${rows || '<tr><td colspan="21" class="muted">還沒有學生。按「匯入學生」貼上名單。</td></tr>'}</tbody></table></div>
-    <p class="hint">評測格：速度 準確率 星級；⚠ 表示伺服器重計時發現可疑（把滑鼠移上去看原因）。所有評測成績都由伺服器按按鍵紀錄重新計算。</p>
+    <p class="hint">評測格：速度 準確率 星級；⚠ 表示伺服器重計時發現可疑（把滑鼠移上去看原因）。所有評測成績都由伺服器按按鍵紀錄重新計算。</p>`}
   </section>`;
+  main.querySelectorAll('[data-view]').forEach((b) => b.onclick = () => { view = b.dataset.view; renderClass(); });
   $('import').onclick = importDialog;
   $('slips').onclick = printSlips;
   $('classpw').onclick = () => dialog(`<h2>${html(current.name)} 全班改用同一個密碼</h2><form id="df"><div class="field"><label>新密碼（4–64 個字元）</label><input id="cp" required minlength="4" autocomplete="off"></div><p class="hint">全班學生的舊密碼會失效，已登入的裝置會被登出。</p><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">更改</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,

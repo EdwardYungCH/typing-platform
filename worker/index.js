@@ -9,7 +9,8 @@ import { json, fail, body } from './http.js';
 import schema1 from '../migrations/0001_init.sql';
 import schema2 from '../migrations/0002_limits.sql';
 import schema3 from '../migrations/0003_custom.sql';
-const schema = [schema1, schema2, schema3].join('\n');
+import schema4 from '../migrations/0004_meta.sql';
+const schema = [schema1, schema2, schema3, schema4].join('\n');
 
 // 資料表：第一次有請求時建立（全部 CREATE IF NOT EXISTS，重複執行沒有影響）
 let ready = null;
