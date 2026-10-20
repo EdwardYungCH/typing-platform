@@ -78,3 +78,10 @@
 .node.next { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(var(--glow) / 0.25); }
 .node.next .s { color: var(--accent); font-weight: 800; }
 .worlds { align-items: start; }
+
+/* 首頁：快捷鍵入口 */
+.sc-home { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; padding: 14px 16px; margin-top: 16px; text-decoration: none; color: inherit; }
+.sc-home:hover { border-color: var(--accent); }
+.sc-home .num { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--surface-2); font-size: 22px; }
+.sc-home .t { display: grid; gap: 2px; }
+.sc-home .t span { color: var(--ink-2); font-size: 14px; }

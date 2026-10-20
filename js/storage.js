@@ -159,3 +159,18 @@ export function saveTestResult(testId, result) {
 export function getTestResult(testId) {
   return readAll().tests?.[testId] ?? null;
 }
+
+/** 快捷鍵課：每個單元的最佳小測成績 { score, total, stars, at } */
+export function saveShortcutResult(unit, { score, total }) {
+  const data = readAll();
+  data.shortcuts ??= {};
+  const stars = score / total >= 0.95 ? 3 : score / total >= 0.8 ? 2 : score / total >= 0.6 ? 1 : 0;
+  const prev = data.shortcuts[unit];
+  if (!prev || score / total > prev.score / prev.total) data.shortcuts[unit] = { score, total, stars, at: new Date().toISOString() };
+  writeAll(data);
+  return { stars, best: data.shortcuts[unit] };
+}
+
+export function getShortcutResults() {
+  return readAll().shortcuts ?? {};
+}

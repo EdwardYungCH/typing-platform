@@ -1,0 +1,70 @@
+{
+  "_說明": "快捷鍵課（Windows 11）。keys：按鍵名稱（Ctrl Shift Alt Win 加主鍵）；code：主鍵的 KeyboardEvent.code；real：瀏覽器攔得到、可以真的按（false 的要用螢幕鍵盤點選，因為 Windows 或瀏覽器會先處理）。",
+  "units": [
+    {
+      "id": "edit", "title": "文字編輯", "subtitle": "複製、貼上、復原，寫功課最常用",
+      "items": [
+        { "id": "selall", "action": "全選", "keys": ["Ctrl", "A"], "code": "KeyA", "real": true, "note": "選取全部文字或檔案。A＝All。" },
+        { "id": "copy", "action": "複製", "keys": ["Ctrl", "C"], "code": "KeyC", "real": true, "note": "先選取，再複製。C＝Copy。" },
+        { "id": "cut", "action": "剪下", "keys": ["Ctrl", "X"], "code": "KeyX", "real": true, "note": "移走選取的內容，之後可以貼上。X 像一把剪刀。" },
+        { "id": "paste", "action": "貼上", "keys": ["Ctrl", "V"], "code": "KeyV", "real": true, "note": "貼上剛才複製或剪下的內容。V 在 C 的旁邊。" },
+        { "id": "undo", "action": "復原（取消上一步）", "keys": ["Ctrl", "Z"], "code": "KeyZ", "real": true, "note": "做錯了？馬上按 Ctrl＋Z。可以按幾次退回幾步。" },
+        { "id": "redo", "action": "重做（取消復原）", "keys": ["Ctrl", "Y"], "code": "KeyY", "real": true, "note": "復原多了一步，用 Ctrl＋Y 做回。" },
+        { "id": "bold", "action": "粗體", "keys": ["Ctrl", "B"], "code": "KeyB", "real": true, "note": "Word、Google 文件通用。B＝Bold。" },
+        { "id": "italic", "action": "斜體", "keys": ["Ctrl", "I"], "code": "KeyI", "real": true, "note": "I＝Italic。" },
+        { "id": "underline", "action": "底線", "keys": ["Ctrl", "U"], "code": "KeyU", "real": true, "note": "U＝Underline。" },
+        { "id": "home", "action": "跳到行首", "keys": ["Home"], "code": "Home", "real": true, "note": "游標跳到這一行的最開頭。" },
+        { "id": "end", "action": "跳到行尾", "keys": ["End"], "code": "End", "real": true, "note": "游標跳到這一行的最後。" },
+        { "id": "selword", "action": "向右選取一個字母", "keys": ["Shift", "→"], "code": "ArrowRight", "real": true, "note": "按住 Shift 再按方向鍵，就可以用鍵盤選取文字。" },
+        { "id": "wordjump", "action": "游標跳到下一個詞", "keys": ["Ctrl", "→"], "code": "ArrowRight", "real": true, "note": "比逐個字母移動快得多。" },
+        { "id": "delword", "action": "刪除前一個詞", "keys": ["Ctrl", "Backspace"], "code": "Backspace", "real": true, "note": "一次刪走整個英文詞。" }
+      ]
+    },
+    {
+      "id": "file", "title": "檔案與文件", "subtitle": "儲存、列印、尋找",
+      "items": [
+        { "id": "save", "action": "儲存", "keys": ["Ctrl", "S"], "code": "KeyS", "real": true, "note": "做功課要經常按，以免當機時白做。S＝Save。" },
+        { "id": "saveas", "action": "另存新檔（Word、PowerPoint）", "keys": ["F12"], "code": "F12", "real": true, "note": "存成另一個名稱或格式。" },
+        { "id": "open", "action": "開啟檔案", "keys": ["Ctrl", "O"], "code": "KeyO", "real": true, "note": "O＝Open。" },
+        { "id": "print", "action": "列印", "keys": ["Ctrl", "P"], "code": "KeyP", "real": true, "note": "P＝Print。" },
+        { "id": "find", "action": "尋找", "keys": ["Ctrl", "F"], "code": "KeyF", "real": true, "note": "在文件或網頁裏找字。F＝Find。" },
+        { "id": "replace", "action": "取代（Word）", "keys": ["Ctrl", "H"], "code": "KeyH", "real": true, "note": "把某個字一次過換成另一個字。" },
+        { "id": "new", "action": "新增檔案／新視窗", "keys": ["Ctrl", "N"], "code": "KeyN", "real": false, "note": "N＝New。在瀏覽器會開新視窗。" },
+        { "id": "rename", "action": "重新命名檔案", "keys": ["F2"], "code": "F2", "real": true, "note": "在檔案總管選好檔案，按 F2。" },
+        { "id": "permdel", "action": "永久刪除（不放入資源回收筒）", "keys": ["Shift", "Delete"], "code": "Delete", "real": true, "note": "小心使用，刪了就找不回。" }
+      ]
+    },
+    {
+      "id": "browser", "title": "瀏覽器", "subtitle": "分頁、重新整理、放大縮小",
+      "items": [
+        { "id": "newtab", "action": "開新分頁", "keys": ["Ctrl", "T"], "code": "KeyT", "real": false, "note": "T＝Tab。" },
+        { "id": "closetab", "action": "關閉分頁", "keys": ["Ctrl", "W"], "code": "KeyW", "real": false, "note": "關錯了？用下面的 Ctrl＋Shift＋T 開返。" },
+        { "id": "reopen", "action": "重新開啟剛關閉的分頁", "keys": ["Ctrl", "Shift", "T"], "code": "KeyT", "real": false, "note": "不小心關了分頁的救星。" },
+        { "id": "nexttab", "action": "切換到下一個分頁", "keys": ["Ctrl", "Tab"], "code": "Tab", "real": false, "note": "加 Shift 就是上一個分頁。" },
+        { "id": "address", "action": "跳到網址列", "keys": ["Ctrl", "L"], "code": "KeyL", "real": true, "note": "馬上可以輸入網址或搜尋。" },
+        { "id": "reload", "action": "重新整理網頁", "keys": ["F5"], "code": "F5", "real": true, "note": "網頁卡住或要看最新內容時用。" },
+        { "id": "zoomin", "action": "放大網頁", "keys": ["Ctrl", "+"], "code": "Equal", "real": true, "note": "+ 在 Backspace 左邊（不用按 Shift）。" },
+        { "id": "zoomout", "action": "縮小網頁", "keys": ["Ctrl", "-"], "code": "Minus", "real": true, "note": "" },
+        { "id": "zoom0", "action": "網頁回復原本大小", "keys": ["Ctrl", "0"], "code": "Digit0", "real": true, "note": "放大縮小後按 Ctrl＋0 還原。" }
+      ]
+    },
+    {
+      "id": "windows", "title": "Windows 系統", "subtitle": "工作管理員、截圖、切換程式",
+      "items": [
+        { "id": "taskmgr", "action": "開啟工作管理員", "keys": ["Ctrl", "Shift", "Esc"], "code": "Escape", "real": false, "note": "程式「沒有回應」時，在這裏結束它。" },
+        { "id": "cad", "action": "安全選項（鎖定、登出、工作管理員）", "keys": ["Ctrl", "Alt", "Delete"], "code": "Delete", "real": false, "note": "電腦卡住時最後的辦法。" },
+        { "id": "alttab", "action": "切換程式", "keys": ["Alt", "Tab"], "code": "Tab", "real": false, "note": "按住 Alt，再按 Tab 選擇要去的視窗。" },
+        { "id": "altf4", "action": "關閉目前的程式", "keys": ["Alt", "F4"], "code": "F4", "real": false, "note": "在桌面按就會出現關機選項。" },
+        { "id": "desktop", "action": "顯示桌面", "keys": ["Win", "D"], "code": "KeyD", "real": false, "note": "D＝Desktop。再按一次回到原本的視窗。" },
+        { "id": "explorer", "action": "開啟檔案總管", "keys": ["Win", "E"], "code": "KeyE", "real": false, "note": "E＝Explorer。" },
+        { "id": "lock", "action": "鎖定電腦", "keys": ["Win", "L"], "code": "KeyL", "real": false, "note": "離開座位前按，別人就不能用你的帳戶。" },
+        { "id": "snip", "action": "截取螢幕一部分（截圖）", "keys": ["Win", "Shift", "S"], "code": "KeyS", "real": false, "note": "截圖後可以直接 Ctrl＋V 貼上。" },
+        { "id": "clip", "action": "剪貼簿記錄", "keys": ["Win", "V"], "code": "KeyV", "real": false, "note": "看到之前複製過的幾樣東西。" },
+        { "id": "settings", "action": "開啟設定", "keys": ["Win", "I"], "code": "KeyI", "real": false, "note": "" },
+        { "id": "snap", "action": "視窗貼到螢幕左邊", "keys": ["Win", "←"], "code": "ArrowLeft", "real": false, "note": "兩個視窗並排，一邊看一邊做。" },
+        { "id": "emoji", "action": "表情符號和符號", "keys": ["Win", "."], "code": "Period", "real": false, "note": "" },
+        { "id": "ime", "action": "切換輸入法（例如英文和速成）", "keys": ["Win", "Space"], "code": "Space", "real": false, "note": "在微軟速成裏，按一下 Shift 可以中英切換。" }
+      ]
+    }
+  ]
+}
