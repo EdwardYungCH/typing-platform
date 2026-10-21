@@ -1,87 +1,110 @@
-/* 兩個世界的外觀：英文＝鍵帽星系（planet），中文＝字根魔法學院（magic）。
-   放在 base.css 之後載入，只覆寫顏色和裝飾，版面不變。 */
+/* 風格 D「光明勇者」：明亮 JRPG 冒險風。
+   英文＝鍵帽星系（planet）：藍天草原；中文＝字根魔法學院（magic）：黃昏粉紫。
+   放在 base.css 之後載入，覆寫顏色、按鈕、卡片；版面不變。
+   藍底白框「對話窗」用 .win。 */
 
 :root[data-world] {
-  color-scheme: dark;
-  --ink: #eef1ff;
-  --ink-2: #b7bfe6;
-  --ink-3: #8089b8;
-  --ok: #5be08a;
-  --ok-bg: rgb(91 224 138 / 0.16);
-  --bad: #ff7d8a;
-  --bad-bg: rgb(255 125 138 / 0.16);
-  --star: #ffd23c;
-  --f-violet: #c4a6ff; --f-violet-bg: rgb(160 120 255 / 0.2);
-  --f-blue: #7fc0ff;   --f-blue-bg: rgb(90 160 255 / 0.2);
-  --f-green: #6ee795;  --f-green-bg: rgb(80 220 130 / 0.2);
-  --f-orange: #ffae66; --f-orange-bg: rgb(255 150 70 / 0.2);
-  --f-gray: #aab3d6;   --f-gray-bg: rgb(170 180 220 / 0.14);
-  --radius: 18px;
-  --radius-sm: 12px;
+  color-scheme: light;
+  --ink: #1f2a44;
+  --ink-2: #4b5878;
+  --ink-3: #7a86a8;
+  --ok: #1f8f4e;
+  --ok-bg: #dff7e6;
+  --bad: #d7263d;
+  --bad-bg: #ffe3e6;
+  --warn: #b7791f;
+  --star: #f2b705;
+  --f-violet: #7c3aed; --f-violet-bg: #efe6ff;
+  --f-blue: #1d6fd8;   --f-blue-bg: #e0efff;
+  --f-green: #1f8f4e;  --f-green-bg: #e2f6e8;
+  --f-orange: #d9641c; --f-orange-bg: #ffe9d6;
+  --f-gray: #6b7590;   --f-gray-bg: #eef1f7;
+  --radius: 14px;
+  --radius-sm: 10px;
   --font: "Baloo 2", "Huninn", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  --shadow: 0 6px 0 rgb(0 0 0 / 0.12);
 }
 
 :root[data-world="planet"] {
-  --bg: #121634;
-  --surface: #1c2150;
-  --surface-2: #262d68;
-  --line: #3a4390;
-  --accent: #5b9bff;
-  --accent-ink: #081030;
-  --glow: 91 155 255;
-  --world-grad: radial-gradient(1200px 600px at 80% -10%, #2b3a9c55, transparent 60%),
-                radial-gradient(900px 500px at 0% 30%, #6a3fd444, transparent 60%);
+  --bg: #a8e6ff;
+  --surface: #ffffff;
+  --surface-2: #eef5ff;
+  --line: #9fb8e0;
+  --accent: #1d3fb8;
+  --accent-ink: #ffffff;
+  --win: #1d3fb8;
+  --win-dark: #0b2a8a;
+  --glow: 29 63 184;
+  --sky-1: #5ec8ff; --sky-2: #a8e6ff; --grass-1: #7fd36a; --grass-2: #58b84c;
+  --world-bg: linear-gradient(180deg, var(--sky-1) 0, var(--sky-2) 46vh, var(--grass-1) 46.3vh, var(--grass-2) 100%);
 }
 
 :root[data-world="magic"] {
-  --bg: #2a1b3d;
-  --surface: #3a2754;
-  --surface-2: #4a3369;
-  --line: #6a4d96;
-  --accent: #ffb84d;
-  --accent-ink: #2a1b3d;
-  --glow: 255 184 77;
-  --world-grad: radial-gradient(1100px 600px at 20% -10%, #8e4fd055, transparent 60%),
-                radial-gradient(900px 500px at 100% 40%, #ffb84d22, transparent 60%);
+  --bg: #ffd9a8;
+  --surface: #ffffff;
+  --surface-2: #f6effd;
+  --line: #c4a6ff;
+  --accent: #5b2ea6;
+  --accent-ink: #ffffff;
+  --win: #5b2ea6;
+  --win-dark: #2e1065;
+  --glow: 91 46 166;
+  --sky-1: #ffd9a8; --sky-2: #ffb6c1; --grass-1: #c9a7ff; --grass-2: #8d6bd8;
+  --world-bg: linear-gradient(180deg, var(--sky-1) 0, var(--sky-2) 30vh, var(--grass-1) 60vh, var(--grass-2) 100%);
 }
 
 html[data-world] body {
   background-color: var(--bg);
-  background-image:
-    var(--world-grad),
-    radial-gradient(1.5px 1.5px at 12% 18%, #fff9, transparent 60%),
-    radial-gradient(1.5px 1.5px at 78% 12%, #fff8, transparent 60%),
-    radial-gradient(1px 1px at 40% 70%, #fff7, transparent 60%),
-    radial-gradient(1.5px 1.5px at 90% 80%, #fff8, transparent 60%),
-    radial-gradient(1px 1px at 25% 90%, #fff6, transparent 60%);
+  background-image: var(--world-bg);
   background-attachment: fixed;
 }
 
-html[data-world] .topbar { border-bottom-color: var(--line); }
-html[data-world] .topbar .brand { color: var(--ink); font-size: 18px; }
+html[data-world] .topbar { border-bottom: 0; padding-bottom: 8px; }
+html[data-world] .topbar .brand { color: var(--win-dark); font-size: 20px; font-weight: 800; }
+html[data-world] .topbar .muted { color: var(--ink-2); }
 
-/* 鍵帽按鈕：按下時會「壓」下去 */
+/* 按鈕：白底藍邊，按下去會「壓」下去；主按鈕金色 */
 html[data-world] .btn {
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-bottom-width: 4px;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-bottom-width: 5px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-weight: 700;
   transition: transform 0.08s ease, border-bottom-width 0.08s ease, filter 0.15s;
 }
-html[data-world] .btn:hover { background: var(--surface-2); filter: brightness(1.15); }
-html[data-world] .btn:active { transform: translateY(3px); border-bottom-width: 1px; }
+html[data-world] .btn:hover { background: var(--surface-2); filter: none; }
+html[data-world] .btn:active { transform: translateY(3px); border-bottom-width: 2px; }
 html[data-world] .btn.primary {
-  background: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 60%, #000);
-  color: var(--accent-ink);
+  background: var(--star);
+  border-color: #b58f00;
+  color: var(--win-dark);
 }
-html[data-world] .btn.ghost { border-color: transparent; background: transparent; }
+html[data-world] .btn.primary:hover { background: #ffd23c; }
+html[data-world] .btn.ghost { border-color: transparent; background: rgb(255 255 255 / 0.55); color: var(--win-dark); }
+html[data-world] .btn.ghost:hover { background: rgb(255 255 255 / 0.85); }
 
 html[data-world] .card {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #fff) 0%, var(--surface) 100%);
-  border: 1px solid var(--line);
-  box-shadow: 0 8px 28px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.06);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 0 rgb(0 0 0 / 0.12);
 }
+
+/* 對話窗：藍底白框（主色隨世界） */
+.win {
+  background: var(--win);
+  border: 4px solid #fff;
+  outline: 3px solid var(--win-dark);
+  border-radius: 8px;
+  color: #fff;
+  box-shadow: 0 6px 0 rgb(0 0 0 / 0.22);
+}
+.win .muted { color: rgb(255 255 255 / 0.75); }
+.win a { color: #ffd23c; }
+.win .btn { background: rgb(255 255 255 / 0.12); border-color: #fff; color: #fff; }
+.win .btn:hover { background: rgb(255 255 255 / 0.22); }
+.win .btn.primary { background: var(--star); border-color: #b58f00; color: var(--win-dark); }
 
 /* 夥伴 */
 .companion { display: block; width: 100%; height: auto; }
@@ -91,7 +114,7 @@ html[data-world] .card {
 
 .badge {
   display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
-  background: rgb(var(--glow) / 0.18); color: var(--accent); border: 1px solid rgb(var(--glow) / 0.4);
+  background: rgb(var(--glow) / 0.1); color: var(--accent); border: 1px solid rgb(var(--glow) / 0.35);
 }
 
 /* 打字頁：頂欄夥伴、結果彈窗夥伴 */

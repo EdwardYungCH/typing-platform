@@ -71,7 +71,7 @@ const GAMES = [
 ];
 function menu() {
   const g = games();
-  $('app').innerHTML = `<h1 style="margin:0 0 4px">小遊戲</h1><p class="muted" style="margin:0 0 14px">只會出你學過的${lang === 'zh' ? '字根和字' : '鍵'}（已學 ${keys.length} 個${lang === 'zh' && chars.length ? `，可拆的常用字 ${chars.length} 個` : ''}）。破個人紀錄每日每款遊戲 +1 ★。</p>
+  $('app').innerHTML = `<h1 style="margin:0 0 4px">遊樂場</h1><p class="muted" style="margin:0 0 14px">只會出你學過的${lang === 'zh' ? '字根和字' : '鍵'}（已學 ${keys.length} 個${lang === 'zh' && chars.length ? `，可拆的常用字 ${chars.length} 個` : ''}）。破個人紀錄每日每款遊戲 +1 ★。</p>
     <div class="game-grid">${GAMES.map((x) => `<button class="card game-card" data-g="${x.id}" type="button"><b>${x.name}</b><span>${x.desc}</span><small>最佳：${g[`${lang}:${x.id}`]?.best ?? 0}・玩過 ${g[`${lang}:${x.id}`]?.plays ?? 0} 次</small></button>`).join('')}</div>`;
   $('app').querySelectorAll('[data-g]').forEach((b) => b.onclick = () => GAMES.find((x) => x.id === b.dataset.g).run());
 }
