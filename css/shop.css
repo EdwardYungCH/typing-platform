@@ -1,0 +1,36 @@
+/* 星星商店、夥伴飾物、稱號、鍵盤皮膚 */
+.shop-head { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.wallet { display: grid; gap: 0; padding: 10px 18px; text-align: center; min-width: 120px; }
+.wallet small { color: var(--ink-2); }
+.wallet b { font-size: 34px; color: var(--star); line-height: 1.1; }
+.wallet b::before { content: "★ "; font-size: 24px; }
+.wallet span { font-size: 12px; }
+.shop-preview { display: flex; gap: 18px; align-items: center; margin-top: 14px; padding: 16px 20px; position: relative; }
+.shop-preview.pop .pet-wrap { animation: pop 0.5s; }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.15) rotate(-4deg); } 100% { transform: scale(1); } }
+.shop-say { position: absolute; left: 150px; top: 8px; background: var(--star); color: #2a1b00; font-weight: 800; padding: 6px 12px; border-radius: 999px; animation: say 1.8s forwards; }
+@keyframes say { 0% { opacity: 0; transform: translateY(8px); } 15% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.shop-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.shop-item { display: grid; gap: 4px; justify-items: center; text-align: center; padding: 16px 12px; }
+.shop-item.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.shop-item .emoji { font-size: 48px; line-height: 1.2; }
+.shop-item small { color: var(--ink-2); min-height: 2.6em; }
+.shop-item .form-actions { justify-content: center; margin-top: 4px; }
+.title-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--star); color: #2a1b00; font-weight: 800; font-size: 13px; vertical-align: middle; }
+.title-chip.big { font-size: 20px; padding: 10px 18px; margin: 8px 0; }
+.kb-swatch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; width: 120px; margin: 10px 0; }
+.kb-swatch i { height: 26px; border-radius: 6px; background: var(--a); }
+.kb-swatch i:nth-child(even) { background: var(--b); }
+
+/* 夥伴飾物：任何地方的夥伴圖都用 .pet-wrap 包住 */
+.pet-wrap { position: relative; display: inline-block; width: var(--pet, 120px); height: var(--pet, 120px); flex: none; }
+.pet-wrap img { width: 100%; height: 100%; display: block; }
+.pet-acc { position: absolute; font-size: calc(var(--pet, 120px) * 0.3); line-height: 1; pointer-events: none; filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.3)); }
+.pet-acc.hat { top: calc(var(--pet, 120px) * -0.08); left: 50%; transform: translateX(-50%) rotate(-8deg); }
+.pet-acc.face { right: calc(var(--pet, 120px) * -0.06); bottom: calc(var(--pet, 120px) * 0.18); }
+
+/* 鍵盤皮膚（打字頁） */
+html[data-kb] .vkb-key { background: color-mix(in srgb, var(--kb-a) 22%, var(--surface-2)); border-color: color-mix(in srgb, var(--kb-a) 50%, var(--line)); }
+html[data-kb] .vkb-key:nth-child(even) { background: color-mix(in srgb, var(--kb-b) 22%, var(--surface-2)); border-color: color-mix(in srgb, var(--kb-b) 50%, var(--line)); }
+html[data-kb="kb-neon"] .vkb-key { background: #0b0b12; color: var(--kb-a); text-shadow: 0 0 6px var(--kb-a); border-color: var(--kb-a); }
+html[data-kb="kb-neon"] .vkb-key:nth-child(even) { color: var(--kb-b); text-shadow: 0 0 6px var(--kb-b); border-color: var(--kb-b); }

@@ -19,6 +19,8 @@ import * as mastery from './mastery.js';
 import { buildDaily, dailyProgress } from './daily.js';
 import { start as syncStart } from './sync.js';
 import { api } from './api.js';
+import { loadShop, petHtml, applyKeyboardSkin, grantBonus, balance } from './wallet.js';
+import { awardStreak } from './streak.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -110,6 +112,8 @@ async function init() {
   state.world = worldForLang(lang);
   state.petData = await pet.loadCompanions();
   state.petId = pet.getChoice(state.world);
+  state.shop = await loadShop();
+  applyKeyboardSkin(state.shop);   // 商店買的鍵盤皮膚
   const showFingers = store.getSetting('showFingers', CONFIG.defaults.showFingers);
   state.kb = new VirtualKeyboard($('keyboard'), { showFingers });
   state.hands = new Hands($('hands'));
@@ -395,10 +399,30 @@ function runTyping(step) {
   const text = makeText(step);
   const textEl = $('text');
   const extra = state.mode === 'roots' || state.mode === 'shapes' || state.mode === 'chart' ? ' roots' : '';
-  textEl.className = 'text' + (step.display === 'big' ? ' big' : '') + extra;
-  $('text-wrap').className = 'text-wrap' + (step.display === 'big' ? ' big' : '');
+  const single = step.display === 'single';
+  textEl.className = 'text' + (step.display === 'big' ? ' big' : '') + (single ? ' single' : '') + extra;
+  $('text-wrap').className = 'text-wrap' + (step.display === 'big' ? ' big' : '') + (single ? ' single' : '');
   $('text-wrap').scrollTop = 0;
   const spans = renderText(textEl, text, state.display ?? (state.mode === 'roots' ? ROOTS : null));
+  $('single').hidden = !single;
+  const singleCard = single ? (eng) => {
+    // 大鍵卡：現在要按的鍵、手指、由哪個基準鍵伸出去，和這一組四下的進度
+    const ch = eng.text[eng.pos];
+    if (ch === undefined) return;
+    const cap = $('single-key');
+    if (ch === ' ') { cap.textContent = '␣'; cap.className = 'keycap f-gray'; $('single-finger').textContent = '空白鍵：拇指'; $('single-home').textContent = ''; $('single-dots').innerHTML = ''; return; }
+    const info = keyForChar(ch);
+    const f = info?.finger ?? '';
+    const color = { L5: 'violet', L4: 'blue', L3: 'green', L2: 'orange', R2: 'orange', R3: 'green', R4: 'blue', R5: 'violet' }[f] ?? 'gray';
+    const HOME = { L5: 'A', L4: 'S', L3: 'D', L2: 'F', R2: 'J', R3: 'K', R4: 'L', R5: ';' };
+    cap.textContent = ch.toUpperCase(); cap.className = `keycap f-${color}`;
+    cap.classList.remove('press'); void cap.offsetWidth; cap.classList.add('press'); setTimeout(() => cap.classList.remove('press'), 90);
+    $('single-finger').textContent = fingerName(f);
+    $('single-home').textContent = HOME[f] && HOME[f] !== ch.toUpperCase() ? `由基準鍵 ${HOME[f]} 伸出去按，按完回到 ${HOME[f]}` : '這就是基準鍵，按完手指留在原位';
+    // 這一組：同一個字連續出現的那段
+    let a = eng.pos, b = eng.pos; while (a > 0 && eng.text[a - 1] === ch) a--; while (b + 1 < eng.text.length && eng.text[b + 1] === ch) b++;
+    $('single-dots').innerHTML = [...Array(b - a + 1)].map((_, i) => `<i class="${a + i < eng.pos ? 'on' : ''}"></i>`).join('');
+  } : null;
 
   $('start-hint').hidden = false;
   $('m-time-label').textContent = step.timeLimit ? '剩餘時間' : '時間';
@@ -413,6 +437,7 @@ function runTyping(step) {
       state.kb.press(eng.lastKey.code, eng.lastKey.ok);
       state.fx.key(eng.lastKey.ok);
       paint(spans, eng);
+      singleCard?.(eng);
       updateMeters(eng, step);
       if (!eng.lastKey.ok) flashError(spans[eng.errorMode === 'block' ? eng.pos : eng.pos - 1]);
     },
@@ -421,6 +446,7 @@ function runTyping(step) {
   });
   state.engine = engine;
   paint(spans, engine);
+  singleCard?.(engine);
   engine.attach();
 }
 
@@ -748,6 +774,7 @@ function renderIme(eng, isTest, warn) {
 
 function showTypingUI(on) {
   $('text-wrap').hidden = !on;
+  $('single').hidden = true;
   $('meters').hidden = !on;
   $('start-hint').hidden = !on;
   document.querySelector('.progress').hidden = !on;
@@ -1016,7 +1043,10 @@ function finishStep({ stats, stars, step, rest, guide }) {
       actions.push([`下一步：${L.steps[state.stepIndex + 1].title}`, () => runStep(state.stepIndex + 1), true]);
       actions.push(['再練一次', () => runStep(state.stepIndex), false]);
     }
-    showPanel({ title: isLast ? '今日任務完成！' : '做得好！', stars: null, stats: statsList, actions,
+    let bonus = 0;
+    if (isLast) bonus += grantBonus(`daily:${lang}:${new Date().toLocaleDateString('sv')}`, 1, '每日任務') ? 1 : 0;
+    bonus += awardStreak();
+    showPanel({ title: isLast ? '今日任務完成！' : '做得好！', stars: null, stats: statsList, actions, earned: bonus, celebrate: isLast,
       msg: isLast ? `連續 ${dp.streak} 天完成每日任務。明天再來，字根和字會按你的掌握度安排重溫。` : `已完成 ${dp.done.length}／3 部分。` });
     return;
   }
@@ -1044,7 +1074,9 @@ function finishStep({ stats, stars, step, rest, guide }) {
     actions.push(['回到練習', () => runStep(Math.max(0, state.stepIndex - 1)), false]);
   } else if (isLast) {
     const before = currentStage();
+    const prevStars = store.getLessonResult(lang, lessonId)?.stars ?? 0;
     const best = saveLessonDone(stars, stats);
+    state.earnedNow = Math.max(0, (stars ?? 0) - prevStars) + awardStreak();
     state.evolvedFrom = currentStage() > before ? before : null;
     title = isTest ? '過關！' : '完成這一課！';
     msg = best;
@@ -1064,8 +1096,8 @@ function finishStep({ stats, stars, step, rest, guide }) {
   renderPanelPet();
   state.fx.setFocus(false);
   state.fx.finish({ stars: stars ?? 0, evolved: state.evolvedFrom !== null && state.evolvedFrom !== undefined });
-  showPanel({ title, msg, stars: isTest ? stars : null, stats: statsList, actions });
-  state.evolvedFrom = null;
+  showPanel({ title, msg, stars: isTest ? stars : null, stats: statsList, actions, celebrate: isLast && passed, earned: isLast ? state.earnedNow : 0 });
+  state.evolvedFrom = null; state.earnedNow = 0;
 }
 
 function currentStage() {
@@ -1090,7 +1122,7 @@ function renderPanelPet() {
   const evolved = state.evolvedFrom !== null && state.evolvedFrom !== undefined;
   box.innerHTML = evolved
     ? `<div class="evolve"><img class="companion before" src="${pet.art(state.world, c.id, state.evolvedFrom)}" alt=""><span class="arrow">➜</span><img class="companion after" src="${pet.art(state.world, c.id, stage)}" alt="${nick}"></div><p class="pet-say">${nick} 進化成「${stageName}」了！</p>`
-    : `<img class="companion pet-float" src="${pet.art(state.world, c.id, stage)}" alt="${nick}"><p class="pet-say">${nick}為你加油！</p>`;
+    : `${petHtml(pet.art(state.world, c.id, stage), nick, { cls: 'companion pet-float', size: 110, items: state.shop })}<p class="pet-say" id="pet-say">${nick}為你加油！</p>`;
   box.hidden = false;
 }
 
@@ -1129,19 +1161,34 @@ function goLesson(id) {
 
 // ---------- 結果彈窗 ----------
 
-function showPanel({ title, msg, stars, stats, actions }) {
+const CHEERS = ['太好了！', '你做到了！', '勁呀！', '繼續加油！', '進步神速！', '手指越來越靈活了！', '下一關見！'];
+function showPanel({ title, msg, stars, stats, actions, celebrate = false, earned = 0 }) {
   $('panel-title').textContent = title;
   $('panel-msg').textContent = msg;
   const starsEl = $('panel-stars');
   starsEl.innerHTML = '';
+  const panel = $('overlay').querySelector('.panel');
+  panel.classList.toggle('celebrate', celebrate);
   if (stars !== null && stars !== undefined) {
     for (let i = 1; i <= 3; i++) {
       const s = document.createElement('span');
       s.className = 'star' + (i <= stars ? ' on' : '');
       s.textContent = '★';
+      if (celebrate && i <= stars) s.style.animationDelay = `${0.25 + i * 0.3}s`;
       starsEl.append(s);
     }
     starsEl.setAttribute('aria-label', `${stars} 粒星`);
+  }
+  // 過關動畫：彩帶、星星逐粒亮、夥伴對白、賺到的星星數
+  $('panel-earned')?.remove();
+  if (celebrate) {
+    confetti($('overlay'));
+    const say = $('pet-say'); if (say) say.textContent = CHEERS[Math.floor(Math.random() * CHEERS.length)];
+    if (earned > 0) {
+      const e = document.createElement('div'); e.id = 'panel-earned'; e.className = 'panel-earned';
+      e.innerHTML = `<b>+${earned} ★</b><small>星星 ${balance()}・<a href="shop.html?world=${state.world}">去商店</a></small>`;
+      starsEl.after(e);
+    }
   }
   const dl = $('panel-stats');
   dl.innerHTML = stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
@@ -1169,6 +1216,25 @@ function showPanel({ title, msg, stars, stats, actions }) {
     };
     window.addEventListener('keydown', state.panelKey);
   }, 400);
+}
+
+/** 全屏彩帶：60 片，2 秒落下 */
+function confetti(host) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  host.querySelectorAll('.confetti').forEach((x) => x.remove());
+  const colors = ['#ffd23c', '#5b9bff', '#ff7eb6', '#6ee795', '#ffae66', '#c4a6ff'];
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('i');
+    p.className = 'confetti';
+    p.style.left = `${Math.random() * 100}%`;
+    p.style.background = colors[i % colors.length];
+    p.style.animationDelay = `${Math.random() * 0.8}s`;
+    p.style.animationDuration = `${1.8 + Math.random() * 1.2}s`;
+    p.style.setProperty('--r', `${Math.random() * 720 - 360}deg`);
+    p.style.setProperty('--x', `${Math.random() * 120 - 60}px`);
+    host.append(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
 }
 
 function hidePanel() {

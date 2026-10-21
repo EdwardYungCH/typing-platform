@@ -383,3 +383,18 @@
 
 /* 步驟列上的最近成績（重做會刷新） */
 .step-pill .pill-score { margin-left: 6px; font-size: 11px; color: var(--star); font-weight: 700; }
+
+/* 單鍵步：大鍵卡＋手指提示 */
+.single-card { display: flex; gap: 22px; align-items: center; justify-content: center; margin: 6px 0 10px; }
+.single-card[hidden] { display: none; }
+.keycap { width: 120px; height: 120px; display: grid; place-items: center; border-radius: 22px; font: 800 64px/1 var(--mono, ui-monospace, monospace);
+  background: var(--kb, var(--surface-2)); color: var(--kc, var(--ink)); border: 2px solid var(--kc, var(--line)); border-bottom-width: 8px; box-shadow: 0 0 24px color-mix(in srgb, var(--kc, var(--accent)) 35%, transparent); transition: transform 0.08s; }
+.keycap.press { transform: translateY(5px); border-bottom-width: 3px; }
+.single-info { display: grid; gap: 4px; }
+.single-info b { font-size: 26px; }
+.single-info span { color: var(--ink-2); }
+.single-dots { display: flex; gap: 6px; margin-top: 4px; }
+.single-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); }
+.single-dots i.on { background: var(--ok); border-color: var(--ok); }
+.text-wrap.single { max-height: calc(1.75em * 1.2); font-size: 20px; opacity: 0.8; }
+.text.single { text-align: center; letter-spacing: 0.1em; }

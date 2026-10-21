@@ -23,10 +23,10 @@ async function setPassword(db, id, pw, h) {
 const ZH_PUNCT = '，。；：？！「」、';
 // 備份的資料表和欄位（還原時只接受這些欄位）
 // 舊備份檔沒有的欄位用這些預設值
-const DEFAULTS = { role: 'teacher', resolved: 0 };
+const DEFAULTS = { role: 'teacher', resolved: 0, show_board: 1 };
 const BACKUP_COLS = {
   teachers: ['id', 'username', 'name', 'pass_hash', 'salt', 'created_at', 'role'],
-  classes: ['id', 'name', 'year', 'teacher_id', 'created_at'],
+  classes: ['id', 'name', 'year', 'teacher_id', 'created_at', 'show_board'],
   students: ['id', 'sid', 'name', 'class_id', 'class_no', 'pass_hash', 'salt', 'initial_pw', 'fail_count', 'locked_until', 'created_at'],
   progress: ['student_id', 'data', 'summary', 'updated_at'],
   test_attempts: ['id', 'student_id', 'test_id', 'lang', 'text', 'time_limit', 'started_at', 'submitted_at', 'client_wpm', 'client_acc', 'client_seconds',
@@ -155,6 +155,12 @@ export async function teacherRoutes(req, env, path, teacher) {
     await db.batch([db.prepare("DELETE FROM sessions WHERE kind = 'teacher' AND user_id = ?").bind(mm[1]), db.prepare('DELETE FROM teachers WHERE id = ?').bind(mm[1])]);
     return json({ ok: true });
   }
+  if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/board$/)) && req.method === 'POST') {
+    if (!(await canClass(mm[1]))) return NO();
+    const b = await body(req);
+    await db.prepare('UPDATE classes SET show_board = ? WHERE id = ?').bind(b?.on ? 1 : 0, mm[1]).run();
+    return json({ ok: true });
+  }
   if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/owner$/)) && req.method === 'POST') {
     if (!isAdmin) return fail('只有管理員可以轉班', 403);
     const b = await body(req);
@@ -175,7 +181,7 @@ export async function teacherRoutes(req, env, path, teacher) {
 
   // ----- 班級 -----
   if (path === '/api/teacher/classes' && req.method === 'GET') {
-    const rows = (await db.prepare(`SELECT c.id, c.name, c.year, c.teacher_id, t.name AS teacher, (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students
+    const rows = (await db.prepare(`SELECT c.id, c.name, c.year, c.teacher_id, c.show_board, t.name AS teacher, (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students
       FROM classes c JOIN teachers t ON t.id = c.teacher_id ${isAdmin ? '' : 'WHERE c.teacher_id = ?'} ORDER BY c.year DESC, c.name`).bind(...(isAdmin ? [] : [teacher.id])).all()).results;
     return json({ classes: rows });
   }

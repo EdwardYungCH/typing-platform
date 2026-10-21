@@ -3,6 +3,8 @@ import { loadCompanions, art, getChoice, nickOf, summary, stageOf, nextGoal } fr
 import { dailyProgress } from './daily.js';
 import { start as syncStart } from './sync.js';
 import { api } from './api.js';
+import { loadShop, balance, petHtml, titleName } from './wallet.js';
+import { weekStrip, awardStreak } from './streak.js';
 
 const me = await syncStart();
 // 手機沒有實體鍵盤，課堂做不到：提示用電腦
@@ -19,6 +21,11 @@ if (me) {
 let homework = [];
 if (me) { try { homework = (await api('/api/assignments')).assignments ?? []; } catch { /* 離線 */ } }
 const data = await loadCompanions();
+const shop = await loadShop();
+awardStreak();
+// 頂欄：星星餘額（按入商店）；英雄區下面：連續天數
+document.getElementById('wallet').innerHTML = `★ ${balance()}`;
+document.getElementById('streak').innerHTML = weekStrip();
 const [en, zhL] = await Promise.all(['en', 'zh'].map((l) => fetch(`data/${l}-lessons.json`).then((r) => r.json())));
 const lessonsOf = { en: en.lessons, zh: zhL.lessons };
 const root = document.getElementById('worlds');
@@ -35,7 +42,7 @@ for (const [w, info] of Object.entries(data.worlds)) {
   card.dataset.w = w;
 
   const pet = c
-    ? `<div class="pet-box"><img class="companion pet pet-float" width="120" height="120" src="${art(w, c.id, stage)}" alt="${c.name}"><div class="nm">${nickOf(w, c)}</div><span class="badge">${data.stages[stage].name}</span></div>`
+    ? `<div class="pet-box">${petHtml(art(w, c.id, stage), c.name, { cls: 'companion pet pet-float', size: 120, items: shop })}<div class="nm">${nickOf(w, c)}${titleName(shop) ? ` <span class="title-chip">${titleName(shop)}</span>` : ''}</div><span class="badge">${data.stages[stage].name}</span></div>`
     : `<a class="btn primary" href="pick.html?world=${w}">揀夥伴</a>`;
 
   const pct = Math.min(100, Math.round(((stage) / 4) * 100 + (goal ? Math.min(s.lessons / goal.stage.need.lessons, 1) * 25 : 0)));
@@ -85,7 +92,9 @@ for (const [w, info] of Object.entries(data.worlds)) {
   card.insertAdjacentHTML('beforeend', `<ul class="map"><li><a class="node" href="practice.html?lang=${info.lang}">
     <span class="num">練</span><span class="t"><b>練習區</b><span>自由操練、弱項加強${info.lang === 'zh' ? '、真實輸入法' : ''}</span></span></a></li>
     <li><a class="node" href="tests.html?lang=${info.lang}">
-    <span class="num">測</span><span class="t"><b>評測區</b><span>分級測驗、限時評測（只做一次）</span></span></a></li></ul>`)
+    <span class="num">測</span><span class="t"><b>評測區</b><span>分級測驗、限時評測（只做一次）</span></span></a></li>
+    <li><a class="node" href="games.html?lang=${info.lang}">
+    <span class="num">玩</span><span class="t"><b>小遊戲</b><span>${info.lang === 'zh' ? '字根雨、限時快打：只出你學過的字根和字' : '鍵雨、限時快打：只出你學過的鍵'}</span></span></a></li></ul>`)
   if (info.lang === 'zh') {
     card.insertAdjacentHTML('beforeend', `
       <ul class="map"><li><a class="node" href="zh/lookup.html">

@@ -229,8 +229,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "eee iii eee iii"
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "eeee iiii eeee iiii"
     },
     {
      "type": "drill",
@@ -360,8 +361,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "rrr uuu rrr uuu"
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "rrrr uuuu rrrr uuuu"
     },
     {
      "type": "drill",
@@ -497,8 +499,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "ttt yyy ttt yyy"
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "tttt yyyy tttt yyyy"
     },
     {
      "type": "drill",
@@ -633,8 +636,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "ggg hhh ggg hhh"
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "gggg hhhh gggg hhhh"
     },
     {
      "type": "drill",
@@ -775,8 +779,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "www ooo www ooo"
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "wwww oooo wwww oooo"
     },
     {
      "type": "drill",
@@ -914,8 +919,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "bbb nnn bbb nnn"
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "bbbb nnnn bbbb nnnn"
     },
     {
      "type": "drill",
@@ -1060,8 +1066,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "ccc ,,, ccc ,,,"
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "cccc ,,,, cccc ,,,,"
     },
     {
      "type": "drill",
@@ -1217,8 +1224,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "vvv mmm vvv mmm"
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "vvvv mmmm vvvv mmmm"
     },
     {
      "type": "drill",
@@ -1370,8 +1378,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "qqq ppp /// qqq ppp ///"
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "qqqq pppp //// qqqq pppp ////"
     },
     {
      "type": "drill",
@@ -1539,8 +1548,9 @@
     {
      "type": "drill",
      "title": "單鍵",
-     "hint": "每組三下，只用負責的那隻手指。",
-     "text": "xxx zzz ... xxx zzz ..."
+     "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。",
+     "display": "single",
+     "text": "xxxx zzzz .... xxxx zzzz ...."
     },
     {
      "type": "drill",

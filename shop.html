@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-Hant-HK" data-world="planet">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>星星商店</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/world.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="index.html">打字練習平台</a>
+      <span class="spacer"></span>
+      <a class="btn ghost" href="index.html">回首頁</a>
+    </header>
+    <div class="shop-head">
+      <div><h1 style="margin:0">星星商店</h1><p class="muted" style="margin:4px 0 0">用課堂賺到的星星，給夥伴買飾物、換稱號和鍵盤皮膚。星星只會越賺越多，打得更好會補回差額。</p></div>
+      <div class="wallet card"><small>我的星星</small><b id="bal">0</b><span class="muted" id="earned"></span></div>
+    </div>
+    <div class="shop-preview card" id="preview"></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="shop-grid" id="grid"></div>
+    <p class="note muted">賺星星：每課過關小測最多 3 粒；每日任務完成 +1；連續練習 7 天 +5。</p>
+  </div>
+  <script type="module" src="js/shop-page.js"></script>
+</body>
+</html>

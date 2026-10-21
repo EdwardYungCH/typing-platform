@@ -88,14 +88,14 @@ for new, lid, label in ORDER:
         tokens = tokens + ['yes/no', 'and/or', 'on/off', 'his/her', 'in/out', 'up/down']
     test_words = list(dict.fromkeys(tokens + [w for w in wall[:40]]))
     keys_desc = '、'.join(f"{c.upper()}（{fdesc(c)}）" if c.isalpha() else f"{c}（{fdesc(c)}）" for c in new)
-    single = ' '.join(c * 3 for c in new) + ' ' + ' '.join(c * 3 for c in new)
+    single = ' '.join(c * 4 for c in new) + ' ' + ' '.join(c * 4 for c in new)
     demo = ' '.join(f"{h} {c}" for c in new for h in (finger_of and
             {'e':'d','i':'k','r':'f','u':'j','t':'f','y':'j','g':'f','h':'j','w':'s','o':'l','q':'a','p':';',
              'c':'d',',':'k','v':'f','m':'j','x':'s','.':'l','z':'a','b':'f','n':'j','/':';'}[c],)) + ' ' + ' '.join(new)
     chars = ''.join(new) * 3 + ''.join(sorted(learned))
     steps = [
         {"type": "drill", "title": "示範", "hint": f"新鍵：{keys_desc}。伸出手指按，按完馬上回到基準位。", "display": "big", "text": demo.strip()},
-        {"type": "drill", "title": "單鍵", "hint": "每組三下，只用負責的那隻手指。", "text": single},
+        {"type": "drill", "title": "單鍵", "hint": "看大鍵卡：用指定那隻手指伸出去按，按完回到基準位。每組四下。", "display": "single", "text": single},
         {"type": "drill", "title": "組合", "hint": "新鍵配合學過的鍵，保持節奏，先求準。",
          "gen": {"kind": "groups", "chars": chars, "groups": 16, "minLen": 2, "maxLen": 4}},
         {"type": "drill", "title": "詞語", "hint": "全部都是真正的英文詞，只用學過的鍵。",

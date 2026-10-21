@@ -92,3 +92,13 @@
 .hw .map { margin-top: 8px; }
 .node.late { border-color: var(--bad); }
 .node.late .badge { background: var(--bad-bg); color: var(--bad); }
+
+/* 連續練習天數 */
+.streak { display: flex; gap: 14px; align-items: center; margin: 4px 0 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.streak .dots { display: flex; gap: 6px; }
+.streak .dots span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--surface-2); color: var(--ink-3); border: 1px solid var(--line); }
+.streak .dots span.on { background: var(--star); color: #2a1b00; border-color: var(--star); }
+.streak .dots span.today { box-shadow: 0 0 0 2px var(--accent); }
+.streak .st-text b { display: block; }
+.streak .st-text small { color: var(--ink-2); }
+.wallet-btn { color: var(--star); font-weight: 800; }

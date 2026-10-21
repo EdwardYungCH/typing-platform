@@ -98,6 +98,7 @@ html[data-world] .card {
 #pet-top { width: 44px; height: 44px; }
 .panel-pet { width: 140px; margin: -4px auto 0; text-align: center; }
 .panel-pet img { width: 130px; height: 130px; margin: 0 auto; }
+.panel-pet .pet-wrap img { width: 100%; height: 100%; }
 .panel-pet .pet-say { margin: 0; font-weight: 800; color: var(--accent); }
 .panel-pet { width: auto; }
 .evolve { display: flex; align-items: center; justify-content: center; gap: 10px; }

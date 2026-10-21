@@ -23,7 +23,7 @@ function ensureSchema(db) {
 }
 
 // 後加的欄位（SQLite 沒有 ADD COLUMN IF NOT EXISTS）
-const NEW_COLUMNS = [['teachers', 'role', "TEXT NOT NULL DEFAULT 'teacher'"]];
+const NEW_COLUMNS = [['teachers', 'role', "TEXT NOT NULL DEFAULT 'teacher'"], ['classes', 'show_board', 'INTEGER NOT NULL DEFAULT 1']];
 async function addColumns(db) {
   for (const [table, col, def] of NEW_COLUMNS) {
     const cols = (await db.prepare(`PRAGMA table_info(${table})`).all()).results.map((c) => c.name);
@@ -146,6 +146,26 @@ async function studentRoutes(req, env, path, student) {
     const rows = student.class_id ? (await db.prepare(`SELECT a.id, a.lang, a.lesson_id, a.due, a.note, a.created_at, t.name AS teacher FROM assignments a JOIN teachers t ON t.id = a.teacher_id
       WHERE a.class_id = ? ORDER BY COALESCE(a.due, '9999'), a.id`).bind(student.class_id).all()).results : [];
     return json({ assignments: rows });
+  }
+
+  // ----- 班內排行榜：星星、本週練習分鐘、最佳速度；老師可按班關掉 -----
+  if (path === '/api/leaderboard' && req.method === 'GET') {
+    if (!student.class_id) return json({ enabled: false, reason: '未編班' });
+    const cls = await db.prepare('SELECT show_board FROM classes WHERE id = ?').bind(student.class_id).first();
+    if (!cls?.show_board) return json({ enabled: false, reason: '老師關閉了這班的排行榜' });
+    const rows = (await db.prepare('SELECT s.id, s.name, s.class_no, p.data FROM students s LEFT JOIN progress p ON p.student_id = s.id WHERE s.class_id = ?').bind(student.class_id).all()).results;
+    const weekAgo = Date.now() - 7 * 86400000;
+    const list = rows.map((r) => {
+      let d = null; try { d = r.data ? JSON.parse(r.data) : null; } catch { /* ignore */ }
+      const lessons = d?.store?.lessons ?? {}, attempts = d?.store?.attempts ?? [];
+      let stars = 0, en = 0, zh = 0;
+      for (const [k, v] of Object.entries(lessons)) { if (!v?.done || v.skipped) continue; stars += v.stars ?? 0; if (k.startsWith('en:')) en = Math.max(en, v.bestWpm ?? 0); if (k.startsWith('zh:')) zh = Math.max(zh, v.bestWpm ?? 0); }
+      for (const r2 of Object.values(d?.store?.shortcuts ?? {})) stars += r2.stars ?? 0;
+      const week = Math.round(attempts.filter((a) => a.at && Date.parse(a.at) > weekAgo).reduce((x, a) => x + (a.seconds ?? 0), 0) / 60);
+      const title = d?.store?.settings?.wallet?.equip?.title ?? null;
+      return { id: r.id, name: r.name, no: r.class_no, stars, week, en: Math.round(en), zh: Math.round(zh), title };
+    });
+    return json({ enabled: true, me: student.id, students: list });
   }
 
   // ----- 老師自訂練習 -----

@@ -46,3 +46,17 @@ body.focus-mode .focus-tag { display: inline-flex; }
   .combo.bump, .spark, #pet-top.cheer, .panel .star.on { animation: none; }
   .spark { display: none; }
 }
+
+/* 過關動畫 */
+.confetti { position: fixed; top: -12px; width: 10px; height: 16px; border-radius: 2px; z-index: 60; pointer-events: none; animation: confetti linear forwards; }
+@keyframes confetti { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--x), 105vh) rotate(var(--r)); opacity: 0.9; } }
+.panel.celebrate { animation: panel-in 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes panel-in { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.panel.celebrate .star.on { animation: star-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+@keyframes star-pop { 0% { transform: scale(0) rotate(-90deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+.panel.celebrate .pet-wrap { animation: pet-cheer 0.8s ease-out 0.2s; }
+.panel-earned { display: grid; justify-items: center; margin: -4px 0 8px; animation: earned 0.6s ease-out 1s both; }
+.panel-earned b { font-size: 26px; color: var(--star); }
+.panel-earned small { color: var(--ink-2); }
+@keyframes earned { 0% { transform: translateY(10px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .confetti, .panel.celebrate, .panel.celebrate .star.on, .panel.celebrate .pet-wrap, .panel-earned { animation: none !important; } }

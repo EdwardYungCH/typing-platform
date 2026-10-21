@@ -281,6 +281,7 @@ async function renderClass() {
       <a class="btn" href="../api/teacher/classes/${current.id}/export.csv">匯出 CSV</a>
       <button class="btn" id="refresh">重新整理</button>
       ${me.role === 'admin' ? '<button class="btn" id="owner">轉班</button>' : ''}
+      <button class="btn" id="board" title="學生首頁的「本班排行榜」：星星、本週練習時間、速度。關掉就只有自己的紀錄。">排行榜：${current.show_board ? '開' : '關'}</button>
       ${students.length ? '' : `<button class="btn" id="delclass">刪除班級</button>`}
     </div>
     <div class="t-tabs" role="tablist"><button class="btn ${view === 'list' ? 'primary' : ''}" data-view="list" type="button">學生名單</button><button class="btn ${view === 'report' ? 'primary' : ''}" data-view="report" type="button">全班報告</button><button class="btn ${view === 'hw' ? 'primary' : ''}" data-view="hw" type="button">功課</button></div>
@@ -298,6 +299,7 @@ async function renderClass() {
   $('classpw').onclick = () => dialog(`<h2>${html(current.name)} 全班改用同一個密碼</h2><form id="df"><div class="field"><label>新密碼（4–64 個字元）</label><input id="cp" required minlength="4" autocomplete="off"></div><p class="hint">全班學生的舊密碼會失效，已登入的裝置會被登出。</p><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">更改</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
     async () => { const r = await api(`/api/teacher/classes/${current.id}/password`, { method: 'POST', body: { password: $('cp').value.trim() } }); try { localStorage.setItem('teacher.commonPw', $('cp').value.trim()); } catch {} renderClass(); return `已更改 ${r.count} 人。`; });
   $('refresh').onclick = renderClass;
+  $('board').onclick = async () => { const on = !current.show_board; if (!on && !confirm('關閉排行榜？學生將看不到本班排名（自己的紀錄不受影響）。')) return; await api(`/api/teacher/classes/${current.id}/board`, { method: 'POST', body: { on } }); current.show_board = on ? 1 : 0; renderClass(); };
   $('owner')?.addEventListener('click', async () => {
     const { teachers } = await api('/api/teacher/teachers');
     dialog(`<h2>把 ${html(current.name)} 轉給另一位老師</h2><form id="df"><div class="field"><label>老師</label><select id="t">${teachers.map((t) => `<option value="${t.id}" ${t.id === current.teacher_id ? 'selected' : ''}>${html(t.name)}（${html(t.username)}）</option>`).join('')}</select></div><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">轉班</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
