@@ -24,5 +24,10 @@
       "database_id": "59418574-a16e-4683-b70d-aea2ad2201df"
     }
   ],
+  // 每星期日香港時間早上 6 時（UTC 22:00 星期六）自動備份一次到 R2
+  "triggers": { "crons": ["0 22 * * 6"] },
+  // R2 自動備份：先在 Cloudflare 後台 Storage & Databases → R2 建立名為 typing-backups 的儲存桶，
+  // 再把下面兩行前面的 // 刪掉並推上 GitHub。未建立儲存桶就打開會令部署失敗。
+  // "r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "typing-backups" }],
   "observability": { "enabled": true }
 }

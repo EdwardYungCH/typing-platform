@@ -12,7 +12,7 @@ import { Fx } from './fx.js';
 import { setSoundEnabled } from './sound.js';
 import { QuickEngine, computeZhStats, PAGE, KEY_OF_PUNCT } from './quick-engine.js';
 import { loadZh, ROOTS, chartGlyphs, shapeGlyph } from './zh-codes.js';
-import { preloadGlyphs, glyphData, glyphNow, glyphSvg } from './zh-glyph.js';
+import { loadGlyphBundle, preloadGlyphs, glyphData, glyphNow, glyphSvg } from './zh-glyph.js';
 import { generateZh } from './zh-gen.js';
 import { buildPractice } from './practice.js';
 import * as mastery from './mastery.js';
@@ -64,6 +64,11 @@ async function init() {
     state.chart = sh.chart;
     state.chartInfo = sh.chartInfo ?? {};
     state.rootInfo = sh.rootInfo ?? {};
+    // 先把這一課用到的拆碼圖一次載入（一個檔），之後每步不用抓幾十個小檔
+    if (lessonId >= 0) {
+      await loadGlyphBundle(`zh-${lessonId}`);
+      if (JSON.stringify(state.lessons.find((l) => l.id === lessonId) ?? {}).includes('shapeKey')) await loadGlyphBundle('shapes');
+    }
   }
   if (TEST) {
     const tests = (await fetch('data/tests.json').then((r) => r.json())).tests;
@@ -114,7 +119,7 @@ async function init() {
   const L = state.lesson;
   document.title = PRACTICE ? `${L.title}｜練習區` : TEST ? `${L.title}｜評測區` : DAILY ? '每日任務｜打字練習' : `第 ${L.id} 課：${L.title}｜打字練習`;
   $('crumb').textContent = lang === 'en' ? '英文打字' : '中文速成';
-  $('lesson-eyebrow').textContent = PRACTICE ? '練習區' : TEST ? '評測區' : DAILY ? '每日任務' : `第 ${L.id} 課`;
+  $('lesson-eyebrow').textContent = `${lang === 'zh' ? '字根魔法學院' : '鍵帽星系'}　${PRACTICE ? '練習區' : TEST ? '評測區' : DAILY ? '每日任務' : `第 ${L.id} 課`}`;
   $('lesson-title').textContent = `${L.title}　${L.subtitle ?? ''}`.trim();
 
   const startStep = Math.min(Math.max(Number(params.get('step') ?? 1) - 1, 0), L.steps.length - 1);
@@ -909,17 +914,25 @@ async function onTypingDone(step, eng) {
 /** 把按鍵紀錄送去伺服器計分；失敗時顯示重試按鈕，回傳 null。 */
 async function submitTest(eng, stats) {
   const payload = { attemptId: state.attemptId, keystrokes: eng.keystrokes.map((k) => ({ t: k.t, key: k.key })), client: { wpm: stats.netWpm, accuracy: stats.accuracy, seconds: stats.seconds } };
+  // 網絡斷了也不會丟：先把作答存在這部電腦，交卷成功才刪；之後開評測區會自動補交（伺服器 60 分鐘內接受）
+  try { localStorage.setItem('typing-platform:pendingTest', JSON.stringify({ lang, testId: state.test.id, payload, at: Date.now() })); } catch { /* ignore */ }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  let tries = 0;
   for (;;) {
     try {
       const r = await api('/api/test/submit', { method: 'POST', body: payload });
+      try { localStorage.removeItem('typing-platform:pendingTest'); } catch { /* ignore */ }
       return r.result;
     } catch (err) {
       if (err.status === 409 || err.status === 404 || err.status === 410) {
+        try { localStorage.removeItem('typing-platform:pendingTest'); } catch { /* ignore */ }
         showPanel({ title: '未能交卷', msg: err.message, stars: null, stats: [], actions: [['回到評測區', () => (location.href = `tests.html?lang=${lang}`), true]] });
         return null;
       }
-      const again = await new Promise((resolve) => showPanel({ title: '交卷失敗', msg: `${err.message}。你的作答仍在這一頁，請檢查網絡後再試。`, stars: null, stats: [],
-        actions: [['再試一次', () => resolve(true), true]] }));
+      // 先自動重試三次（2、4、8 秒），多數是一時網絡不穩
+      if (tries < 3) { tries++; showPanel({ title: '正在交卷…', msg: `網絡不穩，${2 ** tries} 秒後自動再試（第 ${tries} 次）。請不要關閉這一頁。`, stars: null, stats: [], actions: [] }); await sleep(2 ** tries * 1000); hidePanel(); continue; }
+      const again = await new Promise((resolve) => showPanel({ title: '交卷失敗', msg: `${err.message}。你的作答已暫存在這部電腦：可以再試，或先關閉，稍後在同一部電腦打開評測區會自動補交（60 分鐘內有效）。`, stars: null, stats: [],
+        actions: [['再試一次', () => resolve(true), true], ['回到評測區', () => (location.href = `tests.html?lang=${lang}`), false]] }));
       if (!again) return null;
       hidePanel();
     }
@@ -970,7 +983,8 @@ function finishStep({ stats, stars, step, rest, guide }) {
       title = '分級完成';
       msg = `${lv.note}（跳過的課仍可隨時重溫。）`;
       renderPanelPet(); state.fx.setFocus(false); state.fx.finish({ stars: 1 });
-      showPanel({ title, msg, stars: null, stats: statsList, actions: [[`去第 ${lv.startLesson} 課`, () => (location.href = `type.html?lang=${lang}&mode=lesson&id=${lv.startLesson}`), true], ['回到評測區', () => (location.href = `tests.html?lang=${lang}`), false]] });
+      const apply = lv.startLesson > 0 ? [[`照建議：跳過第 0–${lv.startLesson - 1} 課，去第 ${lv.startLesson} 課`, () => { store.skipLessonsBefore(lang, lv.startLesson); location.href = `type.html?lang=${lang}&mode=lesson&id=${lv.startLesson}`; }, true]] : [[`去第 ${lv.startLesson} 課`, () => (location.href = `type.html?lang=${lang}&mode=lesson&id=${lv.startLesson}`), true]];
+      showPanel({ title, msg: msg + (lv.startLesson > 0 ? ' 按「照建議」會把前面的課標為已跳過，首頁就直接見到下一課。' : ''), stars: null, stats: statsList, actions: [...apply, ['由第 0 課開始', () => (location.href = `type.html?lang=${lang}&mode=lesson&id=0`), false], ['回到評測區', () => (location.href = `tests.html?lang=${lang}`), false]] });
       return;
     }
     const passed = stars > 0;

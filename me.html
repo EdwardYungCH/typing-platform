@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/world.css">
   <link rel="stylesheet" href="css/home.css">
   <link rel="stylesheet" href="css/account.css">
+  <link rel="stylesheet" href="css/report.css">
 </head>
 <body>
   <div class="page">
@@ -30,6 +31,10 @@
       <p class="form-msg" id="pwmsg" aria-live="polite"></p>
       <div class="form-actions"><button class="btn primary" type="submit">更改密碼</button><a class="btn ghost" id="skip" href="index.html" hidden>之後再改</a></div>
     </form>
+    <section class="card form-card" id="report" style="margin-left:0;max-width:none">
+      <div class="form-actions" style="margin:0 0 8px"><h2 style="margin:0">我的學習報告</h2><span class="spacer"></span><button class="btn ghost" id="print" type="button">列印／存成 PDF</button></div>
+      <div id="report-body"><p class="muted">載入中…</p></div>
+    </section>
   </div>
   <script type="module" src="js/me-page.js"></script>
 </body>

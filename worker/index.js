@@ -4,21 +4,33 @@
 import tests from '../data/tests.json' with { type: 'json' };
 import * as auth from './auth.js';
 import { verify } from './score.js';
-import { teacherRoutes } from './teacher.js';
+import { teacherRoutes, autoBackup } from './teacher.js';
 import { json, fail, body } from './http.js';
 import schema1 from '../migrations/0001_init.sql';
 import schema2 from '../migrations/0002_limits.sql';
 import schema3 from '../migrations/0003_custom.sql';
 import schema4 from '../migrations/0004_meta.sql';
-const schema = [schema1, schema2, schema3, schema4].join('\n');
+import schema5 from '../migrations/0005_teacher2.sql';
+const schema = [schema1, schema2, schema3, schema4, schema5].join('\n');
 
 // 資料表：第一次有請求時建立（全部 CREATE IF NOT EXISTS，重複執行沒有影響）
 let ready = null;
 function ensureSchema(db) {
   // D1 的 exec 要求一句一行，所以把每個 CREATE 句子分開用 prepare 執行
   const stmts = schema.replace(/--[^\n]*/g, '').split(';').map((x) => x.trim()).filter(Boolean);
-  ready ??= db.batch(stmts.map((x) => db.prepare(x))).catch((e) => { ready = null; throw e; });
+  ready ??= db.batch(stmts.map((x) => db.prepare(x))).then(() => addColumns(db)).catch((e) => { ready = null; throw e; });
   return ready;
+}
+
+// 後加的欄位（SQLite 沒有 ADD COLUMN IF NOT EXISTS）
+const NEW_COLUMNS = [['teachers', 'role', "TEXT NOT NULL DEFAULT 'teacher'"]];
+async function addColumns(db) {
+  for (const [table, col, def] of NEW_COLUMNS) {
+    const cols = (await db.prepare(`PRAGMA table_info(${table})`).all()).results.map((c) => c.name);
+    if (!cols.includes(col)) await db.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`).run();
+  }
+  // 第一個教師是管理員（舊資料補上）
+  await db.prepare("UPDATE teachers SET role = 'admin' WHERE id = (SELECT MIN(id) FROM teachers) AND NOT EXISTS (SELECT 1 FROM teachers WHERE role = 'admin')").run();
 }
 
 const MAX_PROGRESS_BYTES = 400 * 1024;
@@ -28,9 +40,11 @@ const MAX_PROGRESS_BYTES = 400 * 1024;
 export function summarize(data) {
   const out = { en: { lessons: 0, stars: 0, bestWpm: 0 }, zh: { lessons: 0, stars: 0, bestWpm: 0 }, minutes: 0, streak: { en: 0, zh: 0 }, lastActive: null };
   const lessons = data?.store?.lessons ?? {};
+  out.done = [];
   for (const [id, v] of Object.entries(lessons)) {
     const lang = id.split(':')[0];
     if (!out[lang] || !v?.done) continue;
+    out.done.push(id);
     out[lang].lessons += 1;
     out[lang].stars += v.stars ?? 0;
     out[lang].bestWpm = Math.max(out[lang].bestWpm, v.bestWpm ?? 0);
@@ -84,9 +98,8 @@ async function studentRoutes(req, env, path, student) {
     return json({ user: { sid: student.sid, name: student.name, className: cls?.name ?? null, classNo: student.class_no, mustChange: !!student.initial_pw } });
   }
 
-  if (!student) return fail('請先登入', 401);
-
   if (path === '/api/password' && req.method === 'POST') {
+    if (!student) return fail('請先登入', 401);
     const b = await body(req);
     const oldPw = String(b?.old ?? ''), newPw = String(b?.password ?? '');
     if (!(await auth.verifyPassword(oldPw, student.salt, student.pass_hash))) return fail('舊密碼不對', 401);
@@ -95,6 +108,8 @@ async function studentRoutes(req, env, path, student) {
     await db.prepare('UPDATE students SET pass_hash = ?, salt = ?, initial_pw = NULL WHERE id = ?').bind(h.hash, h.salt, student.id).run();
     return json({ ok: true });
   }
+
+  if (path.startsWith('/api/progress') && !student) return fail('請先登入', 401);
 
   if (path === '/api/progress' && req.method === 'GET') {
     const p = await db.prepare('SELECT data, updated_at FROM progress WHERE student_id = ?').bind(student.id).first();
@@ -112,6 +127,25 @@ async function studentRoutes(req, env, path, student) {
       ON CONFLICT(student_id) DO UPDATE SET data = excluded.data, summary = excluded.summary, updated_at = excluded.updated_at`)
       .bind(student.id, JSON.stringify(data), summary, now).run();
     return json({ ok: true, updatedAt: now });
+  }
+
+  // ----- 問題回報（未登入也可以）-----
+  if (path === '/api/feedback' && req.method === 'POST') {
+    const b = await body(req);
+    const msg = String(b?.message ?? '').trim().slice(0, 1000);
+    if (msg.length < 3) return fail('請寫幾個字說明問題');
+    await db.prepare('INSERT INTO feedback (student_id, page, message, ua) VALUES (?, ?, ?, ?)')
+      .bind(student?.id ?? null, String(b?.page ?? '').slice(0, 200), msg, (req.headers.get('User-Agent') ?? '').slice(0, 200)).run();
+    return json({ ok: true });
+  }
+
+  if (!student) return fail('請先登入', 401);
+
+  // ----- 老師功課 -----
+  if (path === '/api/assignments' && req.method === 'GET') {
+    const rows = student.class_id ? (await db.prepare(`SELECT a.id, a.lang, a.lesson_id, a.due, a.note, a.created_at, t.name AS teacher FROM assignments a JOIN teachers t ON t.id = a.teacher_id
+      WHERE a.class_id = ? ORDER BY COALESCE(a.due, '9999'), a.id`).bind(student.class_id).all()).results : [];
+    return json({ assignments: rows });
   }
 
   // ----- 老師自訂練習 -----
@@ -149,7 +183,7 @@ async function studentRoutes(req, env, path, student) {
     if (a.submitted_at) return fail('已經交卷', 409);
     const t = tests.tests.find((x) => x.id === a.test_id);
     const serverElapsedSec = (Date.now() - new Date(a.started_at).getTime()) / 1000;
-    if (serverElapsedSec > a.time_limit + 30 * 60) return fail('評測已逾時，請找老師重開', 410);
+    if (serverElapsedSec > a.time_limit + 60 * 60) return fail('評測已逾時，請找老師重開', 410);   // 60 分鐘寬限：網絡斷了可以稍後補交
     const r = verify({ lang: a.lang, text: a.text, timeLimit: a.time_limit, keystrokes: b.keystrokes, pass: t?.pass ?? {}, serverElapsedSec, client: b.client ?? null });
     const keys = JSON.stringify((Array.isArray(b.keystrokes) ? b.keystrokes : []).slice(0, 6000).map((k) => ({ t: k.t, key: k.key })));
     await db.prepare(`UPDATE test_attempts SET submitted_at = ?, client_wpm = ?, client_acc = ?, client_seconds = ?, wpm = ?, accuracy = ?, seconds = ?, stars = ?, flags = ?, keystrokes = ? WHERE id = ?`)
@@ -161,6 +195,13 @@ async function studentRoutes(req, env, path, student) {
 }
 
 export default {
+  // 每週自動備份到 R2（wrangler.jsonc 的 triggers.crons）；未設定 BACKUPS 儲存桶時只記錄一句
+  async scheduled(event, env, ctx) {
+    if (!env.DB) return;
+    if (!env.BACKUPS) { console.log('未設定 R2 儲存桶 BACKUPS，略過自動備份'); return; }
+    await ensureSchema(env.DB);
+    ctx.waitUntil(autoBackup(env).then((k) => console.log('自動備份完成', k)).catch((e) => console.error('自動備份失敗', e)));
+  },
   async fetch(req, env) {
     const url = new URL(req.url);
     const path = url.pathname;

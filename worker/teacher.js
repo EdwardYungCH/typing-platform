@@ -22,14 +22,18 @@ async function setPassword(db, id, pw, h) {
 /** 整理老師貼上的練習內容：中文只留碼表有的字和中文標點；英文只留可打的 ASCII。 */
 const ZH_PUNCT = '，。；：？！「」、';
 // 備份的資料表和欄位（還原時只接受這些欄位）
+// 舊備份檔沒有的欄位用這些預設值
+const DEFAULTS = { role: 'teacher', resolved: 0 };
 const BACKUP_COLS = {
-  teachers: ['id', 'username', 'name', 'pass_hash', 'salt', 'created_at'],
+  teachers: ['id', 'username', 'name', 'pass_hash', 'salt', 'created_at', 'role'],
   classes: ['id', 'name', 'year', 'teacher_id', 'created_at'],
   students: ['id', 'sid', 'name', 'class_id', 'class_no', 'pass_hash', 'salt', 'initial_pw', 'fail_count', 'locked_until', 'created_at'],
   progress: ['student_id', 'data', 'summary', 'updated_at'],
   test_attempts: ['id', 'student_id', 'test_id', 'lang', 'text', 'time_limit', 'started_at', 'submitted_at', 'client_wpm', 'client_acc', 'client_seconds',
     'wpm', 'accuracy', 'seconds', 'stars', 'flags', 'keystrokes'],
   custom_practice: ['id', 'teacher_id', 'class_id', 'title', 'lang', 'kind', 'content', 'created_at'],
+  assignments: ['id', 'class_id', 'teacher_id', 'lang', 'lesson_id', 'due', 'note', 'created_at'],
+  feedback: ['id', 'student_id', 'page', 'message', 'ua', 'created_at', 'resolved'],
 };
 function cleanPractice(lang, kind, raw) {
   const removed = new Set();
@@ -49,13 +53,35 @@ function cleanPractice(lang, kind, raw) {
   return { content, removed: [...removed].filter((c) => !/\s/.test(c)).join(''), length: [...content].length };
 }
 
+/** 把全部資料表讀出來組成一份備份 JSON（教師下載和 R2 自動備份共用） */
+export async function makeBackup(db, by) {
+  const tables = {};
+  for (const t of Object.keys(BACKUP_COLS)) tables[t] = (await db.prepare(`SELECT ${BACKUP_COLS[t].join(', ')} FROM ${t}`).all()).results;
+  const now = new Date().toISOString();
+  await db.prepare("INSERT INTO meta (key, value) VALUES ('last_backup', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(now).run();
+  return { now, text: JSON.stringify({ app: 'typing-platform', version: 1, exportedAt: now, by, tables }) };
+}
+
+/** 寫一份備份到 R2（每週由 cron 自動執行，管理員也可以按鈕立即備份）；只保留最近 12 份 */
+export async function autoBackup(env, by = 'cron') {
+  const { now, text } = await makeBackup(env.DB, by);
+  const key = `typing-backup-${now.slice(0, 19).replace(/[T:]/g, '-')}.json`;
+  await env.BACKUPS.put(key, text, { httpMetadata: { contentType: 'application/json' } });
+  await env.DB.prepare("INSERT INTO meta (key, value) VALUES ('last_auto_backup', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(now).run();
+  const list = await env.BACKUPS.list({ prefix: 'typing-backup-', limit: 200 });
+  const keys = list.objects.map((o) => o.key).sort();
+  if (keys.length > 12) await env.BACKUPS.delete(keys.slice(0, keys.length - 12));
+  return key;
+}
+
 export async function teacherRoutes(req, env, path, teacher) {
   const db = env.DB;
   const m = (re) => path.match(re);
+  let mm;
 
   if (path === '/api/teacher/status') {
     const c = await db.prepare('SELECT COUNT(*) AS n FROM teachers').first();
-    return json({ setupNeeded: (c?.n ?? 0) === 0, user: teacher ? { username: teacher.username, name: teacher.name } : null });
+    return json({ setupNeeded: (c?.n ?? 0) === 0, user: teacher ? { id: teacher.id, username: teacher.username, name: teacher.name, role: teacher.role ?? 'teacher' } : null });
   }
 
   if (path === '/api/teacher/setup' && req.method === 'POST') {
@@ -78,7 +104,7 @@ export async function teacherRoutes(req, env, path, teacher) {
     }
     await auth.clearFails(db, tKey);
     const { header } = await auth.createSession(db, 'teacher', t.id);
-    return json({ ok: true, user: { username: t.username, name: t.name } }, 200, { 'set-cookie': header });
+    return json({ ok: true, user: { username: t.username, name: t.name, role: t.role ?? 'teacher' } }, 200, { 'set-cookie': header });
   }
 
   if (path === '/api/teacher/logout' && req.method === 'POST') {
@@ -87,8 +113,55 @@ export async function teacherRoutes(req, env, path, teacher) {
   }
 
   if (!teacher) return fail('請先以教師身份登入', 401);
+  const isAdmin = teacher.role === 'admin';
+  /** 這位老師可不可以操作這個班（管理員全部可以；老師只可以自己的班） */
+  const canClass = async (classId) => {
+    const c = await db.prepare('SELECT teacher_id FROM classes WHERE id = ?').bind(classId).first();
+    return c && (isAdmin || c.teacher_id === teacher.id);
+  };
+  const canStudent = async (studentId) => {
+    const s = await db.prepare('SELECT class_id FROM students WHERE id = ?').bind(studentId).first();
+    return s && (isAdmin || (s.class_id && await canClass(s.class_id)));
+  };
+  const NO = () => fail('這不是你的班級', 403);
 
-  if (path === '/api/teacher/add' && req.method === 'POST') return createTeacher(db, await body(req), false);
+  // ----- 老師管理（管理員）-----
+  if (path === '/api/teacher/add' && req.method === 'POST') { if (!isAdmin) return fail('只有管理員可以新增教師', 403); return createTeacher(db, await body(req), false); }
+  if (path === '/api/teacher/teachers') {
+    if (!isAdmin) return fail('只有管理員可以看教師名單', 403);
+    const rows = (await db.prepare('SELECT t.id, t.username, t.name, t.role, t.created_at, (SELECT COUNT(*) FROM classes c WHERE c.teacher_id = t.id) AS classes FROM teachers t ORDER BY t.id').all()).results;
+    return json({ teachers: rows });
+  }
+  if ((mm = m(/^\/api\/teacher\/teachers\/(\d+)\/role$/)) && req.method === 'POST') {
+    if (!isAdmin) return fail('只有管理員可以更改', 403);
+    const b = await body(req); const role = b?.role === 'admin' ? 'admin' : 'teacher';
+    if (Number(mm[1]) === teacher.id && role !== 'admin') return fail('不能取消自己的管理員身份');
+    await db.prepare('UPDATE teachers SET role = ? WHERE id = ?').bind(role, mm[1]).run();
+    return json({ ok: true });
+  }
+  if ((mm = m(/^\/api\/teacher\/teachers\/(\d+)\/reset$/)) && req.method === 'POST') {
+    if (!isAdmin) return fail('只有管理員可以重設', 403);
+    const b = await body(req); const pw = String(b?.password ?? '');
+    if (pw.length < 8) return fail('密碼至少 8 個字元');
+    const h = await auth.hashPassword(pw);
+    await db.batch([db.prepare('UPDATE teachers SET pass_hash = ?, salt = ? WHERE id = ?').bind(h.hash, h.salt, mm[1]), db.prepare("DELETE FROM sessions WHERE kind = 'teacher' AND user_id = ?").bind(mm[1])]);
+    return json({ ok: true });
+  }
+  if ((mm = m(/^\/api\/teacher\/teachers\/(\d+)$/)) && req.method === 'DELETE') {
+    if (!isAdmin) return fail('只有管理員可以刪除', 403);
+    if (Number(mm[1]) === teacher.id) return fail('不能刪除自己');
+    const n = (await db.prepare('SELECT COUNT(*) AS n FROM classes WHERE teacher_id = ?').bind(mm[1]).first()).n;
+    if (n) return fail('這位老師還有班級，先把班級轉給其他老師');
+    await db.batch([db.prepare("DELETE FROM sessions WHERE kind = 'teacher' AND user_id = ?").bind(mm[1]), db.prepare('DELETE FROM teachers WHERE id = ?').bind(mm[1])]);
+    return json({ ok: true });
+  }
+  if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/owner$/)) && req.method === 'POST') {
+    if (!isAdmin) return fail('只有管理員可以轉班', 403);
+    const b = await body(req);
+    if (!(await db.prepare('SELECT id FROM teachers WHERE id = ?').bind(Number(b?.teacherId)).first())) return fail('找不到這位老師');
+    await db.prepare('UPDATE classes SET teacher_id = ? WHERE id = ?').bind(Number(b.teacherId), mm[1]).run();
+    return json({ ok: true });
+  }
 
   if (path === '/api/teacher/password' && req.method === 'POST') {
     const b = await body(req);
@@ -103,7 +176,7 @@ export async function teacherRoutes(req, env, path, teacher) {
   // ----- 班級 -----
   if (path === '/api/teacher/classes' && req.method === 'GET') {
     const rows = (await db.prepare(`SELECT c.id, c.name, c.year, c.teacher_id, t.name AS teacher, (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id) AS students
-      FROM classes c JOIN teachers t ON t.id = c.teacher_id ORDER BY c.year DESC, c.name`).all()).results;
+      FROM classes c JOIN teachers t ON t.id = c.teacher_id ${isAdmin ? '' : 'WHERE c.teacher_id = ?'} ORDER BY c.year DESC, c.name`).bind(...(isAdmin ? [] : [teacher.id])).all()).results;
     return json({ classes: rows });
   }
 
@@ -119,8 +192,8 @@ export async function teacherRoutes(req, env, path, teacher) {
     } catch { return fail('這個學年已有這個班', 409); }
   }
 
-  let mm;
   if ((mm = m(/^\/api\/teacher\/classes\/(\d+)$/)) && req.method === 'DELETE') {
+    if (!(await canClass(mm[1]))) return NO();
     const n = await db.prepare('SELECT COUNT(*) AS n FROM students WHERE class_id = ?').bind(mm[1]).first();
     if (n.n > 0) return fail('班裏還有學生，先把學生刪除或移班');
     await db.prepare('DELETE FROM classes WHERE id = ?').bind(mm[1]).run();
@@ -128,6 +201,7 @@ export async function teacherRoutes(req, env, path, teacher) {
   }
 
   if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/students$/))) {
+    if (!(await canClass(mm[1]))) return NO();
     const rows = (await db.prepare(`SELECT s.id, s.sid, s.name, s.class_no, s.initial_pw IS NOT NULL AS pw_initial, s.created_at,
         p.summary, p.updated_at AS progress_at
       FROM students s LEFT JOIN progress p ON p.student_id = s.id WHERE s.class_id = ? ORDER BY s.class_no, s.sid`).bind(mm[1]).all()).results;
@@ -139,6 +213,7 @@ export async function teacherRoutes(req, env, path, teacher) {
   }
 
   if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/export\.csv$/))) {
+    if (!(await canClass(mm[1]))) return NO();
     const cls = await db.prepare('SELECT * FROM classes WHERE id = ?').bind(mm[1]).first();
     if (!cls) return fail('沒有這個班', 404);
     const rows = (await db.prepare(`SELECT s.sid, s.name, s.class_no, p.summary FROM students s LEFT JOIN progress p ON p.student_id = s.id WHERE s.class_id = ? ORDER BY s.class_no, s.sid`).bind(cls.id).all()).results;
@@ -162,20 +237,38 @@ export async function teacherRoutes(req, env, path, teacher) {
 
   // ----- 備份與還原 -----
   // 備份檔包括全部資料（連密碼雜湊），不包括登入中的 session 和登入失敗紀錄
+  if (path.startsWith('/api/teacher/backup') && !isAdmin) return fail('只有管理員可以備份', 403);
+  if (path === '/api/teacher/restore' && !isAdmin) return fail('只有管理員可以還原', 403);
   if (path === '/api/teacher/backup' && req.method === 'GET') {
-    const tables = {};
-    for (const t of Object.keys(BACKUP_COLS)) tables[t] = (await db.prepare(`SELECT ${BACKUP_COLS[t].join(', ')} FROM ${t}`).all()).results;
-    const now = new Date().toISOString();
-    await db.prepare("INSERT INTO meta (key, value) VALUES ('last_backup', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(now).run();
+    const { text, now } = await makeBackup(db, teacher.username);
     const name = `typing-backup-${now.slice(0, 10)}.json`;
-    return new Response(JSON.stringify({ app: 'typing-platform', version: 1, exportedAt: now, by: teacher.username, tables }), {
+    return new Response(text, {
       headers: { 'content-type': 'application/json; charset=utf-8', 'content-disposition': `attachment; filename="${name}"`, 'cache-control': 'no-store' } });
   }
   if (path === '/api/teacher/backup/status') {
     const r = await db.prepare("SELECT value FROM meta WHERE key = 'last_backup'").first();
+    const auto = await db.prepare("SELECT value FROM meta WHERE key = 'last_auto_backup'").first();
     const counts = {};
     for (const t of ['students', 'classes', 'test_attempts']) counts[t] = (await db.prepare(`SELECT COUNT(*) AS n FROM ${t}`).first()).n;
-    return json({ lastBackup: r?.value ?? null, counts });
+    return json({ lastBackup: r?.value ?? null, lastAutoBackup: auto?.value ?? null, r2: !!env.BACKUPS, counts });
+  }
+  // 雲端自動備份（R2）：列出、下載、立即備份一次
+  if (path === '/api/teacher/backup/cloud' && req.method === 'GET') {
+    if (!env.BACKUPS) return json({ enabled: false, files: [] });
+    const list = await env.BACKUPS.list({ prefix: 'typing-backup-', limit: 100 });
+    return json({ enabled: true, files: list.objects.map((o) => ({ key: o.key, size: o.size, uploaded: o.uploaded })).sort((x, y) => (x.key < y.key ? 1 : -1)) });
+  }
+  if (path === '/api/teacher/backup/cloud' && req.method === 'POST') {
+    if (!env.BACKUPS) return fail('未設定 R2 儲存桶（見 wrangler.jsonc 的 r2_buckets）', 503);
+    const key = await autoBackup(env, teacher.username);
+    return json({ ok: true, key });
+  }
+  const cloudKey = path.match(/^\/api\/teacher\/backup\/cloud\/([\w.-]+)$/);
+  if (cloudKey && req.method === 'GET') {
+    if (!env.BACKUPS) return fail('未設定 R2', 503);
+    const obj = await env.BACKUPS.get(cloudKey[1]);
+    if (!obj) return fail('沒有這個備份', 404);
+    return new Response(obj.body, { headers: { 'content-type': 'application/json; charset=utf-8', 'content-disposition': `attachment; filename="${cloudKey[1]}"`, 'cache-control': 'no-store' } });
   }
   if (path === '/api/teacher/restore' && req.method === 'POST') {
     const b = await body(req);
@@ -185,8 +278,8 @@ export async function teacherRoutes(req, env, path, teacher) {
     if (!(d.tables.teachers ?? []).length) return fail('備份檔沒有教師帳號，不能還原');
     const stmts = [];
     // 先刪後加，按外鍵次序；D1 的 batch 是一個交易，中途出錯會全部還原
-    for (const t of ['sessions', 'login_fails', 'test_attempts', 'progress', 'custom_practice', 'students', 'classes', 'teachers']) stmts.push(db.prepare(`DELETE FROM ${t}`));
-    for (const t of ['teachers', 'classes', 'students', 'progress', 'test_attempts', 'custom_practice']) {
+    for (const t of ['sessions', 'login_fails', 'feedback', 'assignments', 'test_attempts', 'progress', 'custom_practice', 'students', 'classes', 'teachers']) stmts.push(db.prepare(`DELETE FROM ${t}`));
+    for (const t of ['teachers', 'classes', 'students', 'progress', 'test_attempts', 'custom_practice', 'assignments', 'feedback']) {
       const cols = BACKUP_COLS[t];
       const rows = d.tables[t] ?? [];
       // 一句插入多行（每句最多 100 個參數；進度和按鍵紀錄較大，一句最多 20 行）
@@ -194,7 +287,7 @@ export async function teacherRoutes(req, env, path, teacher) {
       for (let i = 0; i < rows.length; i += per) {
         const part = rows.slice(i, i + per);
         const one = `(${cols.map(() => '?').join(', ')})`;
-        stmts.push(db.prepare(`INSERT INTO ${t} (${cols.join(', ')}) VALUES ${part.map(() => one).join(', ')}`).bind(...part.flatMap((row) => cols.map((c) => row[c] ?? null))));
+        stmts.push(db.prepare(`INSERT INTO ${t} (${cols.join(', ')}) VALUES ${part.map(() => one).join(', ')}`).bind(...part.flatMap((row) => cols.map((c) => row[c] ?? DEFAULTS[c] ?? null))));
       }
     }
     try { await db.batch(stmts); } catch (e) { return fail(`還原失敗，資料沒有改動：${e.message}`, 400); }
@@ -204,7 +297,7 @@ export async function teacherRoutes(req, env, path, teacher) {
   // ----- 自訂練習 -----
   if (path === '/api/teacher/practice' && req.method === 'GET') {
     const rows = (await db.prepare(`SELECT p.*, c.name AS class_name, c.year AS class_year, t.name AS teacher FROM custom_practice p
-      LEFT JOIN classes c ON c.id = p.class_id JOIN teachers t ON t.id = p.teacher_id ORDER BY p.id DESC`).all()).results;
+      LEFT JOIN classes c ON c.id = p.class_id JOIN teachers t ON t.id = p.teacher_id ${isAdmin ? '' : 'WHERE p.teacher_id = ? OR c.teacher_id = ?'} ORDER BY p.id DESC`).bind(...(isAdmin ? [] : [teacher.id, teacher.id])).all()).results;
     return json({ practices: rows });
   }
   if (path === '/api/teacher/practice' && req.method === 'POST') {
@@ -217,12 +310,15 @@ export async function teacherRoutes(req, env, path, teacher) {
     if (!title) return fail('請輸入標題');
     if (r.error) return fail(r.error);
     const classId = b?.classId ? Number(b.classId) : null;
-    if (classId && !(await db.prepare('SELECT id FROM classes WHERE id = ?').bind(classId).first())) return fail('找不到這個班別');
+    if (classId && !(await canClass(classId))) return fail('找不到這個班別，或不是你的班');
+    if (!classId && !isAdmin) return fail('只有管理員可以出給全部學生；請選一班');
     const res = await db.prepare('INSERT INTO custom_practice (teacher_id, class_id, title, lang, kind, content) VALUES (?, ?, ?, ?, ?, ?)')
       .bind(teacher.id, classId, title, lang, kind, r.content).run();
     return json({ ok: true, id: res.meta?.last_row_id, removed: r.removed, length: r.length });
   }
   if ((mm = m(/^\/api\/teacher\/practice\/(\d+)$/)) && req.method === 'DELETE') {
+    const pr = await db.prepare('SELECT teacher_id, class_id FROM custom_practice WHERE id = ?').bind(mm[1]).first();
+    if (!pr || !(isAdmin || pr.teacher_id === teacher.id)) return NO();
     await db.prepare('DELETE FROM custom_practice WHERE id = ?').bind(mm[1]).run();
     return json({ ok: true });
   }
@@ -231,8 +327,7 @@ export async function teacherRoutes(req, env, path, teacher) {
   if (path === '/api/teacher/import' && req.method === 'POST') {
     const b = await body(req);
     const classId = Number(b?.classId);
-    const cls = await db.prepare('SELECT id FROM classes WHERE id = ?').bind(classId).first();
-    if (!cls) return fail('請先選班別');
+    if (!(await canClass(classId))) return fail('請先選班別（而且要是你的班）');
     const rows = Array.isArray(b?.rows) ? b.rows.slice(0, 200) : [];
     // 老師可指定全部學生用同一個密碼；留空就每人隨機
     const common = b?.password ? String(b.password) : '';
@@ -272,12 +367,14 @@ export async function teacherRoutes(req, env, path, teacher) {
   }
 
   if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/slips$/))) {
+    if (!(await canClass(mm[1]))) return NO();
     const cls = await db.prepare('SELECT * FROM classes WHERE id = ?').bind(mm[1]).first();
     const rows = (await db.prepare('SELECT sid, name, class_no, initial_pw FROM students WHERE class_id = ? ORDER BY class_no, sid').bind(mm[1]).all()).results;
     return json({ cls, students: rows });
   }
 
   if ((mm = m(/^\/api\/teacher\/students\/(\d+)\/reset$/)) && req.method === 'POST') {
+    if (!(await canStudent(mm[1]))) return NO();
     const b = await body(req);
     const pw = b?.password ? String(b.password) : auth.randomPassword();
     if (!PW_OK(pw)) return fail(PW_MSG);
@@ -287,6 +384,7 @@ export async function teacherRoutes(req, env, path, teacher) {
 
   // 全班改用同一個密碼
   if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/password$/)) && req.method === 'POST') {
+    if (!(await canClass(mm[1]))) return NO();
     const b = await body(req);
     const pw = String(b?.password ?? '');
     if (!PW_OK(pw)) return fail(PW_MSG);
@@ -299,17 +397,69 @@ export async function teacherRoutes(req, env, path, teacher) {
   }
 
   if ((mm = m(/^\/api\/teacher\/students\/(\d+)\/retake$/)) && req.method === 'POST') {
+    if (!(await canStudent(mm[1]))) return NO();
     const b = await body(req);
     await db.prepare('DELETE FROM test_attempts WHERE student_id = ? AND test_id = ?').bind(mm[1], String(b?.testId ?? '')).run();
     return json({ ok: true });
   }
 
   if ((mm = m(/^\/api\/teacher\/students\/(\d+)\/tests$/))) {
+    if (!(await canStudent(mm[1]))) return NO();
     const rows = (await db.prepare('SELECT test_id, started_at, submitted_at, client_wpm, client_acc, wpm, accuracy, seconds, stars, flags FROM test_attempts WHERE student_id = ? ORDER BY started_at').bind(mm[1]).all()).results;
     return json({ attempts: rows.map((r) => ({ ...r, flags: JSON.parse(r.flags) })) });
   }
 
+  // 學生詳細頁：整份進度（課堂每步、練習紀錄、弱項）和評測（連按鍵紀錄）
+  if ((mm = m(/^\/api\/teacher\/students\/(\d+)\/detail$/))) {
+    if (!(await canStudent(mm[1]))) return NO();
+    const s = await db.prepare('SELECT s.id, s.sid, s.name, s.class_no, s.class_id, s.created_at, c.name AS class_name, c.year FROM students s LEFT JOIN classes c ON c.id = s.class_id WHERE s.id = ?').bind(mm[1]).first();
+    const p = await db.prepare('SELECT data, updated_at FROM progress WHERE student_id = ?').bind(mm[1]).first();
+    const tests = (await db.prepare('SELECT id, test_id, lang, text, time_limit, started_at, submitted_at, client_wpm, client_acc, wpm, accuracy, seconds, stars, flags, keystrokes FROM test_attempts WHERE student_id = ? ORDER BY started_at').bind(mm[1]).all()).results;
+    return json({ student: s, progress: p ? JSON.parse(p.data) : null, updatedAt: p?.updated_at ?? null,
+      tests: tests.map((t) => ({ ...t, flags: JSON.parse(t.flags), keystrokes: t.keystrokes ? JSON.parse(t.keystrokes) : null })) });
+  }
+
+  // ----- 功課指派 -----
+  if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/assignments$/)) && req.method === 'GET') {
+    if (!(await canClass(mm[1]))) return NO();
+    const rows = (await db.prepare('SELECT a.*, t.name AS teacher FROM assignments a JOIN teachers t ON t.id = a.teacher_id WHERE a.class_id = ? ORDER BY COALESCE(a.due, \'9999\'), a.id').bind(mm[1]).all()).results;
+    // 每份功課誰做了：用 progress.summary 的 done 清單
+    const done = (await db.prepare('SELECT s.id, p.summary FROM students s LEFT JOIN progress p ON p.student_id = s.id WHERE s.class_id = ?').bind(mm[1]).all()).results;
+    const doneMap = {};
+    for (const d of done) { try { doneMap[d.id] = JSON.parse(d.summary ?? '{}').done ?? []; } catch { doneMap[d.id] = []; } }
+    return json({ assignments: rows.map((a) => ({ ...a, doneBy: Object.entries(doneMap).filter(([, ids]) => ids.includes(`${a.lang}:${a.lesson_id}`)).map(([id]) => Number(id)) })), students: done.length });
+  }
+  if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/assignments$/)) && req.method === 'POST') {
+    if (!(await canClass(mm[1]))) return NO();
+    const b = await body(req);
+    const lang = b?.lang === 'en' ? 'en' : 'zh';
+    const lesson = Number(b?.lessonId);
+    if (!Number.isInteger(lesson) || lesson < 0 || lesson > 16) return fail('請選課');
+    const due = /^\d{4}-\d{2}-\d{2}$/.test(b?.due ?? '') ? b.due : null;
+    const dup = await db.prepare('SELECT id FROM assignments WHERE class_id = ? AND lang = ? AND lesson_id = ?').bind(mm[1], lang, lesson).first();
+    if (dup) return fail('這一課已經派過給這班；要改截止日請先刪除再派', 409);
+    await db.prepare('INSERT INTO assignments (class_id, teacher_id, lang, lesson_id, due, note) VALUES (?, ?, ?, ?, ?, ?)').bind(mm[1], teacher.id, lang, lesson, due, String(b?.note ?? '').slice(0, 200)).run();
+    return json({ ok: true });
+  }
+  if ((mm = m(/^\/api\/teacher\/assignments\/(\d+)$/)) && req.method === 'DELETE') {
+    const a = await db.prepare('SELECT class_id FROM assignments WHERE id = ?').bind(mm[1]).first();
+    if (!a || !(await canClass(a.class_id))) return NO();
+    await db.prepare('DELETE FROM assignments WHERE id = ?').bind(mm[1]).run();
+    return json({ ok: true });
+  }
+
+  // ----- 問題回報 -----
+  if (path === '/api/teacher/feedback') {
+    const rows = (await db.prepare(`SELECT f.*, s.sid, s.name, c.name AS class_name FROM feedback f LEFT JOIN students s ON s.id = f.student_id LEFT JOIN classes c ON c.id = s.class_id ORDER BY f.resolved, f.id DESC LIMIT 200`).all()).results;
+    return json({ feedback: rows });
+  }
+  if ((mm = m(/^\/api\/teacher\/feedback\/(\d+)\/resolve$/)) && req.method === 'POST') {
+    await db.prepare('UPDATE feedback SET resolved = 1 WHERE id = ?').bind(mm[1]).run();
+    return json({ ok: true });
+  }
+
   if ((mm = m(/^\/api\/teacher\/students\/(\d+)$/)) && req.method === 'DELETE') {
+    if (!(await canStudent(mm[1]))) return NO();
     const id = mm[1];
     await db.batch([
       db.prepare('DELETE FROM test_attempts WHERE student_id = ?').bind(id),
@@ -332,7 +482,7 @@ async function createTeacher(db, b, first) {
   if (!name) return fail('請輸入姓名');
   const h = await auth.hashPassword(password);
   try {
-    const r = await db.prepare('INSERT INTO teachers (username, name, pass_hash, salt) VALUES (?, ?, ?, ?)').bind(username, name, h.hash, h.salt).run();
+    const r = await db.prepare('INSERT INTO teachers (username, name, pass_hash, salt, role) VALUES (?, ?, ?, ?, ?)').bind(username, name, h.hash, h.salt, first ? 'admin' : (b?.role === 'admin' ? 'admin' : 'teacher')).run();
     if (first) {
       const { header } = await auth.createSession(db, 'teacher', r.meta.last_row_id);
       return json({ ok: true, user: { username, name } }, 200, { 'set-cookie': header });

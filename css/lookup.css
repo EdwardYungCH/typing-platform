@@ -58,3 +58,7 @@
 .cap.key.first small { color: var(--code-first); }
 .cap.key.last { border-color: var(--code-last); background: color-mix(in srgb, var(--code-last) 18%, transparent); }
 .cap.key.last small { color: var(--code-last); }
+
+/* 查碼頁快捷：今日一字、我最常錯的字 */
+.lk-quick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: -8px 0 16px; font-size: 14px; color: var(--ink-2); }
+.lk-quick .btn { padding: 4px 12px; font-size: 14px; }

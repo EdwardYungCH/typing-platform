@@ -114,6 +114,7 @@ export class QuickEngine {
   handleKey(e) {
     if (this.finished) return;
     if (!e.isTrusted) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName) || e.target?.closest?.('dialog')) return;   // 在表單或對話框（例如回報問題）打字不算作答
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     // 學生開着系統中文輸入法：網站收不到英文字母，提示他切換
     if (e.isComposing || e.key === 'Process') { this.onIme?.(); return; }

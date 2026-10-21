@@ -2,6 +2,7 @@
 // 資料由 tools/build_zh_glyphs.py 產生；只有核對過倉頡碼的字才有檔案，其餘回傳 null。
 
 const cache = new Map();
+const ready = new Map();
 
 export function loadGlyph(ch, base = '') {
   if (!cache.has(ch)) {
@@ -11,12 +12,21 @@ export function loadGlyph(ch, base = '') {
   return cache.get(ch);
 }
 
+/** 一次載入一課的拆碼圖合集（tools/bundle_glyphs.py 產生）；之後同一課的字不用逐個抓。沒有的字仍會逐字抓。 */
+const bundles = new Map();
+export function loadGlyphBundle(name, base = '') {
+  if (!bundles.has(name)) {
+    bundles.set(name, fetch(`${base}assets/glyph-bundles/${name}.json`).then((r) => (r.ok ? r.json() : {})).catch(() => ({}))
+      .then((all) => { for (const [ch, g] of Object.entries(all)) { if (!cache.has(ch)) cache.set(ch, Promise.resolve(g)); ready.set(ch, g); } return all; }));
+  }
+  return bundles.get(name);
+}
+
 export function preloadGlyphs(chars, base = '') {
   return Promise.all([...new Set(chars)].map((c) => loadGlyph(c, base)));
 }
 
 /** 同步取得已載入的字形（未載入或沒有資料回傳 null）。 */
-const ready = new Map();
 export async function glyphData(ch, base = '') {
   const g = await loadGlyph(ch, base);
   ready.set(ch, g);

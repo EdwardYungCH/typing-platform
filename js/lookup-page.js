@@ -1,6 +1,7 @@
 import { applyWorld } from './world.js';
 import { loadZh, ROOTS, ROOT_GROUPS, candidateIndex, shapeGlyph, chartGlyphs } from './zh-codes.js';
 import { glyphData, glyphSvg } from './zh-glyph.js';
+import { getWeak } from './storage.js';
 
 applyWorld('magic');
 const $ = (id) => document.getElementById(id);
@@ -66,6 +67,18 @@ $('roots').innerHTML = ROOT_GROUPS.map((g) => `
         <div class="shape-list">${(shapes[k] ?? []).filter((sh) => sh.shape !== ROOTS[k]).map((sh) =>
         `<span class="shape-item" title="${sh.name}"><b>${sh.img ? shapeGlyph(sh, '../') : sh.shape}</b><small>${sh.name}<br>例：${sh.examples}</small></span>`).join('')}</div></div></div>`).join('')}
     </div></div>`).join('');
+
+// 今日一字：按日期在常用字表中固定抽一個（全班同一日看到同一個字）；我最常錯的字：這部電腦弱項紀錄中的中文字
+{
+  const d = new Date();
+  const dayN = Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+  const common = zh.common ?? [];
+  const today = common.length ? common[(dayN * 7919) % Math.min(common.length, 1500)] : null;
+  const wrong = getWeak('zh').map((x) => x.key).filter((k) => k.length === 1 && isHan(k)).slice(0, 8);
+  $('quick').innerHTML = `${today ? `<span>今日一字：</span><button class="btn" type="button" data-q="${today}">${today}</button>` : ''}
+    ${wrong.length ? `<span style="margin-left:8px">我最常錯的字：</span><button class="btn" type="button" data-q="${wrong.join('')}">${wrong.join(' ')}</button>` : '<span style="margin-left:8px">練多幾課後，這裏會列出你最常錯的字。</span>'}`;
+  $('quick').querySelectorAll('[data-q]').forEach((b) => b.onclick = () => { $('q').value = b.dataset.q; search(b.dataset.q); });
+}
 
 const init = new URLSearchParams(location.search).get('q');
 if (init) { $('q').value = init; search(init); }

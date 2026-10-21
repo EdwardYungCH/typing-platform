@@ -85,3 +85,10 @@
 .sc-home .num { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--surface-2); font-size: 22px; }
 .sc-home .t { display: grid; gap: 2px; }
 .sc-home .t span { color: var(--ink-2); font-size: 14px; }
+
+/* 老師功課 */
+.hw { margin-top: 14px; padding: 10px 12px; border-radius: 14px; border: 1px dashed var(--accent); }
+.hw h3 { margin: 0; font-size: 15px; }
+.hw .map { margin-top: 8px; }
+.node.late { border-color: var(--bad); }
+.node.late .badge { background: var(--bad-bg); color: var(--bad); }

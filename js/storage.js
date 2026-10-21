@@ -6,7 +6,7 @@ import { CONFIG } from './config.js';
 
 const KEY = 'typing-platform:v1';
 
-function readAll() {
+export function readAll() {
   try {
     return JSON.parse(localStorage.getItem(KEY)) ?? { lessons: {}, attempts: [], settings: {} };
   } catch {
@@ -173,4 +173,18 @@ export function saveShortcutResult(unit, { score, total }) {
 
 export function getShortcutResults() {
   return readAll().shortcuts ?? {};
+}
+
+/** 分級測驗後一鍵套用：把建議起始課之前的課標為「已跳過」（算完成、沒有星，仍可隨時做） */
+export function skipLessonsBefore(lang, startLesson) {
+  const data = readAll();
+  let n = 0;
+  for (let i = 0; i < startLesson; i++) {
+    const id = `${lang}:${i}`;
+    if (data.lessons[id]?.done) continue;
+    data.lessons[id] = { done: true, skipped: true, stars: 0, bestWpm: 0, bestAccuracy: 0, updated: new Date().toISOString() };
+    n++;
+  }
+  writeAll(data);
+  return n;
 }

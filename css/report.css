@@ -1,0 +1,27 @@
+/* 學生自己的學習報告（me.html），列印時只印這一段 */
+.rp-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.rp-tile { padding: 10px 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); display: grid; gap: 2px; }
+.rp-tile small { color: var(--ink-2); }
+.rp-tile b { font-size: 22px; }
+.rp-tile span { color: var(--ink-2); font-size: 13px; }
+.rp-dist.days { display: grid; grid-template-columns: repeat(30, 1fr); gap: 2px; height: 110px; align-items: end; margin-top: 8px; }
+.rp-dist.days .rp-col { display: grid; grid-template-rows: 1fr auto auto; height: 100%; align-items: end; justify-items: center; }
+.rp-dist.days .rp-bar { display: block; width: 100%; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 1px; }
+.rp-dist.days i { font-style: normal; font-size: 9px; color: var(--ink-2); }
+.rp-dist.days small { font-size: 9px; color: var(--ink-2); }
+.rp-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 6px; }
+.rp-table th, .rp-table td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.rp-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.rp-table tr.muted td { color: var(--ink-2); }
+.rp-stars { color: #ffc940; letter-spacing: 1px; }
+.rp-names { display: flex; flex-wrap: wrap; gap: 6px; }
+.rp-names span { padding: 4px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 700; }
+.rp-names small { font-weight: 400; color: var(--ink-2); margin-left: 4px; }
+.rp-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 700px) { .rp-two { grid-template-columns: 1fr; } }
+@media print {
+  body > .page > *:not(#report) { display: none !important; }
+  #report { border: 0; box-shadow: none; padding: 0; }
+  #print, .fb-btn { display: none !important; }
+  .rp-dist.days .rp-bar { background: #555; }
+}

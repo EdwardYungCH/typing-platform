@@ -21,7 +21,7 @@ async function boot() {
   me = st.user;
   if (st.setupNeeded) return renderSetup();
   if (!me) return renderLogin();
-  $('who').textContent = `${me.name}（${me.username}）`;
+  $('who').textContent = `${me.name}（${me.username}）${me.role === 'admin' ? '・管理員' : ''}`;
   $('logout').hidden = false;
   $('logout').onclick = async () => { await api('/api/teacher/logout', { method: 'POST', body: {} }); location.reload(); };
   classes = (await api('/api/teacher/classes')).classes;
@@ -65,12 +65,18 @@ function renderMain() {
         <p class="hint">貼一段文章或一批字，學生在「練習區」的「老師出的練習」就會看到。</p>
         <div class="form-actions"><button class="btn" id="practice" type="button">管理自訂練習</button></div>
       </section>
-      <section class="card"><h2>備份</h2>
+      <section class="card"><h2>問題回報 <span class="badge-n" id="fb-n" hidden></span></h2>
+        <p class="hint">學生按網站右下角「回報問題」送來的訊息。</p>
+        <div class="form-actions"><button class="btn" id="feedback" type="button">查看回報</button></div>
+      </section>
+      ${me.role === 'admin' ? `<section class="card"><h2>備份</h2>
         <p class="hint" id="bk-status">載入中…</p>
         <div class="form-actions"><a class="btn" id="bk-dl" href="/api/teacher/backup" download>下載備份</a><button class="btn" id="bk-restore" type="button">還原備份</button></div>
-      </section>
+        <div id="bk-cloud"></div>
+      </section>` : ''}
       <section class="card"><h2>帳戶</h2>
-        <div class="form-actions"><button class="btn" id="addteacher" type="button">新增教師</button><button class="btn" id="mypw" type="button">改密碼</button></div>
+        <div class="form-actions">${me.role === 'admin' ? '<button class="btn" id="teachers" type="button">管理教師</button>' : ''}<button class="btn" id="mypw" type="button">改密碼</button></div>
+        ${me.role === 'admin' ? '' : '<p class="hint">你只會看到自己的班級。要轉班或新增老師，請找管理員。</p>'}
       </section>
     </aside>
     <section class="t-main" id="main"></section></div>
@@ -81,14 +87,13 @@ function renderMain() {
     try { const r = await api('/api/teacher/classes', { method: 'POST', body: { name: $('cname').value, year: $('cyear').value } }); classes = (await api('/api/teacher/classes')).classes; current = classes.find((c) => c.id === r.id); renderMain(); }
     catch (err) { msg($('cmsg'), err.message); }
   };
-  $('addteacher').onclick = () => dialog(`<h2>新增教師</h2><form id="df"><div class="field"><label>帳號</label><input id="u" required></div><div class="field"><label>姓名</label><input id="n" required></div><div class="field"><label>密碼（至少 8 個字元）</label><input id="p" type="password" required minlength="8"></div><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">新增</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
-    async () => { await api('/api/teacher/add', { method: 'POST', body: { username: $('u').value, name: $('n').value, password: $('p').value } }); return '已新增。'; });
+  $('teachers')?.addEventListener('click', teachersDialog);
+  $('feedback').onclick = feedbackDialog;
+  feedbackCount();
   $('mypw').onclick = () => dialog(`<h2>更改我的密碼</h2><form id="df"><div class="field"><label>舊密碼</label><input id="o" type="password" required></div><div class="field"><label>新密碼（至少 8 個字元）</label><input id="p" type="password" required minlength="8"></div><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">更改</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
     async () => { await api('/api/teacher/password', { method: 'POST', body: { old: $('o').value, password: $('p').value } }); return '已更改。'; });
   $('practice').onclick = practiceDialog;
-  backupStatus();
-  $('bk-dl').addEventListener('click', () => setTimeout(backupStatus, 2500));
-  $('bk-restore').onclick = restoreDialog;
+  if (me.role === 'admin') { backupStatus(); $('bk-dl').addEventListener('click', () => setTimeout(backupStatus, 2500)); $('bk-restore').onclick = restoreDialog; }
   renderClass();
 }
 
@@ -98,7 +103,22 @@ async function backupStatus() {
     const days = r.lastBackup ? Math.floor((Date.now() - new Date(r.lastBackup)) / 86400000) : null;
     const when = r.lastBackup ? (days === 0 ? '今日' : `${days} 日前`) : '從未下載';
     $('bk-status').innerHTML = `上次下載備份：<b${days === null || days > 7 ? ' style="color:var(--bad)"' : ''}>${when}</b>。現有 ${r.counts.classes} 班、${r.counts.students} 個學生、${r.counts.test_attempts} 次評測。<br>建議每星期下載一次，存在學校的雲端硬碟。備份檔包括密碼資料，不要公開分享。`;
+    cloudBackups(r);
   } catch { $('bk-status').textContent = '未能讀取備份狀態。'; }
+}
+
+/** R2 雲端自動備份：列出最近的檔、可下載、可立即備份 */
+async function cloudBackups(status) {
+  const box = $('bk-cloud');
+  if (!status.r2) { box.innerHTML = '<p class="hint" style="margin-top:8px">雲端自動備份（每星期日早上）尚未啟用：在 Cloudflare 建立 R2 儲存桶 <code>typing-backups</code>，再打開 wrangler.jsonc 內的 r2_buckets 設定。</p>'; return; }
+  try {
+    const r = await api('/api/teacher/backup/cloud');
+    const auto = status.lastAutoBackup ? new Date(status.lastAutoBackup).toLocaleString('zh-HK', { hour12: false }) : '尚未';
+    box.innerHTML = `<h3 style="margin:12px 0 4px">雲端自動備份</h3><p class="hint">每星期日早上自動備份到 Cloudflare R2，保留最近 12 份。上次自動備份：${auto}。</p>
+      <div class="form-actions"><button class="btn" id="bk-now" type="button">立即雲端備份</button></div>
+      ${r.files.length ? `<ul class="mini" style="margin:6px 0 0;padding-left:18px">${r.files.slice(0, 12).map((f) => `<li><a href="/api/teacher/backup/cloud/${f.key}" download>${f.key}</a> <span class="muted">${Math.round(f.size / 1024)} KB</span></li>`).join('')}</ul>` : '<p class="muted">還沒有雲端備份。</p>'}`;
+    $('bk-now').onclick = async () => { $('bk-now').disabled = true; try { await api('/api/teacher/backup/cloud', { method: 'POST', body: {} }); alert('已備份到雲端'); backupStatus(); } catch (e) { alert(e.message); } $('bk-now').disabled = false; };
+  } catch (e) { box.innerHTML = `<p class="hint">${e.message}</p>`; }
 }
 
 function restoreDialog() {
@@ -246,7 +266,7 @@ async function renderClass() {
     }).join('');
     const last = sm?.lastActive ? new Date(sm.lastActive).toLocaleDateString('zh-HK') : '—';
     return `<tr data-id="${s.id}" data-sid="${html(s.sid)}" data-name="${html(s.name)}">
-      <td class="num">${s.class_no ?? ''}</td><td>${html(s.sid)}</td><td>${html(s.name)}</td>
+      <td class="num">${s.class_no ?? ''}</td><td>${html(s.sid)}</td><td><a href="student.html?id=${s.id}" title="看這位學生的詳細紀錄">${html(s.name)}</a></td>
       <td class="mini">${s.pw_initial ? '初始' : '已自改'}</td>
       <td class="num">${sm?.en.lessons ?? 0}</td><td class="num">${sm?.en.stars ?? 0}</td><td class="num">${Math.round(sm?.en.bestWpm ?? 0)}</td>
       <td class="num">${sm?.zh.lessons ?? 0}</td><td class="num">${sm?.zh.stars ?? 0}</td><td class="num">${Math.round(sm?.zh.bestWpm ?? 0)}</td>
@@ -260,10 +280,11 @@ async function renderClass() {
       <button class="btn" id="slips">列印帳號紙條</button><button class="btn" id="classpw">全班統一密碼</button>
       <a class="btn" href="../api/teacher/classes/${current.id}/export.csv">匯出 CSV</a>
       <button class="btn" id="refresh">重新整理</button>
+      ${me.role === 'admin' ? '<button class="btn" id="owner">轉班</button>' : ''}
       ${students.length ? '' : `<button class="btn" id="delclass">刪除班級</button>`}
     </div>
-    <div class="t-tabs" role="tablist"><button class="btn ${view === 'list' ? 'primary' : ''}" data-view="list" type="button">學生名單</button><button class="btn ${view === 'report' ? 'primary' : ''}" data-view="report" type="button">全班報告</button></div>
-    ${view === 'report' ? classReport(students) : `<div class="tbl-wrap"><table class="tbl"><thead><tr>
+    <div class="t-tabs" role="tablist"><button class="btn ${view === 'list' ? 'primary' : ''}" data-view="list" type="button">學生名單</button><button class="btn ${view === 'report' ? 'primary' : ''}" data-view="report" type="button">全班報告</button><button class="btn ${view === 'hw' ? 'primary' : ''}" data-view="hw" type="button">功課</button></div>
+    ${view === 'report' ? classReport(students) : view === 'hw' ? '<div id="hw"><p class="muted">載入中…</p></div>' : `<div class="tbl-wrap"><table class="tbl"><thead><tr>
       <th>班號</th><th>學號</th><th>姓名</th><th>密碼</th>
       <th title="英文完成課數">英課</th><th>英星</th><th>英WPM</th><th title="中文完成課數">中課</th><th>中星</th><th>中字/分</th><th>分鐘</th><th>最後活動</th>
       ${TESTS.map(([, l]) => `<th>${l}</th>`).join('')}<th></th></tr></thead>
@@ -271,11 +292,17 @@ async function renderClass() {
     <p class="hint">評測格：速度 準確率 星級；⚠ 表示伺服器重計時發現可疑（把滑鼠移上去看原因）。所有評測成績都由伺服器按按鍵紀錄重新計算。</p>`}
   </section>`;
   main.querySelectorAll('[data-view]').forEach((b) => b.onclick = () => { view = b.dataset.view; renderClass(); });
+  if (view === 'hw') renderHomework(students);
   $('import').onclick = importDialog;
   $('slips').onclick = printSlips;
   $('classpw').onclick = () => dialog(`<h2>${html(current.name)} 全班改用同一個密碼</h2><form id="df"><div class="field"><label>新密碼（4–64 個字元）</label><input id="cp" required minlength="4" autocomplete="off"></div><p class="hint">全班學生的舊密碼會失效，已登入的裝置會被登出。</p><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">更改</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
     async () => { const r = await api(`/api/teacher/classes/${current.id}/password`, { method: 'POST', body: { password: $('cp').value.trim() } }); try { localStorage.setItem('teacher.commonPw', $('cp').value.trim()); } catch {} renderClass(); return `已更改 ${r.count} 人。`; });
   $('refresh').onclick = renderClass;
+  $('owner')?.addEventListener('click', async () => {
+    const { teachers } = await api('/api/teacher/teachers');
+    dialog(`<h2>把 ${html(current.name)} 轉給另一位老師</h2><form id="df"><div class="field"><label>老師</label><select id="t">${teachers.map((t) => `<option value="${t.id}" ${t.id === current.teacher_id ? 'selected' : ''}>${html(t.name)}（${html(t.username)}）</option>`).join('')}</select></div><p class="form-msg" id="m"></p><div class="form-actions"><button class="btn primary">轉班</button><button class="btn ghost" type="button" id="close">取消</button></div></form>`,
+      async () => { await api(`/api/teacher/classes/${current.id}/owner`, { method: 'POST', body: { teacherId: Number($('t').value) } }); setTimeout(() => location.reload(), 600); return '已轉班。'; });
+  });
   $('delclass')?.addEventListener('click', async () => { if (confirm('刪除這個班級？')) { await api(`/api/teacher/classes/${current.id}`, { method: 'DELETE' }); location.hash = ''; location.reload(); } });
   main.querySelectorAll('button[data-act]').forEach((b) => b.onclick = () => studentAction(b.dataset.act, b.closest('tr').dataset));
 }
@@ -317,7 +344,7 @@ function importDialog() {
   dialog(`<h2>匯入學生到 ${html(current.name)}</h2>
     <p class="hint">每行一個學生：<b>學號 姓名</b>（可加班號在最前或最後；用空格、逗號或 Tab 分隔，從 Excel 直接複製貼上也可以）。學號會成為登入帳號。</p>
     <form id="df" class="import-box"><div class="field"><textarea id="rows" placeholder="1 s27001 陳大文\n2 s27002 李小明"></textarea></div>
-    <div class="field"><label>或選擇 CSV 檔</label><input type="file" id="file" accept=".csv,.txt"></div>
+    <div class="field"><label>或選擇 CSV 檔</label><input type="file" id="file" accept=".csv,.txt">　<a href="student-template.csv" download class="hint">下載 Excel 範本（CSV）</a></div>
     <div class="field"><label>密碼</label>
       <label class="check"><input type="radio" name="pwmode" value="common" checked> 全部用同一個密碼</label>
       <input id="cpw" autocomplete="off" placeholder="例如 sphrc2027（4–64 個字元）">
@@ -354,3 +381,89 @@ async function printSlips() {
 }
 
 boot().catch((e) => { app.innerHTML = `<p class="form-msg">${html(e.message)}</p>`; });
+
+
+// ---------- 功課指派 ----------
+const LESSON_NAMES = { en: {}, zh: {} };
+async function lessonNames() {
+  if (Object.keys(LESSON_NAMES.en).length) return LESSON_NAMES;
+  for (const lang of ['en', 'zh']) {
+    const d = await fetch(`../data/${lang}-lessons.json`).then((r) => r.json());
+    for (const l of d.lessons) LESSON_NAMES[lang][l.id] = l.title;
+  }
+  return LESSON_NAMES;
+}
+async function renderHomework(students) {
+  const names = await lessonNames();
+  const { assignments } = await api(`/api/teacher/classes/${current.id}/assignments`);
+  const byId = Object.fromEntries(students.map((s) => [s.id, s]));
+  const today = new Date().toISOString().slice(0, 10);
+  const rows = assignments.map((a) => {
+    const notDone = students.filter((s) => !a.doneBy.includes(s.id));
+    const late = a.due && a.due < today;
+    return `<tr><td>${a.lang === 'en' ? '英' : '中'} 第 ${a.lesson_id} 課</td><td>${html(names[a.lang][a.lesson_id] ?? '')}${a.note ? `<br><small class="muted">${html(a.note)}</small>` : ''}</td>
+      <td class="mini">${a.due ? `${a.due}${late ? ' <span class="warn">已過期</span>' : ''}` : '—'}</td>
+      <td class="num">${a.doneBy.length} / ${students.length}</td>
+      <td class="mini">${notDone.length ? notDone.slice(0, 12).map((s) => `${s.class_no ?? ''} ${html(s.name)}`).join('、') + (notDone.length > 12 ? `…等 ${notDone.length} 人` : '') : '<span style="color:var(--ok)">全部完成</span>'}</td>
+      <td class="act"><button class="btn" data-del="${a.id}">刪除</button></td></tr>`;
+  }).join('');
+  const opts = (lang) => Object.entries(names[lang]).map(([id, t]) => `<option value="${id}">第 ${id} 課：${html(t)}</option>`).join('');
+  $('hw').innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>功課</th><th>課題</th><th>截止</th><th>完成</th><th>未完成</th><th></th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="6" class="muted">還沒有功課。</td></tr>'}</tbody></table></div>
+    <h3 style="margin:14px 0 6px">新增功課</h3>
+    <form class="inline-form" id="hwf">
+      <div class="field"><label>語言</label><select id="hl"><option value="zh">中文速成</option><option value="en">英文</option></select></div>
+      <div class="field" style="flex:2 1 240px"><label>課</label><select id="hs">${opts('zh')}</select></div>
+      <div class="field"><label>截止日</label><input type="date" id="hd"></div>
+      <div class="field" style="flex:2 1 200px"><label>備註（學生會看到）</label><input id="hn" maxlength="200" placeholder="例如：下星期一前完成"></div>
+      <button class="btn primary" type="submit">指派</button></form><p class="form-msg" id="hwm"></p>
+    <p class="hint">學生登入後，首頁會見到「老師功課」；完成該課的過關小測就算做完。</p>`;
+  $('hl').onchange = () => { $('hs').innerHTML = opts($('hl').value); };
+  $('hwf').onsubmit = async (e) => {
+    e.preventDefault();
+    try { await api(`/api/teacher/classes/${current.id}/assignments`, { method: 'POST', body: { lang: $('hl').value, lessonId: Number($('hs').value), due: $('hd').value, note: $('hn').value } }); renderHomework(students); }
+    catch (err) { msg($('hwm'), err.message); }
+  };
+  $('hw').querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => { if (confirm('刪除這份功課？')) { await api(`/api/teacher/assignments/${b.dataset.del}`, { method: 'DELETE' }); renderHomework(students); } });
+}
+
+// ---------- 問題回報 ----------
+async function feedbackCount() {
+  try {
+    const { feedback } = await api('/api/teacher/feedback');
+    const n = feedback.filter((f) => !f.resolved).length;
+    $('fb-n').hidden = !n; $('fb-n').textContent = n;
+  } catch { /* ignore */ }
+}
+async function feedbackDialog() {
+  const { feedback } = await api('/api/teacher/feedback');
+  dialog(`<h2>問題回報</h2><div class="result-list">${feedback.length ? `<table class="tbl"><thead><tr><th>時間</th><th>學生</th><th>頁面</th><th>內容</th><th></th></tr></thead><tbody>
+    ${feedback.map((f) => `<tr class="${f.resolved ? 'muted' : ''}"><td class="mini">${new Date(f.created_at + 'Z').toLocaleString('zh-HK', { hour12: false })}</td>
+      <td class="mini">${f.sid ? `${html(f.class_name ?? '')} ${html(f.name)}` : '未登入'}</td><td class="mini">${html(f.page)}</td>
+      <td style="white-space:normal;max-width:360px">${html(f.message)}<br><small class="muted">${html((f.ua ?? '').replace(/^Mozilla\/5\.0 /, '').slice(0, 80))}</small></td>
+      <td class="act">${f.resolved ? '已處理' : `<button class="btn" data-ok="${f.id}">已處理</button>`}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">還沒有回報。</p>'}</div>
+    <div class="form-actions"><button class="btn primary" id="close" type="button">關閉</button></div>`);
+  $('dlg').querySelectorAll('[data-ok]').forEach((b) => b.onclick = async () => { await api(`/api/teacher/feedback/${b.dataset.ok}/resolve`, { method: 'POST', body: {} }); feedbackCount(); feedbackDialog(); });
+}
+
+// ---------- 管理教師（管理員）----------
+async function teachersDialog() {
+  const { teachers } = await api('/api/teacher/teachers');
+  dialog(`<h2>管理教師</h2><div class="result-list"><table class="tbl"><thead><tr><th>帳號</th><th>姓名</th><th>身份</th><th>班級</th><th></th></tr></thead><tbody>
+    ${teachers.map((t) => `<tr data-id="${t.id}"><td>${html(t.username)}</td><td>${html(t.name)}</td>
+      <td><select data-role="${t.id}" ${t.id === me.id ? 'disabled' : ''}><option value="teacher" ${t.role !== 'admin' ? 'selected' : ''}>老師</option><option value="admin" ${t.role === 'admin' ? 'selected' : ''}>管理員</option></select></td>
+      <td class="num">${t.classes}</td>
+      <td class="act"><button class="btn" data-pw="${t.id}">重設密碼</button><button class="btn" data-del="${t.id}">刪除</button></td></tr>`).join('')}</tbody></table></div>
+    <h3 style="margin:14px 0 6px">新增教師</h3>
+    <form id="df" class="inline-form"><div class="field"><label>帳號</label><input id="u" required></div><div class="field"><label>姓名</label><input id="n" required></div>
+      <div class="field"><label>密碼（至少 8 個字元）</label><input id="p" type="password" required minlength="8"></div>
+      <div class="field"><label>身份</label><select id="r"><option value="teacher">老師（只看自己的班）</option><option value="admin">管理員</option></select></div>
+      <button class="btn primary">新增</button></form><p class="form-msg" id="m"></p>
+    <p class="hint">老師只看到自己建立的班級；管理員看全部，並可以備份、還原、轉班。要把班級轉給另一位老師，在班級頁的「轉班」做。</p>
+    <div class="form-actions"><button class="btn ghost" id="close" type="button">關閉</button></div>`,
+    async () => { await api('/api/teacher/add', { method: 'POST', body: { username: $('u').value, name: $('n').value, password: $('p').value, role: $('r').value } }); $('dlg').dataset.keep = '1'; setTimeout(teachersDialog, 800); return '已新增。'; });
+  const d = $('dlg');
+  d.querySelectorAll('[data-role]').forEach((sel) => sel.onchange = async () => { try { await api(`/api/teacher/teachers/${sel.dataset.role}/role`, { method: 'POST', body: { role: sel.value } }); } catch (e) { alert(e.message); teachersDialog(); } });
+  d.querySelectorAll('[data-pw]').forEach((b) => b.onclick = async () => { const pw = prompt('新密碼（至少 8 個字元）：'); if (!pw) return; try { await api(`/api/teacher/teachers/${b.dataset.pw}/reset`, { method: 'POST', body: { password: pw } }); alert('已重設。'); } catch (e) { alert(e.message); } });
+  d.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => { if (!confirm('刪除這位老師？')) return; try { await api(`/api/teacher/teachers/${b.dataset.del}`, { method: 'DELETE' }); teachersDialog(); } catch (e) { alert(e.message); } });
+}

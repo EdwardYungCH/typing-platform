@@ -59,3 +59,16 @@ dialog.t-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 .rp-names { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 14px; }
 .rp-names small { color: var(--ink-2); margin-left: 3px; }
 @media print { .rp-grid section { break-inside: avoid; } }
+.badge-n { display:inline-grid; place-items:center; min-width:20px; height:20px; padding:0 6px; border-radius:10px; background:var(--bad); color:#fff; font-size:12px; vertical-align:middle; }
+/* 學生詳細頁 */
+.stp { display: inline-block; margin: 2px 4px 2px 0; padding: 2px 8px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); font-size: 12px; white-space: nowrap; }
+.stp.low { border-color: var(--bad); color: var(--bad); }
+.rp-dist.days { grid-template-columns: repeat(30, 1fr); gap: 2px; }
+.rp-dist.days small { font-size: 9px; }
+.tbl a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+@media print {
+  body > .page { display: block !important; }
+  .topbar .btn, #back, #print, #replay { display: none !important; }
+  .card { break-inside: avoid; border: 1px solid #999; background: #fff; color: #000; }
+  .rp-bar { background: #456 !important; }
+}

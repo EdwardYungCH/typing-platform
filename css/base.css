@@ -204,3 +204,15 @@ a { color: var(--accent); }
 .glyph .g-last { fill: var(--code-last); }
 .c-first { color: var(--code-first); }
 .c-last { color: var(--code-last); }
+
+/* 回報問題按鈕（每頁右下角） */
+.fb-btn { position: fixed; right: 14px; bottom: 14px; z-index: 50; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: inherit; font-size: 13px; cursor: pointer; opacity: 0.75; }
+.fb-btn:hover, .fb-btn:focus-visible { opacity: 1; color: var(--ink); }
+.fb-dlg { border: 1px solid var(--line); border-radius: 16px; padding: 20px; background: var(--surface); color: var(--ink); width: min(480px, calc(100% - 32px)); }
+.fb-dlg::backdrop { background: rgb(0 0 0 / 0.5); }
+.fb-dlg h3 { margin: 0 0 6px; }
+.fb-dlg textarea { width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); padding: 8px 10px; font: inherit; }
+/* 鍵盤焦點：所有可按的東西都看得到焦點 */
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+@media print { .fb-btn { display: none; } }

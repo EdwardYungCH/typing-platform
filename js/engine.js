@@ -72,6 +72,7 @@ export class TypingEngine {
   handleKey(e) {
     if (this.finished || this.paused) return;
     if (!e.isTrusted) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName) || e.target?.closest?.('dialog')) return;   // 在表單或對話框（例如回報問題）打字不算作答
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.isComposing || e.key === 'Process') return;
 

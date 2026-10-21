@@ -180,7 +180,7 @@ function run(unit, quiz, all) {
   // 真實按鍵：只在「做」的題目、未答對時處理；一律 preventDefault，免得 Ctrl＋S、Ctrl＋P 等觸發瀏覽器功能
   const onKey = (e) => {
     const q = queue[pos];
-    if (!q) return;
+    if (!q || e.target?.closest?.('dialog')) return;
     if (locked) { if (e.key === 'Enter') { e.preventDefault(); next(); } return; }
     if (q.kind === 'choose') { if (/^[1-4]$/.test(e.key)) { e.preventDefault(); $('body').querySelectorAll('.sc-opt')[Number(e.key) - 1]?.click(); } return; }
     if (isModifierCode(e.code) || e.repeat) return;
