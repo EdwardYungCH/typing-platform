@@ -37,6 +37,9 @@ export function balance() { return Math.max(0, earned() - spent()); }
 export function owned(id) { return W().items.includes(id); }
 export function equipped() { return W().equip ?? {}; }
 
+/** 技能（買了就一直生效） */
+export function hasSkill(id) { return owned(id); }
+
 /** 買貨品：餘額夠就扣星、記下、並自動裝上 */
 export function buy(item) {
   const w = W();
@@ -44,7 +47,7 @@ export function buy(item) {
   if (balance() < item.price) return { ok: false, msg: `星星不夠：還差 ${item.price - balance()} 粒` };
   w.spent = (w.spent ?? 0) + item.price;
   w.items.push(item.id);
-  w.equip[item.kind] = item.id;
+  if (item.kind !== 'skill') w.equip[item.kind] = item.id;
   save(w);
   return { ok: true };
 }

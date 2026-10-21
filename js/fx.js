@@ -37,6 +37,7 @@ export class Fx {
 
   /** 每次按鍵後呼叫。 */
   key(ok) {
+    this.battle?.key(ok);   // 戰鬥層：打對＝攻擊，打錯＝被反擊
     if (this.playSound) (ok ? sfx.key() : sfx.error());
     if (!ok) { this.reset(); return; }
     this.combo += 1;

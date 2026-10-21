@@ -19,8 +19,9 @@ import * as mastery from './mastery.js';
 import { buildDaily, dailyProgress } from './daily.js';
 import { start as syncStart } from './sync.js';
 import { api } from './api.js';
-import { loadShop, petHtml, applyKeyboardSkin, grantBonus, balance } from './wallet.js';
+import { loadShop, petHtml, applyKeyboardSkin, grantBonus, balance, hasSkill } from './wallet.js';
 import { awardStreak } from './streak.js';
+import { Battle } from './battle.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -114,6 +115,7 @@ async function init() {
   state.petId = pet.getChoice(state.world);
   state.shop = await loadShop();
   applyKeyboardSkin(state.shop);   // 商店買的鍵盤皮膚
+  state.skillHint = hasSkill('sk-hint');   // 技能：提示術（錯一次就提示）
   const showFingers = store.getSetting('showFingers', CONFIG.defaults.showFingers);
   state.kb = new VirtualKeyboard($('keyboard'), { showFingers });
   state.hands = new Hands($('hands'));
@@ -142,6 +144,14 @@ function setupFx() {
   setSoundEnabled(sound);
   $('stage').classList.add('fx-host');
   state.fx = new Fx({ host: $('stage'), pet: $('pet-top'), level, sound });
+  // 戰鬥層：正式評測（評測塔）不用
+  if (!TEST) {
+    const c = state.petId ? state.petData.companions.find((x) => x.id === state.petId) : null;
+    state.battle = new Battle({ host: $('battle'), world: state.world, petSrc: c ? pet.art(state.world, c.id, currentStage()) : null, petName: c ? `${pet.nickOf(state.world, c)} Lv${pet.summary(lang).lessons}` : '你', shield: hasSkill('sk-shield'),
+      petHtml: (src) => petHtml(src, c?.name ?? '', { cls: 'companion', size: 96, items: state.shop }) });
+    state.battle.onDown = () => runStep(state.stepIndex);
+    state.fx.battle = state.battle;
+  }
   const names = ['關', '輕', '全'];
   const paint = () => {
     $('toggle-fx').textContent = `特效：${names[state.fx.level]}`;
@@ -190,7 +200,7 @@ function renderSteps() {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'step-pill';
-    b.textContent = `${i + 1}. ${s.title}`;
+    b.textContent = s.type === 'test' ? `${i + 1}. BOSS ${s.title}` : `${i + 1}. ${s.title}`;
     const rec = store.getStepResults(lang, lessonId)[i + 1]?.latest;
     if (rec && rec.accuracy !== null) {
       const sc = document.createElement('small');
@@ -247,8 +257,15 @@ function runStep(i) {
   const focus = step.type === 'test';
   state.fx.setFocus(focus);
   document.body.classList.toggle('focus-mode', focus);
+  state.battle?.stop();
   if (step.type === 'guide') runGuide(step);
   else runTyping(step);
+}
+
+/** 開始這一步的戰鬥：total＝要打的字數（或題數） */
+function startBattle(step, total) {
+  if (!state.battle || state.lesson.test) return;
+  state.battle.start({ total, boss: step.type === 'test', index: state.stepIndex + (lessonId > 0 ? lessonId : 0) });
 }
 
 // ---------- 導覽（第 0 課）----------
@@ -448,6 +465,7 @@ function runTyping(step) {
   paint(spans, engine);
   singleCard?.(engine);
   engine.attach();
+  startBattle(step, text.length);
 }
 
 // ---------- 真實輸入法模式：學生用系統的微軟速成打字，網站只收打出的字 ----------
@@ -546,6 +564,7 @@ async function runSplit(step) {
   state.engine = engine;
   renderPair(engine, step, isTest, false);
   engine.attach();
+  startBattle(step, text.length);
 }
 
 function rootTag(k) {
@@ -615,7 +634,7 @@ function renderPair(eng, step, isTest, wrongNow) {
     $('pair-side').innerHTML = eng.awaitEnter ? prevHtml(ch, '這一題') : prevBox;
     $('pair-prev').innerHTML = '';
   }
-  showNextKey(eng.awaitEnter ? 'Enter' : eng.misses >= (lessHints ? 3 : 2) && !isTest ? eng.nextKey() : null);
+  showNextKey(eng.awaitEnter ? 'Enter' : eng.misses >= (lessHints ? 3 : 2) - (state.skillHint ? 1 : 0) && !isTest ? eng.nextKey() : null);
 }
 
 function prevHtml(ch, title = '上一題') {
@@ -691,6 +710,7 @@ function runQuick(step) {
   paint(spans, engine);
   renderIme(engine, isTest, false);
   engine.attach();
+  startBattle(step, text.length);
 }
 
 /** 老師自訂練習：由伺服器取內容，做成一份練習（不計星，可再來一組） */
@@ -819,7 +839,7 @@ function paint(spans, eng) {
   const cur = spans[eng.pos];
   if (cur) keepInView(cur);
   // 拆字模式：學生要自己拆，打錯兩次才亮出下一個鍵
-  const hide = eng.pick === false && (state.hideNext || eng.misses < 2);
+  const hide = eng.pick === false && (state.hideNext || eng.misses < (state.skillHint ? 1 : 2));
   showNextKey(eng.nextKey ? (hide ? null : eng.nextKey()) : eng.text[eng.pos]);
   $('m-progress').style.width = `${(eng.pos / eng.text.length) * 100}%`;
 }
@@ -907,6 +927,7 @@ function clock(sec) {
 // ---------- 完成步驟 ----------
 
 async function onTypingDone(step, eng) {
+  state.battle?.win();
   const stats = statsOf(eng);
   const typingTotal = store.addTypingTime(stats.seconds);
   let stars = null;
@@ -1044,7 +1065,7 @@ function finishStep({ stats, stars, step, rest, guide }) {
       actions.push(['再練一次', () => runStep(state.stepIndex), false]);
     }
     let bonus = 0;
-    if (isLast) bonus += grantBonus(`daily:${lang}:${new Date().toLocaleDateString('sv')}`, 1, '每日任務') ? 1 : 0;
+    if (isLast) { const n = hasSkill('sk-coin') ? 2 : 1; bonus += grantBonus(`daily:${lang}:${new Date().toLocaleDateString('sv')}`, n, '每日任務') ? n : 0; }
     bonus += awardStreak();
     showPanel({ title: isLast ? '今日任務完成！' : '做得好！', stars: null, stats: statsList, actions, earned: bonus, celebrate: isLast,
       msg: isLast ? `連續 ${dp.streak} 天完成每日任務。明天再來，字根和字會按你的掌握度安排重溫。` : `已完成 ${dp.done.length}／3 部分。` });

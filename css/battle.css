@@ -1,0 +1,31 @@
+/* 戰鬥層（打字頁上方）：夥伴 vs 怪物 */
+.battle { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: end; margin: 0 0 10px; padding: 4px 18px 0; min-height: 120px; }
+.battle[hidden] { display: none; }
+.bt-side { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bt-side.pet .pet-wrap { --pet: 80px; }
+.bt-side .companion { width: 80px; height: 80px; }
+.bt-nopet { width: 96px; height: 96px; }
+.bt-mon { width: 90px; height: 108px; filter: drop-shadow(0 6px 0 rgb(0 0 0 / 0.18)); }
+.bt-mon.boss { width: 112px; height: 134px; }
+.bt-bar { width: 220px; max-width: 100%; padding: 6px 10px; font-size: 13px; }
+.bt-row { display: flex; justify-content: space-between; font-weight: 700; }
+.bt-hp { height: 12px; border: 2px solid #fff; border-radius: 999px; background: rgb(0 0 0 / 0.35); overflow: hidden; margin-top: 4px; }
+.bt-hp i { display: block; height: 100%; transition: width 0.15s ease-out, background 0.3s; }
+.bt-mid { display: grid; justify-items: center; align-content: end; gap: 6px; min-width: 120px; padding-bottom: 40px; }
+.bt-vs { font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 26px; color: var(--win-dark); text-shadow: 0 2px 0 #fff; letter-spacing: 0.08em; }
+.bt-say { background: #fff; border: 3px solid var(--win); border-radius: 10px; padding: 4px 12px; font-weight: 800; white-space: nowrap; box-shadow: 0 3px 0 rgb(0 0 0 / 0.18); }
+.bt-float { position: absolute; left: 50%; top: 10px; font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 22px; color: #fff; text-shadow: 0 2px 0 var(--win-dark), 0 0 4px var(--win-dark); animation: bt-float 0.7s ease-out forwards; pointer-events: none; }
+.bt-float.bad { color: #ff8a9a; }
+@keyframes bt-float { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -40px); opacity: 0; } }
+.lunge { animation: bt-lunge 0.3s ease-out; }
+@keyframes bt-lunge { 30% { transform: translateX(26px) scale(1.06); } 100% { transform: none; } }
+.attack { animation: bt-attack 0.35s ease-out; }
+@keyframes bt-attack { 30% { transform: translateX(-26px) scale(1.06); } 100% { transform: none; } }
+.hurt { animation: bt-hurt 0.35s ease-out; }
+@keyframes bt-hurt { 0% { filter: brightness(2); transform: translateX(0); } 30% { transform: translateX(-6px); } 60% { transform: translateX(6px); } 100% { transform: none; } }
+.bt-mon.defeated { animation: bt-defeat 0.8s ease-in forwards; }
+@keyframes bt-defeat { 50% { transform: rotate(10deg) translateY(6px); opacity: 1; } 100% { transform: rotate(90deg) translateY(40px); opacity: 0; } }
+.bt-side.down .companion, .bt-side.down .pet-wrap { transform: rotate(-80deg) translateY(10px); opacity: 0.6; transition: transform 0.5s, opacity 0.5s; }
+.focus-mode .battle { display: none; }
+@media (max-width: 700px) { .battle { grid-template-columns: 1fr 1fr; } .bt-mid { display: none; } .bt-bar { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .lunge, .attack, .hurt, .bt-mon.defeated, .bt-float { animation: none; } }
