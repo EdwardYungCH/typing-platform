@@ -13,7 +13,7 @@
 .pr-weak { margin-top: 16px; padding: 16px 18px; }
 .pr-weak h2 { margin: 0 0 6px; font-size: 18px; }
 .weak-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.weak-list span { padding: 4px 10px; border-radius: 999px; background: var(--bad-bg); color: var(--bad); font-weight: 700; }
+.weak-list span { padding: 4px 10px; border-radius: 4px; background: var(--bad-bg); color: var(--bad); font-weight: 700; }
 .weak-list span small { color: var(--ink-2); font-weight: 400; margin-left: 4px; }
 
 /* 老師出的練習 */

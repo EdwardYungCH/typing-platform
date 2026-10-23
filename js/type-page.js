@@ -1189,7 +1189,7 @@ function showPanel({ title, msg, stars, stats, actions, celebrate = false, earne
 function confetti(host) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   host.querySelectorAll('.confetti').forEach((x) => x.remove());
-  const colors = ['#ffd23c', '#5b9bff', '#ff7eb6', '#6ee795', '#ffae66', '#c4a6ff'];
+  const colors = [getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0b6e5f', '#c98a00', '#17202a', '#1f5fbf', '#b85c12'];
   for (let i = 0; i < 60; i++) {
     const p = document.createElement('i');
     p.className = 'confetti';

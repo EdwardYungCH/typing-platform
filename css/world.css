@@ -1,92 +1,90 @@
-/* 兩個世界的外觀：英文＝鍵帽星系（planet），中文＝字根魔法學院（magic）。
-   放在 base.css 之後載入，只覆寫顏色和裝飾，版面不變。 */
+/* 全站視覺系統「練習簿」：淺色紙面、墨藍字、每個世界一個強調色、以留白和字級分層，不靠邊框、漸變和發光。
+   英文（planet）：墨綠強調；中文（magic）：印章紅強調。放在 base.css 之後載入，覆寫顏色和元件外觀。 */
 
 :root[data-world] {
-  color-scheme: dark;
-  --ink: #eef1ff;
-  --ink-2: #b7bfe6;
-  --ink-3: #8089b8;
-  --ok: #5be08a;
-  --ok-bg: rgb(91 224 138 / 0.16);
-  --bad: #ff7d8a;
-  --bad-bg: rgb(255 125 138 / 0.16);
-  --star: #ffd23c;
-  --f-violet: #c4a6ff; --f-violet-bg: rgb(160 120 255 / 0.2);
-  --f-blue: #7fc0ff;   --f-blue-bg: rgb(90 160 255 / 0.2);
-  --f-green: #6ee795;  --f-green-bg: rgb(80 220 130 / 0.2);
-  --f-orange: #ffae66; --f-orange-bg: rgb(255 150 70 / 0.2);
-  --f-gray: #aab3d6;   --f-gray-bg: rgb(170 180 220 / 0.14);
-  --radius: 18px;
-  --radius-sm: 12px;
-  --font: "Baloo 2", "Huninn", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  color-scheme: light;
+  --bg: #eef0ec;            /* 紙（偏灰綠，不是米色） */
+  --surface: #ffffff;
+  --surface-2: #e5e8e3;     /* 紙上再暗一級 */
+  --line: #d3d7d1;          /* 只用在表格、分隔線 */
+  --ink: #17202a;
+  --ink-2: #4b5664;
+  --ink-3: #66717f;
+  --ok: #1f7a46;
+  --ok-bg: #e3f2e8;
+  --bad: #b3261e;
+  --bad-bg: #f9e4e2;
+  --warn: #8a5a00;
+  --star: #c98a00;
+  --f-violet: #6d3fc2; --f-violet-bg: #efe8fb;
+  --f-blue: #1f5fbf;   --f-blue-bg: #e3edfb;
+  --f-green: #1f7a46;  --f-green-bg: #e3f2e8;
+  --f-orange: #b85c12; --f-orange-bg: #fbe9db;
+  --f-gray: #6b7482;   --f-gray-bg: #eceef1;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: none;
+  --font: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  --font-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --mono: "IBM Plex Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
 }
 
 :root[data-world="planet"] {
-  --bg: #121634;
-  --surface: #1c2150;
-  --surface-2: #262d68;
-  --line: #3a4390;
-  --accent: #5b9bff;
-  --accent-ink: #081030;
-  --glow: 91 155 255;
-  --world-grad: radial-gradient(1200px 600px at 80% -10%, #2b3a9c55, transparent 60%),
-                radial-gradient(900px 500px at 0% 30%, #6a3fd444, transparent 60%);
+  --accent: #0b6e5f;        /* 墨綠 */
+  --accent-ink: #ffffff;
+  --accent-bg: #e1efea;
+  --glow: 11 110 95;
 }
 
 :root[data-world="magic"] {
-  --bg: #2a1b3d;
-  --surface: #3a2754;
-  --surface-2: #4a3369;
-  --line: #6a4d96;
-  --accent: #ffb84d;
-  --accent-ink: #2a1b3d;
-  --glow: 255 184 77;
-  --world-grad: radial-gradient(1100px 600px at 20% -10%, #8e4fd055, transparent 60%),
-                radial-gradient(900px 500px at 100% 40%, #ffb84d22, transparent 60%);
+  --accent: #a6392b;        /* 印章紅 */
+  --accent-ink: #ffffff;
+  --accent-bg: #f6e4df;
+  --glow: 166 57 43;
 }
 
-html[data-world] body {
-  background-color: var(--bg);
-  background-image:
-    var(--world-grad),
-    radial-gradient(1.5px 1.5px at 12% 18%, #fff9, transparent 60%),
-    radial-gradient(1.5px 1.5px at 78% 12%, #fff8, transparent 60%),
-    radial-gradient(1px 1px at 40% 70%, #fff7, transparent 60%),
-    radial-gradient(1.5px 1.5px at 90% 80%, #fff8, transparent 60%),
-    radial-gradient(1px 1px at 25% 90%, #fff6, transparent 60%);
-  background-attachment: fixed;
-}
+html[data-world] body { background: var(--bg); }
 
-html[data-world] .topbar { border-bottom-color: var(--line); }
-html[data-world] .topbar .brand { color: var(--ink); font-size: 18px; }
+/* 頁首：只有一條細線，品牌用襯線 */
+html[data-world] .topbar { border-bottom: 1px solid var(--line); padding: 16px 0 12px; margin-bottom: 28px; }
+html[data-world] .topbar .brand { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: 0.04em; color: var(--ink); }
+html[data-world] .topbar .muted { font-size: 14px; }
 
-/* 鍵帽按鈕：按下時會「壓」下去 */
+/* 標題：襯線、緊字距 */
+html[data-world] h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.01em; line-height: 1.25; font-size: clamp(26px, 3.2vw, 34px); }
+html[data-world] h2 { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.01em; font-size: 22px; }
+html[data-world] h3 { font-size: 17px; }
+
+/* 按鈕：方正、實心墨色為主，強調色只給主要動作 */
 html[data-world] .btn {
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-bottom-width: 4px;
-  border-radius: 12px;
-  transition: transform 0.08s ease, border-bottom-width 0.08s ease, filter 0.15s;
+  min-height: 40px; padding: 8px 16px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid #b4bac3; color: var(--ink);
+  font-weight: 600; transition: background 0.15s ease-out, color 0.15s ease-out, transform 0.1s ease-out;
 }
-html[data-world] .btn:hover { background: var(--surface-2); filter: brightness(1.15); }
-html[data-world] .btn:active { transform: translateY(3px); border-bottom-width: 1px; }
-html[data-world] .btn.primary {
-  background: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 60%, #000);
-  color: var(--accent-ink);
-}
-html[data-world] .btn.ghost { border-color: transparent; background: transparent; }
+html[data-world] .btn:hover { background: var(--ink); color: var(--surface); }
+html[data-world] .btn:active { transform: scale(0.98); }
+html[data-world] .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+html[data-world] .btn.primary:hover { background: color-mix(in srgb, var(--accent) 85%, #000); border-color: color-mix(in srgb, var(--accent) 85%, #000); filter: none; }
+html[data-world] .btn.ghost { background: transparent; border-color: transparent; color: var(--ink-2); font-weight: 500; }
+html[data-world] .btn.ghost:hover { background: var(--surface-2); color: var(--ink); }
+html[data-world] .btn.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+html[data-world] .btn.ghost[aria-pressed="true"] { color: var(--ink); }
 
-html[data-world] .card {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #fff) 0%, var(--surface) 100%);
-  border: 1px solid var(--line);
-  box-shadow: 0 8px 28px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.06);
-}
+/* 卡片：白紙放在灰紙上，沒有邊框和陰影；需要分隔時用留白 */
+html[data-world] .card { background: var(--surface); border: 0; border-radius: var(--radius); box-shadow: none; }
 
-
+/* 標籤：小寫字、無膠囊 */
 .badge {
-  display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
-  background: rgb(var(--glow) / 0.18); color: var(--accent); border: 1px solid rgb(var(--glow) / 0.4);
+  display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 12px; font-weight: 600; line-height: 20px;
+  background: var(--accent-bg); color: var(--accent);
 }
 
-.panel-cheer { margin: 0 0 6px; font-weight: 800; font-size: 20px; color: var(--accent); }
+/* 表單元件 */
+html[data-world] .field input, html[data-world] .field select, html[data-world] .field textarea { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+html[data-world] .field input:focus-visible, html[data-world] .field select:focus-visible, html[data-world] .field textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+
+/* 結果彈窗內的鼓勵語 */
+.panel-cheer { margin: 0 0 6px; font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--accent); }
+
+/* 回報問題按鈕淡一點 */
+html[data-world] .fb-btn { border-color: var(--line); background: var(--surface); }

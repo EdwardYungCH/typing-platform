@@ -15,7 +15,7 @@
 .rp-table tr.muted td { color: var(--ink-2); }
 .rp-stars { color: #ffc940; letter-spacing: 1px; }
 .rp-names { display: flex; flex-wrap: wrap; gap: 6px; }
-.rp-names span { padding: 4px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 700; }
+.rp-names span { padding: 4px 10px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 700; }
 .rp-names small { font-weight: 400; color: var(--ink-2); margin-left: 4px; }
 .rp-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 700px) { .rp-two { grid-template-columns: 1fr; } }

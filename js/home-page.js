@@ -1,90 +1,105 @@
-import { getProgress, getSetting } from './storage.js';
+// 首頁：一個焦點（下一課）＋課程目錄＋其他入口。英文／中文用上方分頁切換，會記住上次看的。
+import { getProgress, getSetting, setSetting, getStepResults } from './storage.js';
 import { dailyProgress } from './daily.js';
 import { start as syncStart } from './sync.js';
 import { api } from './api.js';
 import { loadShop, balance, titleName } from './wallet.js';
-import { weekStrip, awardStreak } from './streak.js';
+import { streakInfo, awardStreak } from './streak.js';
+import { applyWorld } from './world.js';
+
+const $ = (id) => document.getElementById(id);
+const html = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const WORLDS = {
+  planet: { lang: 'en', name: '英文打字', sub: '鍵帽星系', desc: '由基準鍵到整段文字，16 課' },
+  magic: { lang: 'zh', name: '中文速成', sub: '字根魔法學院', desc: '字根、拆字、選字、常用字，16 課' },
+};
 
 const me = await syncStart();
-// 手機沒有實體鍵盤，課堂做不到：提示用電腦
 if (matchMedia('(pointer: coarse)').matches && !matchMedia('(min-width: 900px)').matches) {
-  document.getElementById('worlds').insertAdjacentHTML('beforebegin', '<p class="note" style="border:1px solid var(--warn);border-radius:12px;padding:10px 12px">你正在用手機或平板。打字課要有實體鍵盤，請用電腦練習；手機可以看進度、里程碑、快捷鍵學習卡和查碼。</p>');
+  $('world-tabs').insertAdjacentHTML('beforebegin', '<p class="notice">你正在用手機或平板。打字課要有實體鍵盤，請用電腦練習；手機可以看進度、里程碑、快捷鍵學習卡和查碼。</p>');
 }
 if (me) {
-  const a = document.getElementById('acct');
+  const a = $('acct');
   a.href = 'me.html'; a.textContent = `${me.name}（${me.className ?? me.sid}）`;
-  document.getElementById('note').textContent = `已登入 ${me.name}：紀錄會自動同步到伺服器。共用電腦練完記得在「我的帳戶」登出。`;
+  $('note').textContent = `已登入 ${me.name}：紀錄會自動同步到伺服器。共用電腦練完記得在「我的帳戶」登出。`;
 }
-
-// 老師功課
 let homework = [];
 if (me) { try { homework = (await api('/api/assignments')).assignments ?? []; } catch { /* 離線 */ } }
-const data = { worlds: { planet: { lang: 'en', name: '鍵帽星系', tagline: '英文打字・星際冒險' }, magic: { lang: 'zh', name: '字根魔法學院', tagline: '中文速成・魔法修行' } } };
 const shop = await loadShop();
 awardStreak();
-// 頂欄：星星餘額（按入商店）；英雄區下面：連續天數
-document.getElementById('wallet').innerHTML = `★ ${balance()}`;
-document.getElementById('streak').innerHTML = weekStrip();
+$('wallet').textContent = `★ ${balance()}`;
 const [en, zhL] = await Promise.all(['en', 'zh'].map((l) => fetch(`data/${l}-lessons.json`).then((r) => r.json())));
 const lessonsOf = { en: en.lessons, zh: zhL.lessons };
-const root = document.getElementById('worlds');
 
-for (const [w, info] of Object.entries(data.worlds)) {
+const param = new URLSearchParams(location.search).get('world');
+let world = param && WORLDS[param] ? param : getSetting('homeWorld', 'planet');
+if (!WORLDS[world]) world = 'planet';
 
-  const card = document.createElement('article');
-  card.className = 'world-card card';
-  card.dataset.w = w;
+function render() {
+  setSetting('homeWorld', world);
+  applyWorld(world);
+  const info = WORLDS[world];
+  const lang = info.lang;
+  const lessons = lessonsOf[lang];
+  const prog = getProgress(lang);
+  const placement = getSetting(`placement:${lang}`, null);
+  const dp = dailyProgress(lang);
+  const st = streakInfo();
+  const today = new Date().toISOString().slice(0, 10);
+  const hwOf = (id) => homework.find((h) => h.lang === lang && h.lesson_id === id);
 
+  $('world-tabs').innerHTML = Object.entries(WORLDS).map(([w, i]) => `<button class="wtab${w === world ? ' on' : ''}" data-w="${w}" type="button" aria-pressed="${w === world}">${i.name}<small>${i.sub}</small></button>`).join('');
+  $('world-tabs').querySelectorAll('[data-w]').forEach((b) => b.onclick = () => { world = b.dataset.w; render(); });
 
-
-  card.innerHTML = `
-    <div class="world-top">
-      <div><span class="tag">${w === 'planet' ? 'ENGLISH' : '速成'}</span><h2>${info.name}</h2><p class="muted" style="margin:2px 0 0">${info.tagline}</p></div>
-      ${titleName(shop) ? `<span class="title-chip">${titleName(shop)}</span>` : ''}
+  // 焦點：下一課
+  const current = lessons.find((l) => !prog[l.id]?.done) ?? lessons[lessons.length - 1];
+  const allDone = lessons.every((l) => prog[l.id]?.done);
+  const steps = getStepResults(lang, current.id);
+  const stepsDone = Object.values(steps).filter((s) => s?.latest?.accuracy != null).length;
+  const doneN = lessons.filter((l) => prog[l.id]?.done && !prog[l.id]?.skipped).length;
+  const title = titleName(shop);
+  $('next').innerHTML = `
+    <div class="next-main">
+      <p class="eyebrow">${allDone ? '全部完成' : doneN === 0 && !placement ? '由這裏開始' : '下一課'}<span>・${info.sub}</span></p>
+      <h1>第 ${current.id} 課：${html(current.title)}</h1>
+      <p class="lead">${html(current.subtitle ?? '')}${current.steps ? `　·　${current.steps.length} 步${stepsDone ? `，已做 ${stepsDone} 步` : ''}` : ''}</p>
+      <div class="next-actions">
+        <a class="btn primary" href="type.html?lang=${lang}&mode=lesson&id=${current.id}">${allDone ? '再做一次' : stepsDone ? '繼續這一課' : '開始這一課'}</a>
+        <a class="btn" href="type.html?lang=${lang}&mode=daily">每日任務<span class="sub">${dp.finishedToday ? '今日已完成' : dp.done.length ? `今日已做 ${dp.done.length}／3` : '十分鐘重溫'}</span></a>
+        ${placement === null && doneN === 0 ? `<a class="btn ghost" href="tests.html?lang=${lang}">先做分級測驗</a>` : ''}
+      </div>
+    </div>
+    <div class="next-side">
+      <div class="stat"><b>${doneN}<small>／${lessons.length}</small></b><span>完成課數</span></div>
+      <div class="stat"><b>${st.current}<small> 天</small></b><span>${st.today ? '連續練習，今日已練' : st.current ? '連續練習，今日未練' : '今日還未練習'}</span>
+        <div class="dots" aria-hidden="true">${st.week.map((w) => `<i class="${w.on ? 'on' : ''}${w.today ? ' today' : ''}"></i>`).join('')}</div></div>
+      ${me && title ? `<div class="stat"><b class="title-name">${html(title)}</b><span>稱號</span></div>` : ''}
     </div>`;
 
-  const prog = getProgress(info.lang);
-  const placement = getSetting(`placement:${info.lang}`, null);
-  const ul = document.createElement('ul');
-  ul.className = 'map';
-  for (const l of lessonsOf[info.lang]) {
-    const p = prog[l.id];
-    const li = document.createElement('li');
-    li.innerHTML = `<a class="node${p?.done ? ' done' : ''}" href="type.html?lang=${info.lang}&mode=lesson&id=${l.id}">
-      <span class="num">${p?.skipped ? '略' : p?.done ? '✓' : l.id}</span>
-      <span class="t"><b>第 ${l.id} 課：${l.title}</b><span>${l.subtitle}${placement === l.id ? '　<b class="badge">分級測驗建議由這裏開始</b>' : ''}</span></span>
-      <span class="s" aria-label="${p?.stars ?? 0} 粒星">${p?.stars ? '★'.repeat(p.stars) : ''}</span></a>`;
-    ul.append(li);
-  }
-  // 老師功課（這個世界的）
-  const hw = homework.filter((h) => h.lang === info.lang);
-  if (hw.length) {
-    const today = new Date().toISOString().slice(0, 10);
-    card.insertAdjacentHTML('beforeend', `<div class="hw"><h3>老師功課</h3><ul class="map">${hw.map((h) => {
-      const l = lessonsOf[info.lang].find((x) => x.id === h.lesson_id); const done = prog[h.lesson_id]?.done && !prog[h.lesson_id]?.skipped;
-      const late = h.due && h.due < today && !done;
-      return `<li><a class="node${done ? ' done' : ''}${late ? ' late' : ''}" href="type.html?lang=${info.lang}&mode=lesson&id=${h.lesson_id}">
-        <span class="num">${done ? '✓' : '課'}</span><span class="t"><b>第 ${h.lesson_id} 課：${l?.title ?? ''}</b><span>${h.teacher}老師${h.due ? `・${late ? '已過期' : '截止'} ${h.due}` : ''}${h.note ? `・${h.note}` : ''}</span></span>
-        <span class="badge">${done ? '已完成' : late ? '過期' : '未完成'}</span></a></li>`; }).join('')}</ul></div>`);
-  }
-  card.append(ul);
-  const dp = dailyProgress(info.lang);
-  const dailySub = dp.finishedToday ? `今日已完成 ✓　連續 ${dp.streak} 天` : dp.done.length ? `今日已做 ${dp.done.length}／3 部分` : `每日十分鐘，重溫到期的字根和字${dp.streak ? `　連續 ${dp.streak} 天` : ''}`;
-  card.insertAdjacentHTML('beforeend', `<ul class="map"><li><a class="node${dp.finishedToday ? ' done' : ''}" href="type.html?lang=${info.lang}&mode=daily">
-    <span class="num">${dp.finishedToday ? '✓' : '日'}</span><span class="t"><b>每日任務</b><span>${dailySub}</span></span></a></li>
-    <li><a class="node" href="milestones.html?lang=${info.lang}">
-    <span class="num">程</span><span class="t"><b>里程碑</b><span>${info.lang === 'zh' ? '認齊字根、認齊輔助字形、拆對和打熟常用字' : '掌握 26 個鍵、打熟常用詞、速度目標'}</span></span></a></li></ul>`);
-  card.insertAdjacentHTML('beforeend', `<ul class="map"><li><a class="node" href="practice.html?lang=${info.lang}">
-    <span class="num">練</span><span class="t"><b>練習區</b><span>自由操練、弱項加強${info.lang === 'zh' ? '、真實輸入法' : ''}</span></span></a></li>
-    <li><a class="node" href="tests.html?lang=${info.lang}">
-    <span class="num">測</span><span class="t"><b>評測區</b><span>分級測驗、限時評測（只做一次）</span></span></a></li>
-    <li><a class="node" href="games.html?lang=${info.lang}">
-    <span class="num">玩</span><span class="t"><b>小遊戲</b><span>${info.lang === 'zh' ? '字根雨、限時快打：只出你學過的字根和字' : '鍵雨、限時快打：只出你學過的鍵'}</span></span></a></li></ul>`)
-  if (info.lang === 'zh') {
-    card.insertAdjacentHTML('beforeend', `
-      <ul class="map"><li><a class="node" href="zh/lookup.html">
-        <span class="num">查</span>
-        <span class="t"><b>速成查碼</b><span>任何字的速成碼、拆字圖解和選字位置</span></span></a></li></ul>`);
-  }
-  root.append(card);
+  // 課程目錄
+  $('toc').innerHTML = `<h2>課程目錄</h2>
+    <ol class="toc-list">${lessons.map((l) => {
+      const p = prog[l.id]; const hw = hwOf(l.id);
+      const done = p?.done && !p?.skipped; const late = hw && hw.due && hw.due < today && !done;
+      const state = p?.skipped ? '略過' : done ? `${'★'.repeat(p.stars ?? 0)}` : l === current ? '下一課' : '';
+      return `<li class="${done ? 'done' : ''}${l === current ? ' cur' : ''}">
+        <a href="type.html?lang=${lang}&mode=lesson&id=${l.id}">
+          <span class="n">${l.id}</span>
+          <span class="t"><b>${html(l.title)}</b><small>${html(l.subtitle ?? '')}${placement === l.id && !done ? '　分級測驗建議由這裏開始' : ''}</small>
+            ${hw ? `<small class="hw${late ? ' late' : ''}">老師功課${hw.due ? `・${late ? '已過期' : '截止'} ${hw.due}` : ''}${hw.note ? `・${html(hw.note)}` : ''}</small>` : ''}</span>
+          <span class="s ${done ? 'stars' : ''}">${state}</span>
+        </a></li>`; }).join('')}</ol>`;
+
+  // 其他入口
+  const items = [
+    ['practice.html?lang=' + lang, '練習區', lang === 'zh' ? '自由操練、弱項加強、真實輸入法' : '自由操練、弱項加強'],
+    ['tests.html?lang=' + lang, '評測區', '分級測驗、限時評測（只做一次）'],
+    ['milestones.html?lang=' + lang, '里程碑', lang === 'zh' ? '字根、輔助字形、常用字的掌握度' : '26 個鍵、常用詞、速度目標'],
+    ['games.html?lang=' + lang, '小遊戲', lang === 'zh' ? '字根雨、限時快打' : '鍵雨、限時快打'],
+    ...(lang === 'zh' ? [['zh/lookup.html', '速成查碼', '任何字的速成碼、拆字圖解和選字位置']] : []),
+    ['shortcuts.html', '電腦快捷鍵', '複製、貼上、儲存、工作管理員等'],
+    ['shop.html?world=' + world, '星星商店', '用星星換稱號和鍵盤皮膚'],
+  ];
+  $('side').innerHTML = `<h2>其他</h2><ul class="side-list">${items.map(([h, t, d]) => `<li><a href="${h}"><b>${t}</b><small>${d}</small></a></li>`).join('')}</ul>`;
 }
+render();

@@ -28,30 +28,21 @@
 .steps {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 18px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .step-pill {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink-2);
-  border-radius: 999px;
-  padding: 4px 12px;
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
+  border: 0; border-bottom: 2px solid transparent; background: none; color: var(--ink-3);
+  border-radius: 0; padding: 6px 2px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
 }
+.step-pill:hover { color: var(--ink); }
 
-.step-pill.done { color: var(--ok); border-color: var(--ok); }
-.step-pill.done::before { content: "✓ "; }
-.step-pill[aria-current="step"] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-ink);
-}
+.step-pill.done { color: var(--ink-2); }
+.step-pill.done::before { content: "✓ "; color: var(--ok); }
+.step-pill[aria-current="step"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
 .step-pill:disabled { opacity: 0.45; cursor: default; }
 
 /* ---- 舞台 ---- */
@@ -388,7 +379,7 @@
 .single-card { display: flex; gap: 22px; align-items: center; justify-content: center; margin: 6px 0 10px; }
 .single-card[hidden] { display: none; }
 .keycap { width: 120px; height: 120px; display: grid; place-items: center; border-radius: 22px; font: 800 64px/1 var(--mono, ui-monospace, monospace);
-  background: var(--kb, var(--surface-2)); color: var(--kc, var(--ink)); border: 2px solid var(--kc, var(--line)); border-bottom-width: 8px; box-shadow: 0 0 24px color-mix(in srgb, var(--kc, var(--accent)) 35%, transparent); transition: transform 0.08s; }
+  background: var(--kb, var(--surface-2)); color: var(--kc, var(--ink)); border: 2px solid var(--kc, var(--line)); border-bottom-width: 8px; transition: transform 0.08s; }
 .keycap.press { transform: translateY(5px); border-bottom-width: 3px; }
 .single-info { display: grid; gap: 4px; }
 .single-info b { font-size: 26px; }

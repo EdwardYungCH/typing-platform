@@ -4,13 +4,11 @@
 
 .combo {
   position: absolute; right: 18px; bottom: 12px; z-index: 3; pointer-events: none;
-  padding: 2px 14px; border-radius: 999px; font-weight: 800; letter-spacing: 0.03em;
-  background: var(--surface-2); color: var(--accent); border: 1px solid var(--accent);
-  box-shadow: 0 0 0 0 rgb(var(--glow, 91 155 255) / 0.5);
+  padding: 2px 14px; border-radius: 4px; font-weight: 800; letter-spacing: 0.03em;
+  background: var(--surface); color: var(--accent); border: 1px solid var(--accent); font-variant-numeric: tabular-nums;
 }
-.combo[data-tier="1"] { box-shadow: 0 0 14px rgb(var(--glow, 91 155 255) / 0.5); }
-.combo[data-tier="2"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 20px rgb(var(--glow, 91 155 255) / 0.7); }
-.combo[data-tier="3"] { background: linear-gradient(90deg, var(--star), var(--accent)); color: #14182e; box-shadow: 0 0 28px rgb(var(--glow, 91 155 255) / 0.9); }
+.combo[data-tier="2"] { background: var(--accent); color: var(--accent-ink); }
+.combo[data-tier="3"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
 .combo.bump { animation: combo-bump 0.18s ease-out; }
 @keyframes combo-bump { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
 
@@ -24,14 +22,14 @@
 }
 
 /* 星星逐粒彈出 */
-.panel .star.on { animation: star-pop 0.5s cubic-bezier(.2,1.6,.4,1) both; }
+.panel .star.on { animation: star-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .panel .star.on:nth-child(2) { animation-delay: 0.15s; }
 .panel .star.on:nth-child(3) { animation-delay: 0.3s; }
 @keyframes star-pop { from { transform: scale(0) rotate(-40deg); opacity: 0; } to { transform: none; opacity: 1; } }
 
 /* 評測專注模式 */
 body.focus-mode .focus-tag { display: inline-flex; }
-.focus-tag { display: none; padding: 2px 12px; border-radius: 999px; font-size: 13px; font-weight: 700;
+.focus-tag { display: none; padding: 2px 12px; border-radius: 4px; font-size: 13px; font-weight: 700;
   border: 1px solid var(--line); color: var(--ink-2); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -42,9 +40,9 @@ body.focus-mode .focus-tag { display: inline-flex; }
 /* 過關動畫 */
 .confetti { position: fixed; top: -12px; width: 10px; height: 16px; border-radius: 2px; z-index: 60; pointer-events: none; animation: confetti linear forwards; }
 @keyframes confetti { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--x), 105vh) rotate(var(--r)); opacity: 0.9; } }
-.panel.celebrate { animation: panel-in 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.panel.celebrate { animation: panel-in 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
 @keyframes panel-in { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-.panel.celebrate .star.on { animation: star-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.panel.celebrate .star.on { animation: star-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
 @keyframes star-pop { 0% { transform: scale(0) rotate(-90deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
 .panel.celebrate .panel-cheer { animation: earned 0.5s ease-out 0.2s both; }
 .panel-earned { display: grid; justify-items: center; margin: -4px 0 8px; animation: earned 0.6s ease-out 1s both; }

@@ -6,7 +6,7 @@
   <title>打字練習平台</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/world.css">
   <link rel="stylesheet" href="css/home.css">
@@ -23,16 +23,12 @@
       <a class="btn ghost" id="acct" href="login.html">登入</a>
     </header>
 
-    <section class="hero">
-      <div>
-        <h1>兩個世界，一對靈活的手指</h1>
-        <p class="muted">英文去星球冒險，中文進魔法學院。每課 5 至 10 分鐘：先學、再練、後測。準確比快更重要。</p>
-      </div>
-    </section>
-
-    <div id="streak"></div>
-    <section class="worlds" id="worlds"></section>
-    <a class="card sc-home" href="shortcuts.html"><span class="num">⌨</span><span class="t"><b>電腦快捷鍵</b><span>複製、貼上、儲存、工作管理員、截圖等 Windows 常用快捷鍵</span></span></a>
+    <nav class="world-tabs" id="world-tabs" aria-label="選擇語言"></nav>
+    <section class="next card" id="next"></section>
+    <div class="home-grid">
+      <section class="toc" id="toc"></section>
+      <aside class="side" id="side"></aside>
+    </div>
     <p class="note muted" id="note">紀錄只存在這部電腦的瀏覽器內；<a href="login.html">登入</a>後會同步到伺服器，換電腦也不會丟失。</p>
   </div>
   <script type="module" src="js/home-page.js"></script>
