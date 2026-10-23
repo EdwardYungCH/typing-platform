@@ -3,31 +3,38 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>打字冒險</title>
+  <title>打字練習平台</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/world.css">
   <link rel="stylesheet" href="css/home.css">
   <link rel="stylesheet" href="css/shop.css">
 </head>
 <body>
-  <div class="page wide">
+  <div class="page">
     <header class="topbar">
-      <a class="brand" href="index.html">打字冒險 <small class="muted">TYPE QUEST</small></a>
+      <a class="brand" href="index.html">打字練習平台</a>
       <span class="spacer"></span>
-      <a class="btn ghost wallet-btn" id="wallet" href="shop.html" title="道具店（星星商店）">★ 0</a>
-      <a class="btn ghost" href="board.html">公會</a>
-      <a class="btn ghost" href="games.html">遊樂場</a>
+      <a class="btn ghost wallet-btn" id="wallet" href="shop.html" title="星星商店">★ 0</a>
+      <a class="btn ghost" href="board.html">排行榜</a>
+      <a class="btn ghost" href="games.html">小遊戲</a>
       <a class="btn ghost" href="companion-home.html">夥伴之家</a>
+      <a class="btn ghost" href="pick.html">揀夥伴</a>
       <a class="btn ghost" id="acct" href="login.html">登入</a>
     </header>
 
-    <div class="world-tabs" id="world-tabs"></div>
+    <section class="hero">
+      <div>
+        <h1>兩個世界，一對靈活的手指</h1>
+        <p class="muted">英文去星球冒險，中文進魔法學院。每課 5 至 10 分鐘：先學、再練、後測。準確比快更重要。</p>
+      </div>
+    </section>
+
     <div id="streak"></div>
-    <section class="map-stage" id="map" aria-label="世界地圖"></section>
-    <section class="home-wins" id="wins"></section>
+    <section class="worlds" id="worlds"></section>
+    <a class="card sc-home" href="shortcuts.html"><span class="num">⌨</span><span class="t"><b>電腦快捷鍵</b><span>複製、貼上、儲存、工作管理員、截圖等 Windows 常用快捷鍵</span></span></a>
     <p class="note muted" id="note">紀錄只存在這部電腦的瀏覽器內；<a href="login.html">登入</a>後會同步到伺服器，換電腦也不會丟失。</p>
   </div>
   <script type="module" src="js/home-page.js"></script>

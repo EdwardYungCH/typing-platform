@@ -114,7 +114,6 @@ body {
 
 a { color: var(--accent); }
 
-.page.wide { max-width: 1180px; }
 .page {
   max-width: 1040px;
   margin: 0 auto;
