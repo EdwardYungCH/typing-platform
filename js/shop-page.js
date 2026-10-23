@@ -11,7 +11,7 @@ const world = params.get('world') === 'magic' ? 'magic' : 'planet';
 applyWorld(world);
 const data = await loadCompanions();
 const items = await loadShop();
-const KINDS = [['hat', '頭部裝備'], ['face', '手持裝備'], ['title', '稱號'], ['kb', '鍵盤皮膚'], ['skill', '技能']];
+const KINDS = [['hat', '頭飾'], ['face', '飾物'], ['title', '稱號'], ['kb', '鍵盤皮膚']];
 let kind = params.get('kind') ?? 'hat';
 
 function preview() {
@@ -23,7 +23,7 @@ function preview() {
   const title = titleName(items);
   $('preview').innerHTML = `${c ? petHtml(art(world, c.id, stage), c.name, { size: 140, items, cls: 'companion pet-float' }) : '<p class="muted">還未揀夥伴。</p>'}
     <div class="pv-text"><b>${c ? nickOf(world, c) : ''}${title ? ` <span class="title-chip">${title}</span>` : ''}</b>
-      <p class="muted" style="margin:4px 0 0">裝備中：${KINDS.filter(([k]) => k !== 'skill').map(([k, n]) => `${n}：${items.find((x) => x.id === e[k])?.name ?? '無'}`).join('　')}　技能：${items.filter((x) => x.kind === 'skill' && owned(x.id)).map((x) => x.name).join('、') || '無'}</p>
+      <p class="muted" style="margin:4px 0 0">裝備中：${KINDS.map(([k, n]) => `${n}：${items.find((x) => x.id === e[k])?.name ?? '無'}`).join('　')}</p>
       <div class="tabs" style="margin:8px 0 0">${Object.entries(data.worlds).map(([w, i]) => `<a class="btn${w === world ? ' primary' : ''}" href="shop.html?world=${w}&kind=${kind}">${i.name}</a>`).join('')}</div></div>`;
   $('bal').textContent = balance();
   $('earned').textContent = `共賺 ${earned()}`;
@@ -36,8 +36,8 @@ function render() {
   const list = items.filter((it) => it.kind === kind && (!it.world || it.world === world));
   $('grid').innerHTML = list.map((it) => {
     const has = owned(it.id), on = e[kind] === it.id, can = balance() >= it.price;
-    const face = it.kind === 'skill' ? `<span class="skill-icon">${{ 'sk-hint': '燈', 'sk-shield': '盾', 'sk-coin': '金' }[it.id] ?? '技'}</span>` : it.kind === 'kb' ? `<span class="kb-swatch" style="--a:${it.colors[0]};--b:${it.colors[1]}"><i></i><i></i><i></i><i></i></span>` : it.kind === 'title' ? `<span class="title-chip big">${it.name}</span>` : `<span class="emoji">${it.emoji}</span>`;
-    const btn = it.kind === 'skill' ? (has ? '<span class="badge">已學會</span>' : `<button class="btn primary" data-buy="${it.id}" type="button" ${can ? '' : 'disabled'}>★ ${it.price} 學習</button>`) : on ? `<button class="btn" data-off="${it.id}" type="button">脫下</button>` : has ? `<button class="btn primary" data-on="${it.id}" type="button">裝上</button>` : `<button class="btn primary" data-buy="${it.id}" type="button" ${can ? '' : 'disabled'}>★ ${it.price} 買</button>`;
+    const face = it.kind === 'kb' ? `<span class="kb-swatch" style="--a:${it.colors[0]};--b:${it.colors[1]}"><i></i><i></i><i></i><i></i></span>` : it.kind === 'title' ? `<span class="title-chip big">${it.name}</span>` : `<span class="emoji">${it.emoji}</span>`;
+    const btn = on ? `<button class="btn" data-off="${it.id}" type="button">脫下</button>` : has ? `<button class="btn primary" data-on="${it.id}" type="button">裝上</button>` : `<button class="btn primary" data-buy="${it.id}" type="button" ${can ? '' : 'disabled'}>★ ${it.price} 買</button>`;
     return `<div class="shop-item card${on ? ' on' : ''}${has ? ' has' : ''}">${face}<b>${it.name}</b><small>${it.desc}</small><div class="form-actions">${btn}${has ? '<span class="muted mini">已擁有</span>' : ''}</div></div>`;
   }).join('') || '<p class="muted">這個世界沒有這類貨品。</p>';
   $('grid').querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => { const it = items.find((x) => x.id === b.dataset.buy); const r = buy(it); if (!r.ok) alert(r.msg); else { celebrate(it); } preview(); render(); });

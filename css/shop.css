@@ -34,4 +34,3 @@ html[data-kb] .vkb-key { background: color-mix(in srgb, var(--kb-a) 22%, var(--s
 html[data-kb] .vkb-key:nth-child(even) { background: color-mix(in srgb, var(--kb-b) 22%, var(--surface-2)); border-color: color-mix(in srgb, var(--kb-b) 50%, var(--line)); }
 html[data-kb="kb-neon"] .vkb-key { background: #0b0b12; color: var(--kb-a); text-shadow: 0 0 6px var(--kb-a); border-color: var(--kb-a); }
 html[data-kb="kb-neon"] .vkb-key:nth-child(even) { color: var(--kb-b); text-shadow: 0 0 6px var(--kb-b); border-color: var(--kb-b); }
-.skill-icon { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 50%; background: var(--star); color: var(--win-dark, #2a1b00); font-size: 30px; font-weight: 900; margin: 4px 0; }
