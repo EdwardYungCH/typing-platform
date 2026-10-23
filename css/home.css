@@ -16,11 +16,7 @@
 .world-card[data-w="magic"] { --wg: 255 184 77; }
 .world-card .tag { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; color: rgb(var(--wg)); }
 .world-card h2 { margin: 2px 0 0; font-size: 26px; }
-.world-card .pet { width: 120px; flex: none; }
 .world-top { display: flex; gap: 14px; align-items: center; justify-content: space-between; }
-.pet-box { text-align: center; }
-.pet-box .nm { font-weight: 800; margin-top: 2px; }
-.pet-box a { font-size: 13px; }
 .growth { margin: 14px 0 0; }
 .growth .bar { height: 10px; border-radius: 999px; background: rgb(255 255 255 / 0.1); overflow: hidden; }
 .growth .bar > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgb(var(--wg)), #fff); }

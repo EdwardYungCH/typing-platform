@@ -83,28 +83,10 @@ html[data-world] .card {
   box-shadow: 0 8px 28px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
-/* 夥伴 */
-.companion { display: block; width: 100%; height: auto; }
-.pet-float { animation: pet-float 3.2s ease-in-out infinite; }
-@keyframes pet-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-@media (prefers-reduced-motion: reduce) { .pet-float { animation: none; } }
 
 .badge {
   display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
   background: rgb(var(--glow) / 0.18); color: var(--accent); border: 1px solid rgb(var(--glow) / 0.4);
 }
 
-/* 打字頁：頂欄夥伴、結果彈窗夥伴 */
-#pet-top { width: 44px; height: 44px; }
-.panel-pet { width: 140px; margin: -4px auto 0; text-align: center; }
-.panel-pet img { width: 130px; height: 130px; margin: 0 auto; }
-.panel-pet .pet-wrap img { width: 100%; height: 100%; }
-.panel-pet .pet-say { margin: 0; font-weight: 800; color: var(--accent); }
-.panel-pet { width: auto; }
-.evolve { display: flex; align-items: center; justify-content: center; gap: 10px; }
-.evolve img { width: 110px; height: 110px; }
-.evolve .before { filter: brightness(0.7) saturate(0.7); }
-.evolve .after { animation: evo-pop 0.9s cubic-bezier(.2,1.4,.4,1) both 0.3s; width: 150px; height: 150px; }
-.evolve .arrow { font-size: 28px; color: var(--accent); }
-@keyframes evo-pop { from { transform: scale(0.3) rotate(-10deg); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .evolve .after { animation: none; } }
+.panel-cheer { margin: 0 0 6px; font-weight: 800; font-size: 20px; color: var(--accent); }

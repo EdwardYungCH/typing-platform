@@ -7,7 +7,6 @@ import { VirtualKeyboard, Hands, loadFingers, keyForChar, fingerName } from './k
 import { computeStats, starsFor, fmt, fmtAcc } from './stats.js';
 import * as store from './storage.js';
 import { applyWorld, worldForLang } from './world.js';
-import * as pet from './companion.js';
 import { Fx } from './fx.js';
 import { setSoundEnabled } from './sound.js';
 import { QuickEngine, computeZhStats, PAGE, KEY_OF_PUNCT } from './quick-engine.js';
@@ -19,7 +18,7 @@ import * as mastery from './mastery.js';
 import { buildDaily, dailyProgress } from './daily.js';
 import { start as syncStart } from './sync.js';
 import { api } from './api.js';
-import { loadShop, petHtml, applyKeyboardSkin, grantBonus, balance } from './wallet.js';
+import { loadShop, applyKeyboardSkin, grantBonus, balance } from './wallet.js';
 import { awardStreak } from './streak.js';
 
 const $ = (id) => document.getElementById(id);
@@ -110,8 +109,6 @@ async function init() {
     return;
   }
   state.world = worldForLang(lang);
-  state.petData = await pet.loadCompanions();
-  state.petId = pet.getChoice(state.world);
   state.shop = await loadShop();
   applyKeyboardSkin(state.shop);   // 商店買的鍵盤皮膚
   const showFingers = store.getSetting('showFingers', CONFIG.defaults.showFingers);
@@ -141,7 +138,7 @@ function setupFx() {
   const sound = store.getSetting('sound', CONFIG.defaults.sound);
   setSoundEnabled(sound);
   $('stage').classList.add('fx-host');
-  state.fx = new Fx({ host: $('stage'), pet: $('pet-top'), level, sound });
+  state.fx = new Fx({ host: $('stage'), pet: null, level, sound });
   const names = ['關', '輕', '全'];
   const paint = () => {
     $('toggle-fx').textContent = `特效：${names[state.fx.level]}`;
@@ -243,8 +240,7 @@ function runStep(i) {
   $('m-unit').textContent = ` ${state.unit}`;
   // 速成評測不提示下一個鍵（否則變成跟住發光的鍵按）
   state.hideNext = lang === 'zh' && step.type === 'test';
-  showTopPet(step.type !== 'test');
-  const focus = step.type === 'test';
+    const focus = step.type === 'test';
   state.fx.setFocus(focus);
   document.body.classList.toggle('focus-mode', focus);
   if (step.type === 'guide') runGuide(step);
@@ -1009,7 +1005,7 @@ function finishStep({ stats, stars, step, rest, guide }) {
       store.setSetting(`placement:${lang}`, lv.startLesson);
       title = '分級完成';
       msg = `${lv.note}（跳過的課仍可隨時重溫。）`;
-      renderPanelPet(); state.fx.setFocus(false); state.fx.finish({ stars: 1 });
+      state.fx.setFocus(false); state.fx.finish({ stars: 1 });
       const apply = lv.startLesson > 0 ? [[`照建議：跳過第 0–${lv.startLesson - 1} 課，去第 ${lv.startLesson} 課`, () => { store.skipLessonsBefore(lang, lv.startLesson); location.href = `type.html?lang=${lang}&mode=lesson&id=${lv.startLesson}`; }, true]] : [[`去第 ${lv.startLesson} 課`, () => (location.href = `type.html?lang=${lang}&mode=lesson&id=${lv.startLesson}`), true]];
       showPanel({ title, msg: msg + (lv.startLesson > 0 ? ' 按「照建議」會把前面的課標為已跳過，首頁就直接見到下一課。' : ''), stars: null, stats: statsList, actions: [...apply, ['由第 0 課開始', () => (location.href = `type.html?lang=${lang}&mode=lesson&id=0`), false], ['回到評測區', () => (location.href = `tests.html?lang=${lang}`), false]] });
       return;
@@ -1017,14 +1013,13 @@ function finishStep({ stats, stars, step, rest, guide }) {
     const passed = stars > 0;
     title = passed ? '達標！' : '未達標';
     msg = passed ? `達到${t.subtitle.replace(/^.*目標/, '目標')}的要求。` : `目標是${t.subtitle.replace(/^.*目標/, '')}。到練習區再練一練，下次評測再試。`;
-    renderPanelPet(); state.fx.setFocus(false); state.fx.finish({ stars: stars ?? 0 });
+    state.fx.setFocus(false); state.fx.finish({ stars: stars ?? 0 });
     showPanel({ title, msg, stars, stats: statsList, actions: [['回到評測區', () => (location.href = `tests.html?lang=${lang}`), true], ['去練習區', () => (location.href = `practice.html?lang=${lang}`), false]] });
     return;
   }
   if (L.practice) {
     const statsList = stats ? [['速度', `${fmt(stats.netWpm)} ${state.unit}`], ['準確率', `${fmtAcc(stats.accuracy)}%`], ['用時', clock(stats.seconds)], ['打錯', `${stats.errors} 次`]] : [];
-    renderPanelPet();
-    state.fx.setFocus(false);
+      state.fx.setFocus(false);
     state.fx.finish({ stars: 1 });
     showPanel({ title: '完成！', msg: '練習不計星，想再試就按「再來一組」。', stars: null, stats: statsList,
       actions: [['再來一組', () => runStep(0), true], ['回到練習區', () => (location.href = `practice.html?lang=${lang}`), false]] });
@@ -1034,7 +1029,7 @@ function finishStep({ stats, stars, step, rest, guide }) {
   if (L.daily) {
     const statsList = stats ? [['速度', `${fmt(stats.netWpm)} ${state.unit}`], ['準確率', `${fmtAcc(stats.accuracy)}%`], ['用時', clock(stats.seconds)], ['打錯', `${stats.errors} 次`]] : [];
     const dp = dailyProgress(lang);
-    renderPanelPet(); state.fx.setFocus(false); state.fx.finish({ stars: 1 });
+    state.fx.setFocus(false); state.fx.finish({ stars: 1 });
     const actions = [];
     if (isLast) {
       actions.push(['回到首頁', () => (location.href = 'index.html'), true]);
@@ -1073,11 +1068,9 @@ function finishStep({ stats, stars, step, rest, guide }) {
     actions.push(['再試一次', () => runStep(state.stepIndex), true]);
     actions.push(['回到練習', () => runStep(Math.max(0, state.stepIndex - 1)), false]);
   } else if (isLast) {
-    const before = currentStage();
     const prevStars = store.getLessonResult(lang, lessonId)?.stars ?? 0;
     const best = saveLessonDone(stars, stats);
     state.earnedNow = Math.max(0, (stars ?? 0) - prevStars) + awardStreak();
-    state.evolvedFrom = currentStage() > before ? before : null;
     title = isTest ? '過關！' : '完成這一課！';
     msg = best;
     const next = state.lessons.find((l) => l.id === L.id + 1);
@@ -1093,37 +1086,10 @@ function finishStep({ stats, stars, step, rest, guide }) {
     if (!guide) actions.push(['再練一次', () => runStep(state.stepIndex), false]);
   }
 
-  renderPanelPet();
   state.fx.setFocus(false);
-  state.fx.finish({ stars: stars ?? 0, evolved: state.evolvedFrom !== null && state.evolvedFrom !== undefined });
+  state.fx.finish({ stars: stars ?? 0 });
   showPanel({ title, msg, stars: isTest ? stars : null, stats: statsList, actions, celebrate: isLast && passed, earned: isLast ? state.earnedNow : 0 });
-  state.evolvedFrom = null; state.earnedNow = 0;
-}
-
-function currentStage() {
-  return pet.stageOf(state.petData.stages, pet.summary(lang));
-}
-
-function showTopPet(on) {
-  const img = $('pet-top');
-  if (!state.petId || !on) { img.hidden = true; return; }
-  img.src = pet.art(state.world, state.petId, currentStage());
-  img.hidden = false;
-}
-
-function renderPanelPet() {
-  const box = $('panel-pet');
-  box.hidden = true;
-  if (!state.petId) return;
-  const stage = currentStage();
-  const c = state.petData.companions.find((x) => x.id === state.petId);
-  const nick = pet.nickOf(state.world, c);
-  const stageName = state.petData.stages[stage].name;
-  const evolved = state.evolvedFrom !== null && state.evolvedFrom !== undefined;
-  box.innerHTML = evolved
-    ? `<div class="evolve"><img class="companion before" src="${pet.art(state.world, c.id, state.evolvedFrom)}" alt=""><span class="arrow">➜</span><img class="companion after" src="${pet.art(state.world, c.id, stage)}" alt="${nick}"></div><p class="pet-say">${nick} 進化成「${stageName}」了！</p>`
-    : `${petHtml(pet.art(state.world, c.id, stage), nick, { cls: 'companion pet-float', size: 110, items: state.shop })}<p class="pet-say" id="pet-say">${nick}為你加油！</p>`;
-  box.hidden = false;
+  state.earnedNow = 0;
 }
 
 function saveLessonDone(stars, stats) {
@@ -1169,6 +1135,7 @@ function showPanel({ title, msg, stars, stats, actions, celebrate = false, earne
   starsEl.innerHTML = '';
   const panel = $('overlay').querySelector('.panel');
   panel.classList.toggle('celebrate', celebrate);
+  $('panel-cheer').hidden = true;
   if (stars !== null && stars !== undefined) {
     for (let i = 1; i <= 3; i++) {
       const s = document.createElement('span');
@@ -1179,11 +1146,11 @@ function showPanel({ title, msg, stars, stats, actions, celebrate = false, earne
     }
     starsEl.setAttribute('aria-label', `${stars} 粒星`);
   }
-  // 過關動畫：彩帶、星星逐粒亮、夥伴對白、賺到的星星數
+  // 過關動畫：彩帶、星星逐粒亮、鼓勵語、賺到的星星數
   $('panel-earned')?.remove();
   if (celebrate) {
     confetti($('overlay'));
-    const say = $('pet-say'); if (say) say.textContent = CHEERS[Math.floor(Math.random() * CHEERS.length)];
+    const say = $('panel-cheer'); if (say) { say.textContent = CHEERS[Math.floor(Math.random() * CHEERS.length)]; say.hidden = false; }
     if (earned > 0) {
       const e = document.createElement('div'); e.id = 'panel-earned'; e.className = 'panel-earned';
       e.innerHTML = `<b>+${earned} ★</b><small>星星 ${balance()}・<a href="shop.html?world=${state.world}">去商店</a></small>`;

@@ -23,14 +23,6 @@
   100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2); opacity: 0; }
 }
 
-#pet-top.cheer { animation: pet-cheer 0.6s ease-out; }
-@keyframes pet-cheer {
-  0% { transform: translateY(0) scale(1); }
-  30% { transform: translateY(-10px) scale(1.25) rotate(-6deg); }
-  60% { transform: translateY(0) scale(1.1) rotate(5deg); }
-  100% { transform: none; }
-}
-
 /* 星星逐粒彈出 */
 .panel .star.on { animation: star-pop 0.5s cubic-bezier(.2,1.6,.4,1) both; }
 .panel .star.on:nth-child(2) { animation-delay: 0.15s; }
@@ -43,7 +35,7 @@ body.focus-mode .focus-tag { display: inline-flex; }
   border: 1px solid var(--line); color: var(--ink-2); }
 
 @media (prefers-reduced-motion: reduce) {
-  .combo.bump, .spark, #pet-top.cheer, .panel .star.on { animation: none; }
+  .combo.bump, .spark, .panel .star.on { animation: none; }
   .spark { display: none; }
 }
 
@@ -54,9 +46,9 @@ body.focus-mode .focus-tag { display: inline-flex; }
 @keyframes panel-in { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 .panel.celebrate .star.on { animation: star-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
 @keyframes star-pop { 0% { transform: scale(0) rotate(-90deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
-.panel.celebrate .pet-wrap { animation: pet-cheer 0.8s ease-out 0.2s; }
+.panel.celebrate .panel-cheer { animation: earned 0.5s ease-out 0.2s both; }
 .panel-earned { display: grid; justify-items: center; margin: -4px 0 8px; animation: earned 0.6s ease-out 1s both; }
 .panel-earned b { font-size: 26px; color: var(--star); }
 .panel-earned small { color: var(--ink-2); }
 @keyframes earned { 0% { transform: translateY(10px); opacity: 0; } 100% { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .confetti, .panel.celebrate, .panel.celebrate .star.on, .panel.celebrate .pet-wrap, .panel-earned { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .confetti, .panel.celebrate, .panel.celebrate .star.on, .panel.celebrate .panel-cheer, .panel-earned { animation: none !important; } }

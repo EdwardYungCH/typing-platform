@@ -72,15 +72,6 @@ export function equippedItems(items) {
   return out;
 }
 
-/** 夥伴圖加上飾物：把 <img> 包起來，頭頂／臉旁放 emoji。size 是圖的 CSS 寬度。 */
-export function petHtml(src, alt, { cls = 'companion', size = 120, items = null, extra = '' } = {}) {
-  const e = items ? equippedItems(items) : {};
-  const acc = [];
-  if (e.hat) acc.push(`<span class="pet-acc hat" aria-hidden="true">${e.hat.emoji}</span>`);
-  if (e.face) acc.push(`<span class="pet-acc face" aria-hidden="true">${e.face.emoji}</span>`);
-  return `<span class="pet-wrap" style="--pet:${size}px"><img class="${cls}" width="${size}" height="${size}" src="${src}" alt="${alt}" ${extra}>${acc.join('')}</span>`;
-}
-
 /** 稱號（裝備了才有） */
 export function titleName(items) { return equippedItems(items).title?.name ?? ''; }
 

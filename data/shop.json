@@ -1,25 +1,93 @@
 {
-  "_說明": "星星商店貨品。price 是星星數；kind：hat（夥伴飾物，顯示在夥伴頭頂）、face（夥伴臉旁）、title（稱號，顯示在名字旁）、kb（鍵盤皮膚，打字頁鍵盤顏色）。world 留空代表兩個世界都可以用。老師想加減貨品或改價錢，直接改這個檔。",
+  "_說明": "星星商店貨品。price 是星星數；kind：title（稱號，顯示在名字旁和排行榜）、kb（鍵盤皮膚，打字頁鍵盤顏色）。world 留空代表兩個世界都可以用。老師想加減貨品或改價錢，直接改這個檔。",
   "items": [
-    { "id": "bow", "kind": "hat", "name": "蝴蝶結", "emoji": "🎀", "price": 6, "desc": "夥伴頭頂一個小蝴蝶結。" },
-    { "id": "cap", "kind": "hat", "name": "棒球帽", "emoji": "🧢", "price": 8, "desc": "運動風的帽子。" },
-    { "id": "flower", "kind": "hat", "name": "小花", "emoji": "🌸", "price": 8, "desc": "春天的感覺。" },
-    { "id": "helmet", "kind": "hat", "name": "太空頭盔", "emoji": "🪖", "price": 12, "desc": "出發探索鍵帽星系！", "world": "planet" },
-    { "id": "wizard", "kind": "hat", "name": "魔法帽", "emoji": "🎩", "price": 12, "desc": "字根魔法學院的正式學生帽。", "world": "magic" },
-    { "id": "star", "kind": "hat", "name": "星星頭飾", "emoji": "⭐", "price": 15, "desc": "閃閃發光。" },
-    { "id": "crown", "kind": "hat", "name": "皇冠", "emoji": "👑", "price": 30, "desc": "打字之王的皇冠。" },
-    { "id": "glasses", "kind": "face", "name": "太陽眼鏡", "emoji": "🕶️", "price": 10, "desc": "型爆。" },
-    { "id": "headphones", "kind": "face", "name": "耳機", "emoji": "🎧", "price": 10, "desc": "邊聽歌邊練習。" },
-    { "id": "balloon", "kind": "face", "name": "氣球", "emoji": "🎈", "price": 6, "desc": "夥伴手上的氣球。" },
-    { "id": "t-new", "kind": "title", "name": "打字新星", "price": 3, "desc": "剛起步的稱號。" },
-    { "id": "t-fast", "kind": "title", "name": "快手", "price": 10, "desc": "手快過腦。" },
-    { "id": "t-key", "kind": "title", "name": "鍵盤俠", "price": 18, "desc": "鍵盤就是武器。" },
-    { "id": "t-quick", "kind": "title", "name": "速成達人", "price": 25, "desc": "首尾碼，一眼睇穿。", "world": "magic" },
-    { "id": "t-astro", "kind": "title", "name": "星際打字員", "price": 25, "desc": "航向鍵帽星系最遠處。", "world": "planet" },
-    { "id": "t-light", "kind": "title", "name": "閃電手", "price": 45, "desc": "最高榮譽。" },
-    { "id": "kb-ocean", "kind": "kb", "name": "海洋鍵盤", "price": 10, "desc": "打字頁的鍵盤變成藍綠色調。", "colors": ["#1e90ff", "#00c2a8"] },
-    { "id": "kb-candy", "kind": "kb", "name": "糖果鍵盤", "price": 14, "desc": "粉紅粉藍的糖果色。", "colors": ["#ff7eb6", "#8ad3ff"] },
-    { "id": "kb-forest", "kind": "kb", "name": "森林鍵盤", "price": 14, "desc": "綠色和木色。", "colors": ["#4caf50", "#c8a165"] },
-    { "id": "kb-neon", "kind": "kb", "name": "霓虹鍵盤", "price": 22, "desc": "黑底發光，夜店感。", "colors": ["#ff2d95", "#2dffea"] }
+    {
+      "id": "t-new",
+      "kind": "title",
+      "name": "打字新星",
+      "price": 3,
+      "desc": "剛起步的稱號。"
+    },
+    {
+      "id": "t-fast",
+      "kind": "title",
+      "name": "快手",
+      "price": 10,
+      "desc": "手快過腦。"
+    },
+    {
+      "id": "t-key",
+      "kind": "title",
+      "name": "鍵盤俠",
+      "price": 18,
+      "desc": "鍵盤就是武器。"
+    },
+    {
+      "id": "t-quick",
+      "kind": "title",
+      "name": "速成達人",
+      "price": 25,
+      "desc": "首尾碼，一眼睇穿。",
+      "world": "magic"
+    },
+    {
+      "id": "t-astro",
+      "kind": "title",
+      "name": "星際打字員",
+      "price": 25,
+      "desc": "航向鍵帽星系最遠處。",
+      "world": "planet"
+    },
+    {
+      "id": "t-light",
+      "kind": "title",
+      "name": "閃電手",
+      "price": 45,
+      "desc": "最高榮譽。"
+    },
+    {
+      "id": "kb-ocean",
+      "kind": "kb",
+      "name": "海洋鍵盤",
+      "price": 10,
+      "desc": "打字頁的鍵盤變成藍綠色調。",
+      "colors": [
+        "#1e90ff",
+        "#00c2a8"
+      ]
+    },
+    {
+      "id": "kb-candy",
+      "kind": "kb",
+      "name": "糖果鍵盤",
+      "price": 14,
+      "desc": "粉紅粉藍的糖果色。",
+      "colors": [
+        "#ff7eb6",
+        "#8ad3ff"
+      ]
+    },
+    {
+      "id": "kb-forest",
+      "kind": "kb",
+      "name": "森林鍵盤",
+      "price": 14,
+      "desc": "綠色和木色。",
+      "colors": [
+        "#4caf50",
+        "#c8a165"
+      ]
+    },
+    {
+      "id": "kb-neon",
+      "kind": "kb",
+      "name": "霓虹鍵盤",
+      "price": 22,
+      "desc": "黑底發光，夜店感。",
+      "colors": [
+        "#ff2d95",
+        "#2dffea"
+      ]
+    }
   ]
 }

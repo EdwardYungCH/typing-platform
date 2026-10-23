@@ -1,9 +1,8 @@
 import { getProgress, getSetting } from './storage.js';
-import { loadCompanions, art, getChoice, nickOf, summary, stageOf, nextGoal } from './companion.js';
 import { dailyProgress } from './daily.js';
 import { start as syncStart } from './sync.js';
 import { api } from './api.js';
-import { loadShop, balance, petHtml, titleName } from './wallet.js';
+import { loadShop, balance, titleName } from './wallet.js';
 import { weekStrip, awardStreak } from './streak.js';
 
 const me = await syncStart();
@@ -20,7 +19,7 @@ if (me) {
 // 老師功課
 let homework = [];
 if (me) { try { homework = (await api('/api/assignments')).assignments ?? []; } catch { /* 離線 */ } }
-const data = await loadCompanions();
+const data = { worlds: { planet: { lang: 'en', name: '鍵帽星系', tagline: '英文打字・星際冒險' }, magic: { lang: 'zh', name: '字根魔法學院', tagline: '中文速成・魔法修行' } } };
 const shop = await loadShop();
 awardStreak();
 // 頂欄：星星餘額（按入商店）；英雄區下面：連續天數
@@ -31,32 +30,18 @@ const lessonsOf = { en: en.lessons, zh: zhL.lessons };
 const root = document.getElementById('worlds');
 
 for (const [w, info] of Object.entries(data.worlds)) {
-  const s = summary(info.lang);
-  const stage = stageOf(data.stages, s);
-  const goal = nextGoal(data.stages, s);
-  const cid = getChoice(w);
-  const c = data.companions.find((x) => x.id === cid);
 
   const card = document.createElement('article');
   card.className = 'world-card card';
   card.dataset.w = w;
 
-  const pet = c
-    ? `<div class="pet-box">${petHtml(art(w, c.id, stage), c.name, { cls: 'companion pet pet-float', size: 120, items: shop })}<div class="nm">${nickOf(w, c)}${titleName(shop) ? ` <span class="title-chip">${titleName(shop)}</span>` : ''}</div><span class="badge">${data.stages[stage].name}</span></div>`
-    : `<a class="btn primary" href="pick.html?world=${w}">揀夥伴</a>`;
 
-  const pct = Math.min(100, Math.round(((stage) / 4) * 100 + (goal ? Math.min(s.lessons / goal.stage.need.lessons, 1) * 25 : 0)));
-  const growth = c ? `
-    <div class="growth">
-      <div class="bar" role="img" aria-label="成長進度 ${pct}%"><i style="width:${pct}%"></i></div>
-      <small>${goal ? `下一階段「${goal.stage.name}」：${goal.need.join('、')}` : '已達到最高階段，你是傳說！'}</small>
-    </div>` : '';
 
   card.innerHTML = `
     <div class="world-top">
       <div><span class="tag">${w === 'planet' ? 'ENGLISH' : '速成'}</span><h2>${info.name}</h2><p class="muted" style="margin:2px 0 0">${info.tagline}</p></div>
-      ${pet}
-    </div>${growth}`;
+      ${titleName(shop) ? `<span class="title-chip">${titleName(shop)}</span>` : ''}
+    </div>`;
 
   const prog = getProgress(info.lang);
   const placement = getSetting(`placement:${info.lang}`, null);
