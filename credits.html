@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hant-HK" data-world="planet">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>鳴謝與授權</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/world.css">
+  <link rel="stylesheet" href="css/doc.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="index.html" data-site="productName">打字練習平台</a>
+      <span class="spacer"></span>
+      <a class="btn ghost" href="index.html">回首頁</a>
+    </header>
+    <main class="doc">
+      <h1>鳴謝與授權</h1>
+      <p class="updated">最後更新：<span data-site="policyUpdated">2026-11-04</span></p>
+      <p class="lead">本平台的課堂設計、英文句子、中文詞語和句子、拆碼說明、程式和介面為原創。以下資料來自開放授權的來源，謹此致謝，並按各自的授權條款使用。</p>
+
+      <table>
+        <thead><tr><th>用在哪裏</th><th>來源</th><th>授權</th></tr></thead>
+        <tbody>
+          <tr><td>雙色拆碼圖的筆畫；字根和輔助字形圖</td><td><a href="https://github.com/skishore/makemeahanzi">Make Me a Hanzi</a>（筆畫源自 Arphic PL UKai、Arphic PL KaitiM GB）</td><td>Arphic Public License（筆畫）；LGPL-3.0（字典）。由此衍生的字形資料（<code>assets/glyphs/</code>、<code>assets/shapes/</code>）同樣以 Arphic Public License 授權，授權全文見 <a href="assets/glyphs/COPYING.txt">COPYING.txt</a>。</td></tr>
+          <tr><td>倉頡全碼（拆字圖解）</td><td><a href="https://github.com/rime/rime-cangjie">rime-cangjie</a></td><td>LGPL-3.0。整理後的碼表以原格式公開於 <a href="data/zh-codes.json">data/zh-codes.json</a>。</td></tr>
+          <tr><td>常用字次序</td><td><a href="https://github.com/rime/rime-essay">rime-essay</a></td><td>LGPL-3.0</td></tr>
+          <tr><td>速成碼和選字次序</td><td><a href="https://github.com/kanzaki1201/rime-ms-quick">rime-ms-quick</a>（依 Windows 微軟速成整理）</td><td>見來源</td></tr>
+          <tr><td>英文課堂的詞語和常用詞</td><td><a href="https://www.newgeneralservicelist.com/">New General Service List 1.01</a>（Browne, Culligan &amp; Phillips, 2013）</td><td>CC BY-SA 4.0。由此選取和改編的詞表（<a href="data/en-lessons.json">data/en-lessons.json</a> 的詞語練習）同樣以 CC BY-SA 4.0 授權。</td></tr>
+          <tr><td>標題字體</td><td><a href="https://fonts.google.com/noto/specimen/Noto+Serif+TC">Noto Serif TC</a></td><td>SIL Open Font License 1.1</td></tr>
+          <tr><td>內文字體</td><td><a href="https://fonts.google.com/noto/specimen/Noto+Sans+TC">Noto Sans TC</a></td><td>SIL Open Font License 1.1</td></tr>
+          <tr><td>打字文字和鍵帽字體</td><td><a href="https://github.com/IBM/plex">IBM Plex Mono</a></td><td>SIL Open Font License 1.1</td></tr>
+        </tbody>
+      </table>
+
+      <h2>商標</h2>
+      <p>Windows、Microsoft 是 Microsoft Corporation 的商標。本平台與 Microsoft 沒有關係；「微軟速成」一詞只用來說明課堂教的是哪一種輸入法。</p>
+
+      <h2>回報錯誤</h2>
+      <p>如發現拆碼、選字次序或課文有錯，請用每頁右下角的「回報問題」告訴我們。</p>
+    </main>
+  </div>
+  <script type="module" src="js/doc-page.js"></script>
+</body>
+</html>

@@ -130,7 +130,9 @@ export function verify({ lang, text, timeLimit, keystrokes, pass, serverElapsedS
     if (sd < 15) flags.push('robotic');
   }
   if (!r.total) flags.push('empty');
-  if (client && Number.isFinite(client.wpm) && Math.abs(client.wpm - wpm) > Math.max(5, wpm * 0.15)) flags.push('client-mismatch');
+  // 按鍵時間要一直向前；倒退代表紀錄被改過
+  for (let i = 1; i < keys.length; i++) if (keys[i].t < keys[i - 1].t) { flags.push('non-monotonic'); break; }
+  if (client && client.wpm !== null && Number.isFinite(client.wpm) && Math.abs(client.wpm - wpm) > Math.max(5, wpm * 0.15)) flags.push('client-mismatch');
 
   const stats = { netWpm: wpm, accuracy };
   const stars = pass && Object.keys(pass).length ? starsFor(stats, pass, levels.stars) : 0;

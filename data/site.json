@@ -1,0 +1,9 @@
+{
+  "_說明": "整個平台的產品資料：名稱、營運者、聯絡方法。私隱政策、使用條款、鳴謝頁和頁尾都讀這個檔。賣給其他學校前，請把 operator 和 contactEmail 改成你的資料。",
+  "productName": "打字練習平台",
+  "productNameEn": "Typing Practice Platform",
+  "operator": "（營運者名稱，請在 data/site.json 填寫）",
+  "contactEmail": "",
+  "policyUpdated": "2026-11-04",
+  "dataRetentionDays": 30
+}

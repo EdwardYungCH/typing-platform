@@ -5,32 +5,29 @@
 
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
-import { readdirSync, readFileSync } from 'node:fs';
 import { join, extname } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import { makeD1 } from './d1-sqlite.mjs';
 
 const PORT = Number(process.argv[2] ?? 8787);
-const DBFILE = process.argv[3] ?? ':memory:';
+const DBFILE = process.argv[3] && !process.argv[3].startsWith('--') ? process.argv[3] : ':memory:';
 const ROOT = new URL('..', import.meta.url).pathname;
 
-// ---- D1 模擬：prepare().bind().first()/all()/run()，batch() ----
-const sqlite = new DatabaseSync(DBFILE);
-for (const f of readdirSync(join(ROOT, 'migrations')).sort()) sqlite.exec(readFileSync(join(ROOT, 'migrations', f), 'utf8'));
+// ---- D1 模擬（tools/d1-sqlite.mjs）；資料表由 worker 第一次收到請求時自動建立 ----
+const { DB, Q } = makeD1(DBFILE);
 
-const fix = (v) => (v === undefined ? null : typeof v === 'boolean' ? (v ? 1 : 0) : v);
-class Stmt {
-  constructor(sql) { this.sql = sql; this.args = []; }
-  bind(...args) { this.args = args.map(fix); return this; }
-  async first() { Q.n++; return sqlite.prepare(this.sql).get(...this.args) ?? null; }
-  async all() { Q.n++; return { results: sqlite.prepare(this.sql).all(...this.args) }; }
-  async run() { Q.n++; return this._run(); }
-  _run() { const r = sqlite.prepare(this.sql).run(...this.args); return { meta: { last_row_id: Number(r.lastInsertRowid), changes: r.changes } }; }
-}
-// batch 跟 D1 一樣是一個交易：中途出錯就全部還原
-const DB = { prepare: (sql) => new Stmt(sql), exec: async (sql) => sqlite.exec(sql),
-  batch: async (stmts) => { Q.n++; sqlite.exec('BEGIN'); try { const out = []; for (const s of stmts) out.push(s._run()); sqlite.exec('COMMIT'); return out; } catch (e) { sqlite.exec('ROLLBACK'); throw e; } } };
-// 每個請求的資料庫查詢次數（batch 算一次），放在回應的 x-db-queries；Cloudflare 免費計劃上限 50
-const Q = { n: 0 };
+// ---- R2 模擬（雲端備份）：存在記憶體 ----
+const r2 = new Map();
+const BACKUPS = {
+  async put(key, data) { r2.set(key, { data: typeof data === 'string' ? Buffer.from(data) : Buffer.from(data), uploaded: new Date() }); },
+  async get(key) { const o = r2.get(key); return o ? { body: o.data } : null; },
+  async list({ prefix = '' } = {}) { return { objects: [...r2.entries()].filter(([k]) => k.startsWith(prefix)).map(([key, o]) => ({ key, size: o.data.length, uploaded: o.uploaded })) }; },
+  async delete(keys) { for (const k of [].concat(keys)) r2.delete(k); },
+  async createMultipartUpload(key) {
+    const parts = [];
+    return { async uploadPart(n, data) { parts[n] = Buffer.from(data); return { partNumber: n }; },
+      async complete() { r2.set(key, { data: Buffer.concat(parts.filter(Boolean)), uploaded: new Date() }); }, async abort() {} };
+  },
+};
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.csv': 'text/csv' };
 
@@ -55,7 +52,8 @@ register('data:text/javascript,' + encodeURIComponent(`
     return next(url, context);
   }`));
 const worker = (await import('../worker/index.js')).default;
-const env = { DB, ASSETS };
+// 加 --no-r2 模擬未設定雲端備份
+const env = { DB, ASSETS, ...(process.argv.includes('--no-r2') ? {} : { BACKUPS }), DEFAULT_SCHOOL_CODE: 'demo', DEFAULT_SCHOOL_NAME: '示範中學' };
 
 createServer(async (req, res) => {
   const chunks = [];
