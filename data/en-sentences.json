@@ -1,0 +1,185 @@
+{
+ "_說明": "英文句子庫：每日任務和練習區「句子練習」用。lesson 是打得到這句要完成的課（之前未學的鍵不會出現）。由 tools/gen_en_lessons.py 產生。",
+ "sentences": [
+  {
+   "text": "My name is Ken and I am in Form One. I go to school by MTR every morning. My favourite lesson is Computer because we learn to type with ten fingers.",
+   "lesson": 12
+  },
+  {
+   "text": "It was a hot day in July. Mum and I took a ferry to Cheung Chau. We rode bikes, ate fish balls and swam at the beach. I was tired but happy when we got home.",
+   "lesson": 12
+  },
+  {
+   "text": "Our class is planning a party for the end of term. Amy will bring cups and plates, Ben will make a poster, and I will choose the music. We hope everyone can come!",
+   "lesson": 14
+  },
+  {
+   "text": "Typing is a useful skill. At first it feels slow because you must not look at the keys. Keep your fingers on the home row, sit up straight and practise for ten minutes a day.",
+   "lesson": 12
+  },
+  {
+   "text": "Last Saturday our class visited a farm in the New Territories.",
+   "lesson": 12
+  },
+  {
+   "text": "My name is Ken and I am in Form One.",
+   "lesson": 12
+  },
+  {
+   "text": "I go to school by MTR every morning.",
+   "lesson": 12
+  },
+  {
+   "text": "My favourite lesson is Computer because we learn to type with ten fingers.",
+   "lesson": 12
+  },
+  {
+   "text": "It was a hot day in July.",
+   "lesson": 12
+  },
+  {
+   "text": "Mum and I took a ferry to Cheung Chau.",
+   "lesson": 12
+  },
+  {
+   "text": "We rode bikes, ate fish balls and swam at the beach.",
+   "lesson": 12
+  },
+  {
+   "text": "I was tired but happy when we got home.",
+   "lesson": 12
+  },
+  {
+   "text": "Our class is planning a party for the end of term.",
+   "lesson": 12
+  },
+  {
+   "text": "Amy will bring cups and plates, Ben will make a poster, and I will choose the music.",
+   "lesson": 12
+  },
+  {
+   "text": "We hope everyone can come!",
+   "lesson": 14
+  },
+  {
+   "text": "Typing is a useful skill.",
+   "lesson": 12
+  },
+  {
+   "text": "At first it feels slow because you must not look at the keys.",
+   "lesson": 12
+  },
+  {
+   "text": "Keep your fingers on the home row, sit up straight and practise for ten minutes a day.",
+   "lesson": 12
+  },
+  {
+   "text": "The sun is up and we go to school.",
+   "lesson": 12
+  },
+  {
+   "text": "I like to read books in the library.",
+   "lesson": 12
+  },
+  {
+   "text": "My friend has a small brown dog.",
+   "lesson": 12
+  },
+  {
+   "text": "Please open your books at page ten.",
+   "lesson": 12
+  },
+  {
+   "text": "We will have a test on Friday.",
+   "lesson": 12
+  },
+  {
+   "text": "She can play the piano very well.",
+   "lesson": 12
+  },
+  {
+   "text": "It is a good day to learn something new.",
+   "lesson": 12
+  },
+  {
+   "text": "Our class plays football after lunch.",
+   "lesson": 12
+  },
+  {
+   "text": "Can you help me with my homework?",
+   "lesson": 14
+  },
+  {
+   "text": "He walks to the bus stop every morning.",
+   "lesson": 12
+  },
+  {
+   "text": "Thank you for your help today!",
+   "lesson": 14
+  },
+  {
+   "text": "The cat sat on the warm windowsill.",
+   "lesson": 12
+  },
+  {
+   "text": "We need to drink water and sleep well.",
+   "lesson": 12
+  },
+  {
+   "text": "Typing gets easier when you practise every day.",
+   "lesson": 12
+  },
+  {
+   "text": "What time does the class start?",
+   "lesson": 14
+  },
+  {
+   "text": "Look at the screen, not at the keys.",
+   "lesson": 12
+  },
+  {
+   "text": "Good typists stay calm and keep a steady rhythm.",
+   "lesson": 12
+  },
+  {
+   "text": "My favourite subject is science.",
+   "lesson": 12
+  },
+  {
+   "text": "There are twenty-five students in my class.",
+   "lesson": 14
+  },
+  {
+   "text": "Today I typed more words than yesterday!",
+   "lesson": 14
+  },
+  {
+   "text": "we read a book at lunch",
+   "lesson": 8
+  },
+  {
+   "text": "the kids ride bikes in the park",
+   "lesson": 10
+  },
+  {
+   "text": "she has a red bag",
+   "lesson": 7
+  },
+  {
+   "text": "he likes fresh fruit",
+   "lesson": 5
+  },
+  {
+   "text": "we will go to the zoo next week",
+   "lesson": 11
+  },
+  {
+   "text": "my mother cooks rice and fish",
+   "lesson": 9
+  },
+  {
+   "text": "the quiet pupil drew a picture",
+   "lesson": 10
+  }
+ ]
+}

@@ -3,7 +3,8 @@
 // kind（中文）：roots 字根、chart 字形、split 拆字、quick 打字、weak 弱項、ime 真實輸入法
 // kind（英文）：keys 單鍵、words 詞語、sentences 句子、weak 弱項
 
-import { getWeak } from './storage.js';
+import { getWeak, getLessonResult } from './storage.js';
+import { pickSentences } from './daily.js';
 
 const ALL = 'abcdefghijklmnopqrstuvwyx';
 const EXCLUDE = new Set('呵喫縣臺爾啦黨');  // 詞頻表帶來、不適合課堂的字
@@ -55,16 +56,17 @@ export function buildPractice(params, { lang, zh, enLessons }) {
     const learned = new Set();
     for (const l of enLessons) for (const k of l.newKeys ?? []) { const m = /^Key([A-Z])$/.exec(k); if (m) learned.add(m[1].toLowerCase()); }
     const chars = params.get('chars') ?? [...learned].join('');
-    if (kind === 'keys') step = { type: 'drill', gen: { kind: 'groups', chars, groups: Math.ceil(count / 2), minLen: 2, maxLen: 4 } };
+    if (kind === 'keys') step = { type: 'drill', gen: { kind: 'groups', chars, groups: count, minLen: 2, maxLen: 4 } };
     else if (kind === 'words') {
       const words = enLessons.flatMap((l) => l.steps.flatMap((s) => s.gen?.words ?? [])).filter((w) => [...w].every((c) => chars.includes(c)));
       step = { type: 'drill', gen: { kind: 'words', words: [...new Set(words)], count } };
     } else if (kind === 'sentences') {
-      const texts = enLessons.flatMap((l) => l.steps.map((s) => s.text).filter((t) => t && t.length > 25));
-      step = { type: 'drill', text: texts[Math.floor(Math.random() * texts.length)] ?? 'the quick brown fox jumps over the lazy dog' };
+      // 只出已完成的課打得到的句子（未學 Shift 不會出大寫）
+      const doneUpTo = Math.max(1, ...enLessons.filter((l) => getLessonResult('en', l.id)?.done).map((l) => l.id));
+      step = { type: 'drill', text: pickSentences(doneUpTo, Math.max(2, Math.round(count / 4))) || 'a sad lad had a salad' };
     } else if (kind === 'weak') {
       const weak = getWeak('en').filter((w) => w.key.length === 1).slice(0, 6).map((w) => w.key);
-      step = weak.length ? { type: 'drill', gen: { kind: 'groups', chars: weak.join('') + 'asdfjkl', groups: Math.ceil(count / 2), minLen: 2, maxLen: 4 } } : null;
+      step = weak.length ? { type: 'drill', gen: { kind: 'groups', chars: weak.join('') + 'asdfjkl', groups: count, minLen: 2, maxLen: 4 } } : null;
     }
   }
   if (!step) return null;
