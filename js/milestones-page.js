@@ -13,6 +13,7 @@ const params = new URLSearchParams(location.search);
 let lang = params.get('lang') === 'zh' ? 'zh' : 'en';
 
 const enLessons = (await fetch('data/en-lessons.json').then((r) => r.json())).lessons;
+const zhLessonCount = (await fetch('data/zh-lessons.json').then((r) => r.json())).lessons.length;
 let zh = null, chartInfo = {};
 
 const html = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -43,7 +44,7 @@ function zhMilestones() {
   const weakChars = top500.filter((ch) => m[`c:${ch}`] && m[`c:${ch}`].box < mastery.MASTER_BOX);
 
   $('list').innerHTML = [
-    bar('完成 16 課', '第 0 至 15 課全部過關', lessonsDone, 16),
+    bar(`完成 ${zhLessonCount} 課`, '第 0 課到最後一課全部過關', lessonsDone, zhLessonCount),
     bar('認齊 24 個字根＋難字鍵', '看字根立刻按對鍵（24 個字根加難字鍵 X）', roots.mastered, rootIds.length,
       weakRoots.length ? `<p class="ms-weak">未穩的：${weakRoots.map((k) => `<span class="chip">${ROOTS[k]} <small>${k.toUpperCase()}</small></span>`).join('')}</p>` : ''),
     bar('認齊輔助字形', `課堂教過的 ${shapeIds.length} 個字形，看到就知道屬於哪個鍵`, shapes.mastered, shapeIds.length,
@@ -87,7 +88,7 @@ async function render() {
   const dp = dailyProgress(lang);
   const due = mastery.due(lang).length;
   $('daily').innerHTML = `<div class="ms-head"><b>每日任務</b><span class="ms-num">${dp.finishedToday ? '今日已完成 ✓' : `今日 ${dp.done.length}／3`}</span></div>
-    <p class="muted ms-sub">連續 ${dp.streak} 天。今日有 ${due} 個項目到期要重溫。</p>
+    <p class="muted ms-sub">每日任務連續完成 ${dp.streak} 天。今日有 ${due} 個項目到期要重溫。</p>
     <a class="btn primary" href="type.html?lang=${lang}&mode=daily">${dp.finishedToday ? '再做一次' : '開始今日任務'}</a>`;
   if (lang === 'zh') {
     if (!zh) {

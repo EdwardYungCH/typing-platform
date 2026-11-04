@@ -215,8 +215,8 @@ function renderOverview(body, students) {
   const tile = (label, value, sub = '') => `<div class="rp-tile"><b>${value}</b><small>${label}</small>${sub ? `<span>${sub}</span>` : ''}</div>`;
   const flagged = students.filter((s) => out.get(s.id).length);
   const dist = (lang) => {
-    const cnt = Array(17).fill(0);
-    for (const s of students) cnt[Math.min(16, num(sm(s)[lang]?.lessons))] += 1;
+    const cnt = Array(18).fill(0);
+    for (const s of students) cnt[Math.min(17, num(sm(s)[lang]?.lessons))] += 1;
     const max = Math.max(...cnt, 1);
     return `<div class="rp-dist" role="img" aria-label="${lang === 'en' ? '英文' : '中文'}完成課數分佈">${cnt.map((c, i) => `<div class="rp-col" title="完成 ${i} 課：${c} 人"><span class="rp-bar" style="height:${(c / max) * 100}%"></span><i>${c || ''}</i><small>${i}</small></div>`).join('')}</div>`;
   };

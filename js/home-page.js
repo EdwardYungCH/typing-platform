@@ -10,8 +10,8 @@ import { applyWorld } from './world.js';
 const $ = (id) => document.getElementById(id);
 const html = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const WORLDS = {
-  planet: { lang: 'en', name: '英文打字', sub: '鍵帽星系', desc: '由基準鍵到整段文字，16 課' },
-  magic: { lang: 'zh', name: '中文速成', sub: '字根魔法學院', desc: '字根、拆字、選字、常用字，16 課' },
+  planet: { lang: 'en', name: '英文打字', sub: '鍵帽星系', desc: '由基準鍵到整段文字，17 課' },
+  magic: { lang: 'zh', name: '中文速成', sub: '字根魔法學院', desc: '字根、拆字、選字、常用字，17 課' },
 };
 
 const me = await syncStart();

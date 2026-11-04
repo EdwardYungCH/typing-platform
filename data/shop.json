@@ -13,7 +13,7 @@
       "kind": "title",
       "name": "快手",
       "price": 10,
-      "desc": "手快過腦。"
+      "desc": "手指比思考還快。"
     },
     {
       "id": "t-key",
@@ -27,7 +27,7 @@
       "kind": "title",
       "name": "速成達人",
       "price": 25,
-      "desc": "首尾碼，一眼睇穿。",
+      "desc": "首尾碼一眼就看得出。",
       "world": "magic"
     },
     {
@@ -83,7 +83,7 @@
       "kind": "kb",
       "name": "霓虹鍵盤",
       "price": 22,
-      "desc": "黑底發光，夜店感。",
+      "desc": "黑底發光，像晚上的城市。",
       "colors": [
         "#ff2d95",
         "#2dffea"

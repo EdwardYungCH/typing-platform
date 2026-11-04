@@ -389,8 +389,8 @@ def batch_lesson(lid, title, subtitle, start, end, test_pass, test_count):
                   'gen': {'kind': 'chars', 'chars': COMMON[start:end], 'count': test_count}})
     return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': [], 'pass': test_pass, 'steps': steps}
 
-L.append(batch_lesson(12, '常用字（一）', '最常用 500 字，分 10 批', 0, 500, {'wpm': 3, 'accuracy': 90}, 120))
-L.append(batch_lesson(13, '常用字（二）', '第 501 至 1000 字，分 10 批', 500, 1000, {'wpm': 5, 'accuracy': 90}, 150))
+L.append(batch_lesson(12, '常用字（一）', '最常用 500 字，分 10 批', 0, 500, {'wpm': 6, 'accuracy': 90}, 120))
+L.append(batch_lesson(13, '常用字（二）', '第 501 至 1000 字，分 10 批', 500, 1000, {'wpm': 8, 'accuracy': 90}, 150))
 
 # 第 14 課：詞語（原創的香港常用兩字詞，用頓號分隔；部分字要翻頁，例如「學」）
 WORDS = """學校 老師 同學 課室 功課 考試 上課 下課 放學 早餐 午餐 晚餐 朋友 家人 爸爸 媽媽 哥哥 姐姐 弟弟 妹妹
@@ -407,7 +407,7 @@ rnd = random.Random(2027)
 def word_text(k):
     return '、'.join(rnd.sample(words, k)) + '。'
 L.append(text_lesson(14, '詞語', '常用兩字詞', [word_text(8), word_text(8), word_text(10), word_text(30)],
-    '詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按空白鍵。', {'wpm': 6, 'accuracy': 90}, unit='組'))
+    '詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按空白鍵。', {'wpm': 10, 'accuracy': 90}, unit='組'))
 
 # 第 15 課：句子與短文（原創）
 sentences = [
@@ -419,7 +419,24 @@ sentences = [
     '學習打字需要耐心。開始時速度會比較慢，但只要每天練習十分鐘，手指就會慢慢記住每個字根的位置。先求準確，再求速度，你一定可以做到！',
 ]
 L.append(text_lesson(15, '句子與短文', '把整段話打出來', sentences,
-    '連標點一起打。不記得碼時，看提示。', {'wpm': 6, 'accuracy': 90}, limit=120))
+    '連標點一起打。不記得碼時，看提示。', {'wpm': 12, 'accuracy': 90}, limit=120))
+
+# 第 16 課：常見翻頁字（最常用 700 字中不在第一頁的字，要背熟「碼＋空白鍵次數＋數字」）
+def flip_seq(c):
+    code = first[c]; i = Z['quick'][code].index(c)
+    return code, i // 9, i % 9 + 1
+FLIP = [c for c in COMMON[:700] if c in first and Z['quick'][first[c]].index(c) >= 9][:40]
+ex = '、'.join(f"{c} {first[c].upper()}{'␣' * flip_seq(c)[1]}{flip_seq(c)[2]}" for c in FLIP[:8])
+rep = lambda cs, n: ''.join(cs) * n
+L.append({'id': 16, 'title': '常見翻頁字', 'subtitle': '不在第一頁的常用字', 'newKeys': [], 'pass': {'wpm': 6, 'accuracy': 90}, 'steps': [
+    guide('常見翻頁字', [
+        {'title': '為甚麼要背翻頁字', 'points': ['最常用的 700 個字之中，大約 130 個不在候選字的第一頁', '這些字幾乎每段文章都會出現（個、這、就、學、說……）', '背熟「速成碼 → 按幾次空白鍵 → 揀第幾個」，手指就不用停下來找'], 'show': 'keyboard'},
+        {'title': '讀法', 'points': [f'例子：{ex}', '␣ 代表按一下空白鍵（翻到下一頁），最後的數字是揀第幾個', '多練幾次，手指會記住整個動作，不用每次看候選字']}]),
+    {'type': 'drill', 'mode': 'quick', 'title': '第 1 組', 'hint': '每個字打三次。按提示翻頁，記住空白鍵要按幾次。', 'text': rep(FLIP[:12], 3)},
+    {'type': 'drill', 'mode': 'quick', 'title': '第 2 組', 'hint': '每個字打三次。', 'text': rep(FLIP[12:24], 3)},
+    {'type': 'drill', 'mode': 'quick', 'title': '第 3 組', 'hint': '每個字打兩次。', 'text': rep(FLIP[24:40], 2)},
+    {'type': 'test', 'mode': 'quick', 'title': '過關小測', 'timeLimit': 90, 'pass': {'wpm': 6, 'accuracy': 90},
+     'hint': '90 秒內打得愈多愈好，沒有提示。速度達每分鐘 6 字、準確率達 90% 即過關。', 'gen': {'kind': 'chars', 'chars': ''.join(FLIP), 'count': 40}}]})
 
 # 檢查：所有字都在碼表
 # 第 9 課才教的規則（複合字 隹 目 門 阝 鬼 幾 虍 鬥、包含省略、特殊字、特別字首）：

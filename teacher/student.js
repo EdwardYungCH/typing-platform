@@ -65,7 +65,7 @@ async function boot() {
     <p class="meta" style="margin:4px 0 0;color:var(--ink-2)">${html(s.sid)}・${s.year ? html(`${s.year} ${s.class_name}`) : '未編班'}${s.class_no ? `（${s.class_no} 號）` : ''}</p>
     <p class="hint">進度最後更新：${d.updatedAt ? new Date(d.updatedAt).toLocaleString('zh-HK', { hour12: false }) : '從未同步'}</p>
     <div class="rp">
-      <div class="rp-tiles">${tile('英文完成課數', `${doneN('en')} / 17`)}${tile('中文完成課數', `${doneN('zh')} / 16`)}${tile('總練習時間', `${minutes} 分鐘`, `${attempts.length} 次`)}
+      <div class="rp-tiles">${tile('英文完成課數', `${doneN('en')} / ${lessons.en.length}`)}${tile('中文完成課數', `${doneN('zh')} / ${lessons.zh.length}`)}${tile('總練習時間', `${minutes} 分鐘`, `${attempts.length} 次`)}
         ${tile('英文最佳速度', `${best('en')} WPM`)}${tile('中文最佳速度', `${best('zh')} 字/分`)}${tile('最後活動', last ? new Date(last).toLocaleDateString('zh-HK') : '—')}</div>
       <section class="card" style="margin-top:12px"><h3>最近 30 天練習時間（分鐘）</h3>${chart}</section>
       <section class="card" style="margin-top:12px"><h3>英文課堂</h3>${lessonTable('en')}<h4 style="margin-top:12px">常錯的鍵</h4>${weakHtml('en')}</section>

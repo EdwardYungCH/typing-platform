@@ -611,7 +611,7 @@ function renderPair(eng, step, isTest, wrongNow) {
   }
   $('pair-hint').innerHTML = hint;
   const right = eng.status.filter((x) => x === 'ok').length;
-  $('pair-count').textContent = `第 ${eng.pos + 1} / ${total} 題　一次答啱 ${right}　答錯 ${state.pairWrong}`;
+  $('pair-count').textContent = `第 ${eng.pos + 1} / ${total} 題　一次答對 ${right}　答錯 ${state.pairWrong}`;
 
   // 右邊：評測顯示字形表；練習顯示上一題的雙色拆碼
   // 右邊只放字根和輔助字形表（多欄，一眼看完）；上一題的雙色拆碼放左邊提示下面

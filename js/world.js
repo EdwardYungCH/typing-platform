@@ -59,4 +59,16 @@ function openFeedback() {
     d.addEventListener('close', () => d.remove());
   }
 }
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountFeedback); else mountFeedback();
+/** 瀏覽器不能儲存（私密瀏覽、封鎖網站資料、空間已滿）：提示學生紀錄不會保存 */
+function checkStorage() {
+  try { localStorage.setItem('tp:probe', '1'); localStorage.removeItem('tp:probe'); return; } catch { /* 不能儲存 */ }
+  const page = document.querySelector('.page');
+  if (!page || document.getElementById('storage-warn')) return;
+  const p = document.createElement('p');
+  p.id = 'storage-warn'; p.setAttribute('role', 'status');
+  p.style.cssText = 'margin:8px 0;padding:8px 12px;border-radius:6px;background:var(--bad-bg);color:var(--bad);font-size:14px';
+  p.textContent = '這個瀏覽器不能儲存紀錄（可能是私密瀏覽或封鎖了網站資料），練習照常可以做，但關閉網頁後紀錄會消失。請改用一般瀏覽視窗。';
+  page.querySelector('.topbar')?.after(p);
+}
+function onReady() { mountFeedback(); checkStorage(); }
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady); else onReady();

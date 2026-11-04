@@ -96,7 +96,7 @@ export function buildDaily({ lang, zh, lessons, chartInfo }) {
     const dueKeys = mastery.due('en', 'k:').map((id) => id.slice(2));
     const chars = [...new Set([...dueKeys, ...keys])].join('');
     steps.push({ type: 'drill', daily: 'review', title: '單鍵複習', gen: { kind: 'groups', chars: (dueKeys.length ? dueKeys.join('') : chars) + 'asdfjkl', groups: 10, minLen: 2, maxLen: 4 },
-                 hint: `今日要重溫 ${dueKeys.length} 個鍵。眼看螢幕，手指回到起始位置。` });
+                 hint: dueKeys.length ? `今日要重溫 ${dueKeys.length} 個鍵。眼看螢幕，手指回到起始位置。` : '重溫學過的鍵。眼看螢幕，手指回到起始位置。' });
     const words = [...new Set(lessons.flatMap((l) => l.steps.flatMap((s) => s.gen?.words ?? [])).filter((w) => [...w].every((c) => chars.includes(c))))];
     if (words.length >= 10) steps.push({ type: 'drill', daily: 'split', title: '詞語', gen: { kind: 'words', words, count: 15 }, hint: '一個一個詞打，打錯要退回改正。' });
     const doneUpTo = Math.max(1, ...lessons.filter((l) => getLessonResult('en', l.id)?.done).map((l) => l.id));
