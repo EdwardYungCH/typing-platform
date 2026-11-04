@@ -16,7 +16,7 @@ if (me) {
   $('form').hidden = true;
   $('already-text').textContent = `這部電腦現在登入了 ${me.className ? `${me.className} ` : ''}${me.name}（${me.sid}）。`;
   $('continue').href = next;
-  $('switch').onclick = async () => { await logout(); location.reload(); };
+  $('switch').onclick = async () => { if (!(await logout())) alert('上一位同學有部分紀錄未能上載（可能是網絡問題），他下次在這部電腦登入時會自動補上。'); location.reload(); };
 }
 
 // 有幾間學校：只有一間就不用填學校代碼

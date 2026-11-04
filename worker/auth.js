@@ -132,7 +132,7 @@ export async function sweep(db) {
 // 帳號 + 網絡：教師 8 次、學生 10 次就鎖 10 分鐘（同學亂試別人帳號，只會鎖住自己所在網絡，不會令本人在家也登入不到）。
 // 帳號（不論網絡）：一小時內 50 次失敗才鎖 30 分鐘，防止有人換不同網絡慢慢估。
 export const LIMITS = {
-  ip: { max: 300, windowMin: 10, lockMin: 10 },
+  ip: { max: 100, windowMin: 10, lockMin: 10 },   // 只計老師登入（學生登入不設網絡上限）
   teacherIp: { max: 8, windowMin: 15, lockMin: 10 },
   studentIp: { max: 10, windowMin: 15, lockMin: 10 },
   account: { max: 50, windowMin: 60, lockMin: 30 },

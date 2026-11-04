@@ -233,7 +233,7 @@ function renderOverview(body, students) {
     <div class="rp-tiles">${tile('最近 7 日有練習', `${active7} / ${n}`, `${Math.round((active7 / n) * 100)}%`)}${tile('英文完成課數（中位數）', med.en)}${tile('中文完成課數（中位數）', med.zh)}
       ${tile('英文最佳速度（中位數）', `${Math.round(median(students.map((s) => num(sm(s).en?.bestWpm))))}`, 'WPM')}${tile('中文最佳速度（中位數）', `${Math.round(median(students.map((s) => num(sm(s).zh?.bestWpm))))}`, '字/分')}</div>
     <h3>需要留意（${flagged.length}）</h3>
-    ${flagged.length ? `<ul class="rp-names">${flagged.map((s) => `<li><a href="student.html?id=${s.id}">${s.class_no ?? ''} ${html(s.name)}</a> ${out.get(s.id).map(([k, t]) => `<span class="status ${k}">${t}</span>`).join(' ')}</li>`).join('')}</ul>` : '<p class="muted">全班都有練習，沒有特別需要留意的同學。</p>'}
+    ${flagged.length ? `<ul class="rp-names">${flagged.map((s) => `<li><a href="student.html?id=${s.id}">${html(s.class_no ?? '')} ${html(s.name)}</a> ${out.get(s.id).map(([k, t]) => `<span class="status ${k}">${t}</span>`).join(' ')}</li>`).join('')}</ul>` : '<p class="muted">全班都有練習，沒有特別需要留意的同學。</p>'}
     <div class="rp-grid" style="margin-top:12px">
       <section><h4>英文：完成課數分佈</h4>${dist('en')}</section>
       <section><h4>中文：完成課數分佈</h4>${dist('zh')}<p class="hint">橫軸是完成了幾多課，長條是人數。</p></section>
@@ -261,7 +261,7 @@ function renderRoster(body, students) {
         const S = sm(s), d = daysSince(s);
         const c = out.get(s.id);
         return `<tr data-id="${s.id}" data-sid="${html(s.sid)}" data-name="${html(s.name)}">
-          <td class="num">${s.class_no ?? ''}</td><td class="sticky"><a href="student.html?id=${s.id}">${html(s.name)}</a>${c.length ? `<br>${c.map(([k, t]) => `<span class="status ${k}">${t}</span>`).join(' ')}` : ''}</td>
+          <td class="num">${html(s.class_no ?? '')}</td><td class="sticky"><a href="student.html?id=${s.id}">${html(s.name)}</a>${c.length ? `<br>${c.map(([k, t]) => `<span class="status ${k}">${t}</span>`).join(' ')}` : ''}</td>
           <td class="mini">${html(s.sid)}${s.pw_initial ? '<br><span class="muted">未改初始密碼</span>' : ''}</td>
           <td class="num">${num(S.en?.lessons)}</td><td class="num">${Math.round(num(S.en?.bestWpm))}</td><td class="num">${num(S.zh?.lessons)}</td><td class="num">${Math.round(num(S.zh?.bestWpm))}</td>
           <td class="mini">${d === null ? '從未' : d === 0 ? '今日' : `${d} 日前`}</td><td class="num">${Math.round(weekMin(s))}</td>
@@ -273,7 +273,7 @@ function renderRoster(body, students) {
       <p class="hint">「可疑」：伺服器重新計分時發現的問題（按一下看原因）。所有評測成績都由伺服器按按鍵紀錄重新計算。</p>`;
     $('only').onchange = () => { only = $('only').checked; try { sessionStorage.setItem('t.only', only ? '1' : '0'); } catch { /* ignore */ } draw(); };
     body.querySelectorAll('[data-act]').forEach((b) => b.onclick = () => { b.closest('details').open = false; studentAction(b.dataset.act, b.closest('tr').dataset); });
-    body.querySelectorAll('[data-flags]').forEach((b) => b.onclick = () => dialog(`<h2 id="dlg-title">${b.dataset.who}：${b.dataset.test}</h2><p>${html(b.dataset.flags)}</p>
+    body.querySelectorAll('[data-flags]').forEach((b) => b.onclick = () => dialog(`<h2 id="dlg-title">${html(b.dataset.who)}：${html(b.dataset.test)}</h2><p>${html(b.dataset.flags)}</p>
       <p class="hint">可以在學生的「詳細紀錄」按「回放」看當時每一下按鍵；認為不公平可以「允許重做評測」。</p><div class="form-actions"><button class="btn primary" type="button" data-close>關閉</button></div>`));
   };
   draw();
@@ -328,7 +328,7 @@ function importDialog() {
       <fieldset><legend>密碼</legend>
         <label class="check" for="pm1"><input type="radio" name="pwmode" id="pm1" value="random" checked> 每人隨機產生（較安全）</label>
         <label class="check" for="pm2"><input type="radio" name="pwmode" id="pm2" value="common"> 全部用同一個密碼</label>
-        <div class="field"><label for="cpw" class="visually-hidden">統一密碼</label><input id="cpw" autocomplete="off" placeholder="統一密碼（4–64 個字元）" disabled></div>
+        <div class="field"><label for="cpw" class="visually-hidden">統一密碼</label><input id="cpw" autocomplete="off" placeholder="統一密碼（6–64 個字元，不可以太簡單）" disabled></div>
         <label class="check" for="applyold"><input type="checkbox" id="applyold" disabled> 已在系統內的學生也改用這個密碼</label></fieldset>
       <p class="hint">學號會成為學生的登入帳號。學生第一次登入時會被要求改密碼。</p>
       ${actions('匯入')}</form>
@@ -338,7 +338,7 @@ function importDialog() {
     if (!rows.length) throw new Error('沒有讀到任何學生');
     const common = document.querySelector('input[name="pwmode"]:checked').value === 'common';
     const password = common ? $('cpw').value.trim() : '';
-    if (common && password.length < 4) throw new Error('請輸入統一密碼（至少 4 個字元），或選「每人隨機產生」');
+    if (common && password.length < 6) throw new Error("請輸入統一密碼（至少 6 個字元），或選「每人隨機產生」");
     const all = [];
     for (let i = 0; i < rows.length; i += 40) {
       msg($('dlg').querySelector('.form-msg'), `處理中… ${Math.min(i + 40, rows.length)} / ${rows.length}`, true);
@@ -360,7 +360,7 @@ function importDialog() {
 
 function classPasswordDialog() {
   dialog(`<h2 id="dlg-title">${html(current.name)} 全班改用同一個密碼</h2><form data-main>
-    <div class="field"><label for="cp">新密碼（4–64 個字元）</label><input id="cp" required minlength="4" autocomplete="off"></div>
+    <div class="field"><label for="cp">新密碼（6–64 個字元，不可以太簡單）</label><input id="cp" required minlength="6" autocomplete="off"></div>
     <p class="hint">全班學生的舊密碼會失效，已登入的電腦會被登出。學生登入後會被要求改密碼。</p>${actions('更改')}</form>`,
   async () => { const r = await api(`/api/teacher/classes/${current.id}/password`, { method: 'POST', body: { password: $('cp').value.trim() } }); try { localStorage.setItem('teacher.commonPw', $('cp').value.trim()); } catch { /* ignore */ } render(); return `已更改 ${r.count} 人`; });
 }
@@ -372,7 +372,7 @@ function moveDialog(students) {
     <div class="field"><label for="to">移到</label><select id="to">${others.map((c) => `<option value="${c.id}">${html(c.year)} ${html(c.name)}</option>`).join('')}</select></div>
     <fieldset><legend>學生</legend>
       <label class="check" for="all"><input type="checkbox" id="all" checked> 全班 ${students.length} 人</label>
-      <div id="pick" hidden style="max-height:220px;overflow:auto;display:grid;gap:2px">${students.map((s) => `<label class="check" for="mv${s.id}"><input type="checkbox" id="mv${s.id}" value="${s.id}"> ${s.class_no ?? ''} ${html(s.name)}（${html(s.sid)}）</label>`).join('')}</div></fieldset>
+      <div id="pick" hidden style="max-height:220px;overflow:auto;display:grid;gap:2px">${students.map((s) => `<label class="check" for="mv${s.id}"><input type="checkbox" id="mv${s.id}" value="${s.id}"> ${html(s.class_no ?? '')} ${html(s.name)}（${html(s.sid)}）</label>`).join('')}</div></fieldset>
     <label class="check" for="keepno"><input type="checkbox" id="keepno"> 保留原本的班號（一般升班會有新班號，所以預設清空）</label>
     <p class="hint">學生的課堂進度、評測成績都會跟着學生走。新學年的班號可以之後重新匯入名單更新（學號相同就只會更新班別和班號）。</p>
     ${actions('移班')}</form>`,
@@ -434,10 +434,10 @@ async function renderHomework(body, students) {
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>課</th><th>截止</th><th class="num">完成</th><th>未完成</th><th></th></tr></thead><tbody>
     ${assignments.map((a) => {
       const notDone = students.filter((s) => !a.doneBy.includes(s.id));
-      return `<tr><td>${a.lang === 'en' ? '英文' : '速成'} 第 ${a.lesson_id} 課 ${html(names[a.lang][a.lesson_id] ?? '')}${a.note ? `<br><span class="mini">${html(a.note)}</span>` : ''}</td>
+      return `<tr><td>${a.lang === 'en' ? '英文' : '速成'} 第 ${num(a.lesson_id)} 課 ${html(names[a.lang][a.lesson_id] ?? '')}${a.note ? `<br><span class="mini">${html(a.note)}</span>` : ''}</td>
         <td class="mini">${a.due ? `${a.due}${a.due < today ? ' <span class="status warn">已過期</span>' : ''}` : '—'}</td>
         <td class="num">${a.doneBy.length} / ${students.length}</td>
-        <td class="mini wrap">${notDone.length ? notDone.map((s) => `${s.class_no ?? ''} ${html(s.name)}`).join('、') : '<span class="status ok">全部完成</span>'}</td>
+        <td class="mini wrap">${notDone.length ? notDone.map((s) => `${html(s.class_no ?? '')} ${html(s.name)}`).join('、') : '<span class="status ok">全部完成</span>'}</td>
         <td><button class="btn sm" type="button" data-del="${a.id}">刪除</button></td></tr>`;
     }).join('') || '<tr><td colspan="5" class="muted">還沒有功課。</td></tr>'}</tbody></table></div>
     <h3 style="margin:20px 0 8px">派功課</h3>
@@ -478,7 +478,7 @@ async function renderTests(body, students) {
           <button class="btn sm" type="button" data-sched="${id}">預約時段…</button></div></td></tr>`;
     }).join('')}</tbody></table></div>
     <h3 style="margin:20px 0 8px">時段紀錄</h3>
-    ${windows.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>評測</th><th>開始</th><th>結束</th><th>老師</th></tr></thead><tbody>${windows.slice(0, 30).map((w) => `<tr><td>${TEST_NAME[w.test_id] ?? w.test_id}</td><td class="mini">${fmtTime(w.opens_at)}</td><td class="mini">${fmtTime(w.closes_at)}</td><td class="mini">${html(w.teacher)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">還沒有開放過。</p>'}`;
+    ${windows.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>評測</th><th>開始</th><th>結束</th><th>老師</th></tr></thead><tbody>${windows.slice(0, 30).map((w) => `<tr><td>${TEST_NAME[w.test_id] ?? html(w.test_id)}</td><td class="mini">${fmtTime(w.opens_at)}</td><td class="mini">${fmtTime(w.closes_at)}</td><td class="mini">${html(w.teacher)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">還沒有開放過。</p>'}`;
   body.querySelectorAll('[data-open]').forEach((b) => b.onclick = async () => {
     const opens = new Date(), closes = new Date(Date.now() + Number(b.dataset.min) * 60000);
     await api(`/api/teacher/classes/${current.id}/windows`, { method: 'POST', body: { testId: b.dataset.open, opens: opens.toISOString(), closes: closes.toISOString() } });
@@ -632,7 +632,7 @@ async function viewSchool(main) {
   };
   $('tf').onsubmit = async (e) => { e.preventDefault(); try { await api('/api/teacher/add', { method: 'POST', body: { name: $('tn').value, username: $('tu').value, password: $('tp').value, role: $('tr').value } }); render(); } catch (err) { msg($('tm'), err.message); } };
   main.querySelectorAll('[data-role]').forEach((sel) => sel.onchange = async () => { try { await api(`/api/teacher/teachers/${sel.dataset.role}/role`, { method: 'POST', body: { role: sel.value } }); } catch (e) { alert(e.message); render(); } });
-  main.querySelectorAll('[data-pw]').forEach((b) => b.onclick = () => dialog(`<h2 id="dlg-title">重設 ${b.dataset.name} 的密碼</h2><form data-main>
+  main.querySelectorAll('[data-pw]').forEach((b) => b.onclick = () => dialog(`<h2 id="dlg-title">重設 ${html(b.dataset.name)} 的密碼</h2><form data-main>
     <div class="field"><label for="np">新密碼（至少 8 個字元）</label><input id="np" required minlength="8" autocomplete="off"></div><p class="hint">這位老師所有電腦的登入會被登出。</p>${actions('重設')}</form>`,
     async () => { await api(`/api/teacher/teachers/${b.dataset.pw}/reset`, { method: 'POST', body: { password: $('np').value } }); return '已重設'; }));
   main.querySelectorAll('[data-deltea]').forEach((b) => b.onclick = async () => { if (!confirm('刪除這位老師？他出過的功課和練習會轉到你名下。')) return; try { await api(`/api/teacher/teachers/${b.dataset.deltea}`, { method: 'DELETE' }); render(); } catch (e) { alert(e.message); } });
@@ -705,7 +705,7 @@ async function viewPlatform(main) {
   main.querySelectorAll('[data-toggle]').forEach((b) => b.onclick = async () => { const on = b.dataset.on === '1'; if (!on && !confirm('暫停這間學校？該校所有老師和學生會即時登出，之後不能登入，直至恢復。資料會保留。')) return; await api(`/api/owner/schools/${b.dataset.toggle}`, { method: 'POST', body: { active: on } }); render(); });
   main.querySelectorAll('[data-delete]').forEach((b) => b.onclick = () => dialog(`<h2 id="dlg-title">刪除學校</h2><form data-main>
     <p><b>這間學校全部老師、班級、學生、進度和評測會永久刪除，不能復原。</b>建議先請學校下載備份。</p>
-    <div class="field"><label for="dc">確認：請輸入學校代碼「${b.dataset.code}」</label><input id="dc" required autocomplete="off"></div>
+    <div class="field"><label for="dc">確認：請輸入學校代碼「${html(b.dataset.code)}」</label><input id="dc" required autocomplete="off"></div>
     <p class="form-msg" role="status"></p><div class="form-actions"><button class="btn danger" type="submit">永久刪除</button><button class="btn ghost" type="button" data-close>取消</button></div></form>`,
     async () => { const r = await api(`/api/owner/schools/${b.dataset.delete}`, { method: 'DELETE', body: { confirm: $('dc').value.trim() } }); render(); return `已刪除（${r.deletedStudents} 位學生）`; }));
 }

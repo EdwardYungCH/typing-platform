@@ -15,12 +15,25 @@ const id = Number(new URLSearchParams(location.search).get('id'));
 $('print-report').onclick = () => window.print();
 $('export').href = `../api/teacher/students/${id}/export`;
 
+// 進度紀錄由學生的瀏覽器送來，不可信：顯示前把每個欄位轉成有範圍的數字或固定格式，免得有人塞入 HTML
+const n = (v, max = 1e6) => { const x = Number(v); return Number.isFinite(x) ? Math.min(Math.max(x, 0), max) : 0; };
+const nn = (v, max) => (v === null || v === undefined || v === '' ? null : n(v, max));
+const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+function cleanStore(raw) {
+  const st = obj(raw), out = { lessons: {}, steps: {}, weak: {}, attempts: [] };
+  for (const [k, v0] of Object.entries(obj(st.lessons))) { if (!/^(en|zh):\d{1,3}$/.test(k)) continue; const v = obj(v0); out.lessons[k] = { done: !!v.done, skipped: !!v.skipped, stars: Math.round(n(v.stars, 3)), bestWpm: n(v.bestWpm, 500), bestAccuracy: n(v.bestAccuracy, 100) }; }
+  for (const [k, v0] of Object.entries(obj(st.steps))) { if (!/^(en|zh):\d{1,3}:\d{1,2}$/.test(k)) continue; const lt = obj(obj(v0).latest); out.steps[k] = { latest: { accuracy: nn(lt.accuracy, 100), wpm: nn(lt.wpm, 1000), stars: Math.round(n(lt.stars, 3)) } }; }
+  for (const lang of ['en', 'zh']) { out.weak[lang] = {}; for (const [k, v0] of Object.entries(obj(obj(st.weak)[lang]))) { if (k.length > 4) continue; const v = obj(v0); out.weak[lang][k] = { tries: Math.round(n(v.tries)), errors: Math.round(n(v.errors)) }; } }
+  for (const a0 of Array.isArray(st.attempts) ? st.attempts : []) { const a = obj(a0); out.attempts.push({ at: typeof a.at === 'string' && /^\d{4}-\d\d-\d\dT[\d:.]+Z$/.test(a.at) ? a.at : null, seconds: n(a.seconds, 3600), wpm: n(a.wpm, 1000), lang: a.lang === 'zh' ? 'zh' : 'en' }); }
+  return out;
+}
+
 async function boot() {
   let d;
   try { d = await api(`/api/teacher/students/${id}/detail`); } catch (e) { app.innerHTML = `<p class="form-msg">${html(e.message)}</p>`; return; }
   const lessons = {};
   for (const lang of ['en', 'zh']) lessons[lang] = (await fetch(`../data/${lang}-lessons.json`).then((r) => r.json())).lessons;
-  const s = d.student, P = d.progress ?? {}, store = P.store ?? {};
+  const s = d.student, P = d.progress ?? {}, store = cleanStore(P.store);
   if (s.class_id) $('back').href = `index.html#class=${s.class_id}`;
   document.title = `${s.name}｜學生紀錄`;
 

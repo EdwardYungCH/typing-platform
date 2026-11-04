@@ -12,6 +12,7 @@ const SYNCED_KEY = 'typing-platform:synced';   // 上次跟伺服器對齊時伺
 const DIRTY_KEY = 'typing-platform:dirty';     // 有未推送的改動
 const OWNER_KEY = 'typing-platform:owner';     // 本機紀錄屬於哪位學生（學校代碼:學號）；沒有 = 未登入時練習的
 const PENDING_TEST = 'typing-platform:pendingTest';
+const PARK_KEY = 'typing-platform:parked';      // 登出時未能上載的紀錄（只給同一位同學下次登入時補上）
 
 const get = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const set = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch { /* ignore */ } };
@@ -130,6 +131,8 @@ export async function pull() {
   const r = await api('/api/progress');
   const synced = get(SYNCED_KEY);
   if (!r.data) {
+    // 伺服器空白：上載時附上「empty」，如果另一部電腦剛好同時上載了，伺服器會退回讓這裏合併
+    set(SYNCED_KEY, 'empty');
     if (hasLocalData()) await push();
     else set(SYNCED_KEY, 'empty');
     return 'uploaded';
@@ -152,7 +155,7 @@ export async function pull() {
 let timer = null;
 export async function push(retry = 2) {
   const base = get(SYNCED_KEY);
-  const headers = base && base !== 'empty' ? { 'x-base': base } : {};
+  const headers = base ? { 'x-base': base } : {};
   try {
     const r = await api('/api/progress', { method: 'PUT', body: snapshot(), headers });
     set(SYNCED_KEY, r.updatedAt); set(DIRTY_KEY, null);
@@ -196,6 +199,14 @@ export async function login(sid, password, { school = '', remember = false, keep
   cacheUser(r.user);
   set(OWNER_KEY, me);
   set(SYNCED_KEY, null);
+  // 上次登出時未能上載的紀錄：同一位同學就補上，其他人就刪走
+  try {
+    const park = JSON.parse(localStorage.getItem(PARK_KEY) ?? 'null');
+    if (park) {
+      localStorage.removeItem(PARK_KEY);
+      if (park.owner === me && Date.now() - park.at < 30 * 86400000) { applySnapshot(mergeSnapshots(snapshot(), park.data)); set(DIRTY_KEY, '1'); }
+    }
+  } catch { /* ignore */ }
   await pull();
   return r.user;
 }
@@ -205,8 +216,20 @@ export function hasGuestData() {
   return !get(OWNER_KEY) && hasLocalData();
 }
 
+/**
+ * 登出：先把未上載的改動送出。送不出（離線、登入已過期）就把這份紀錄暫存起來（只記住屬於誰），
+ * 同一位同學下次在這部電腦登入時會自動補上；其他同學登入時看不到、也會被清走。
+ * 回傳 false 代表有改動未能上載。
+ */
 export async function logout() {
-  try { if (get(DIRTY_KEY)) await push(); } catch { /* ignore */ }
+  let ok = true;
+  if (get(DIRTY_KEY)) {
+    try { await push(); } catch {
+      ok = false;
+      try { localStorage.setItem(PARK_KEY, JSON.stringify({ owner: get(OWNER_KEY), data: snapshot(), at: Date.now() })); } catch { /* ignore */ }
+    }
+  }
   try { await api('/api/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }
   clearLocal();
+  return ok;
 }

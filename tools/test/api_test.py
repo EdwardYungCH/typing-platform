@@ -341,6 +341,57 @@ check('刪除學校', s == 200 and r['deletedStudents'] == 1, r)
 s, r = owner.get('/api/owner/schools')
 check('學校列表', [x['code'] for x in r['schools']] == ['alpha'], r)
 
+# ---------- 獨立複查發現的問題（回歸測試）----------
+# 同校另一位管理員不可以接管平台營運者
+s, r = owner.post('/api/teacher/add', {'username': 'alpha.admin2', 'password': 'admin2pass', 'name': '另一位管理員', 'role': 'admin'})
+adm2 = Client(); adm2.post('/api/teacher/login', {'username': 'alpha.admin2', 'password': 'admin2pass'})
+boss_id = [t for t in owner.get('/api/teacher/teachers')[1]['teachers'] if t['username'] == 'boss'][0]['id']
+s, r = adm2.post(f'/api/teacher/teachers/{boss_id}/reset', {'password': 'hijacked1'})
+check('同校管理員不可重設營運者密碼', s == 403, r)
+s, r = adm2.post(f'/api/teacher/teachers/{boss_id}/role', {'role': 'teacher'})
+check('同校管理員不可降級營運者', s == 403, r)
+# 同校管理員還原備份後，營運者仍然存在、仍可登入
+s, text, h = owner.call('GET', '/api/teacher/backup', raw=True)
+bk2 = json.loads(text)
+s, r = adm2.post('/api/teacher/restore', {'confirm': '還原', 'backup': bk2})
+check('同校管理員還原備份', s == 200, r)
+owner = Client()
+s, r = owner.post('/api/teacher/login', {'username': 'boss', 'password': 'bosspass1'})
+check('還原後營運者仍可登入', s == 200, r)
+s, r = owner.get('/api/teacher/status')
+check('還原後仍是營運者', r['user'] and r['user']['isOwner'], r)
+# 備份檔的編號太大要拒絕
+evil2 = json.loads(json.dumps(bk2)); evil2['tables']['classes'][0]['id'] = 2 ** 62
+s, r = owner.post('/api/teacher/restore', {'confirm': '還原', 'backup': evil2})
+check('備份檔編號太大要拒絕', s == 400, r)
+# 雲端備份按學校編號分開：刪校後同代碼的新學校看不到舊備份
+s, r = owner.post('/api/owner/schools', {'schoolCode': 'gamma', 'schoolName': 'Gamma', 'username': 'gamma.admin', 'password': 'gammapass1', 'name': 'G'})
+gid = r['id']
+g1 = Client(); g1.post('/api/teacher/login', {'username': 'gamma.admin', 'password': 'gammapass1'})
+s, r = g1.post('/api/teacher/backup/cloud')
+check('新學校雲端備份', s == 200, r)
+s, r = owner.delete(f'/api/owner/schools/{gid}', {'confirm': 'gamma'})
+s, r = owner.post('/api/owner/schools', {'schoolCode': 'gamma', 'schoolName': 'Gamma 2', 'username': 'gamma2.admin', 'password': 'gammapass2', 'name': 'G2'})
+g2 = Client(); g2.post('/api/teacher/login', {'username': 'gamma2.admin', 'password': 'gammapass2'})
+s, r = g2.get('/api/teacher/backup/cloud')
+check('同代碼的新學校看不到舊學校的雲端備份', r['files'] == [], r)
+# 老師設的學生密碼不可以太簡單
+cls_id = owner.get('/api/teacher/classes')[1]['classes'][0]['id']
+s, r = owner.post(f'/api/teacher/classes/{cls_id}/password', {'password': '123456'})
+check('太簡單的全班密碼要拒絕', s == 400, r)
+# 學生登入不會因為同一網絡輸錯太多而令全校登入不到
+for i in range(12):
+    Client().post('/api/login', {'school': 'alpha', 'sid': f'nobody{i}', 'password': 'bad'})
+s, r = Client().post('/api/login', {'school': 'alpha', 'sid': 'nobody99', 'password': 'bad'})
+check('學生登入沒有整個網絡的鎖', s == 401, r)
+# 同步：伺服器空白時以「empty」為基準，伺服器已有資料就要退回
+s, r = owner.post('/api/teacher/import', {'classId': cls_id, 'rows': [{'sid': 'sync01', 'name': '同步'}], 'password': 'syncpass1'})
+sx = Client()
+s, r = sx.post('/api/login', {'school': 'alpha', 'sid': 'sync01', 'password': 'syncpass1'})
+sx.put('/api/progress', {'store': {'lessons': {'en:1': {'done': True}}}})
+s, r = sx.put('/api/progress', {'store': {'lessons': {}}}, headers={'x-base': 'empty'})
+check('伺服器已有紀錄時以 empty 為基準要退回', s == 409, s)
+
 # ---------- 登入鎖 ----------
 lk = Client()
 for i in range(8):

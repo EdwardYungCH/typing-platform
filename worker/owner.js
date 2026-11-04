@@ -4,7 +4,7 @@
 import * as auth from './auth.js';
 import { json, fail, body } from './http.js';
 import { createSchoolWithAdmin, cleanSettings } from './teacher.js';
-import { deleteSchoolStmts } from './backup.js';
+import { deleteSchoolStmts, deleteCloudBackups } from './backup.js';
 
 export async function ownerRoutes(req, env, path, teacher) {
   const db = env.DB;
@@ -52,6 +52,7 @@ export async function ownerRoutes(req, env, path, teacher) {
     const b = await body(req);
     const t = await db.prepare("SELECT * FROM teachers WHERE school_id = ? AND username = ? AND role = 'admin'").bind(Number(mm[1]), String(b?.username ?? '').trim().toLowerCase()).first();
     if (!t) return fail('這間學校沒有這個管理員帳號');
+    if (t.is_owner && t.id !== teacher.id) return fail('不能重設另一位平台營運者的密碼', 403);
     const pw = String(b?.password ?? '');
     if (pw.length < 8) return fail('密碼至少 8 個字元');
     const h = await auth.hashPassword(pw);
@@ -70,6 +71,8 @@ export async function ownerRoutes(req, env, path, teacher) {
     if (String(b?.confirm ?? '') !== s.code) return fail(`請輸入學校代碼「${s.code}」確認刪除`);
     const n = (await db.prepare('SELECT COUNT(*) AS n FROM students WHERE school_id = ?').bind(s.id).first()).n;
     await db.batch([...deleteSchoolStmts(db, s.id), db.prepare('DELETE FROM meta WHERE key LIKE ?').bind(`%:${s.id}`), db.prepare('DELETE FROM schools WHERE id = ?').bind(s.id)]);
+    // 雲端備份一併刪除（按私隱政策，學校停止使用後要刪除資料）
+    try { await deleteCloudBackups(env, s); } catch (e) { console.error('刪除雲端備份失敗', e); }
     return json({ ok: true, deletedStudents: n });
   }
 

@@ -29,7 +29,7 @@ const setMeta = (db, key, value) => db.prepare('INSERT INTO meta (key, value) VA
 /** 逐頁讀出一間學校的資料，用 emit(文字) 寫出整份備份 JSON */
 async function writeBackup(db, school, by, emit) {
   const now = new Date().toISOString();
-  await emit(`{"app":"typing-platform","version":2,"exportedAt":${JSON.stringify(now)},"by":${JSON.stringify(by)},"school":${JSON.stringify({ code: school.code, name: school.name, settings: school.settings })},"tables":{`);
+  await emit(`{"app":"typing-platform","version":2,"exportedAt":${JSON.stringify(now)},"by":${JSON.stringify(by)},"school":${JSON.stringify({ id: school.id, code: school.code, name: school.name, settings: school.settings })},"tables":{`);
   let firstTable = true;
   for (const [t, def] of Object.entries(BACKUP)) {
     await emit(`${firstTable ? '' : ','}${JSON.stringify(t)}:[`);
@@ -76,7 +76,7 @@ export function backupResponse(env, teacher) {
 async function backupToR2(env, school, by) {
   const PART = 8 * 1024 * 1024;
   const now = new Date().toISOString();
-  const key = `school-${school.code}/${fileName(school.code, now)}`;
+  const key = `${schoolPrefix(school)}${fileName(school.code, now)}`;
   let chunks = [], size = 0, upload = null, n = 1;
   const parts = [];
   const join = () => { const out = new Uint8Array(size); let o = 0; for (const c of chunks) { out.set(c, o); o += c.length; } chunks = []; size = 0; return out; };
@@ -89,7 +89,7 @@ async function backupToR2(env, school, by) {
     if (upload) { if (size) await flush(); await upload.complete(parts); } else await env.BACKUPS.put(key, join(), { httpMetadata: { contentType: 'application/json' } });
   } catch (e) { if (upload) await upload.abort().catch(() => {}); throw e; }
   // 每間學校只保留最近 12 份
-  const list = await env.BACKUPS.list({ prefix: `school-${school.code}/`, limit: 500 });
+  const list = await env.BACKUPS.list({ prefix: schoolPrefix(school), limit: 500 });
   const keys = list.objects.map((o) => o.key).sort();
   if (keys.length > 12) await env.BACKUPS.delete(keys.slice(0, keys.length - 12));
   await env.DB.batch([setMeta(env.DB, `last_auto_backup:${school.id}`, now), env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(`last_auto_backup_error:${school.id}`)]);
@@ -110,7 +110,16 @@ export async function autoBackups(env) {
   return out;
 }
 
-const cloudPrefix = (t) => `school-${t.school_code}/`;
+// 雲端備份按「學校編號-代碼」分資料夾：學校刪除後代碼即使再用，新學校也看不到舊學校的備份
+export const schoolPrefix = (s) => `school-${s.id}-${s.code}/`;
+const cloudPrefix = (t) => schoolPrefix({ id: t.school_id, code: t.school_code });
+/** 刪除學校時一併刪除它的雲端備份 */
+export async function deleteCloudBackups(env, school) {
+  if (!env.BACKUPS) return 0;
+  const keys = (await env.BACKUPS.list({ prefix: schoolPrefix(school), limit: 1000 })).objects.map((o) => o.key);
+  if (keys.length) await env.BACKUPS.delete(keys);
+  return keys.length;
+}
 export async function cloudList(env, teacher) {
   if (!env.BACKUPS) return json({ enabled: false, files: [] });
   const list = await env.BACKUPS.list({ prefix: cloudPrefix(teacher), limit: 100 });
@@ -132,12 +141,13 @@ export async function cloudBackup(env, teacher) {
 }
 
 /** 刪除一間學校的全部資料（還原前、或平台營運者刪除學校時用）；回傳 SQL 句子，由呼叫者放進同一個 batch */
-export function deleteSchoolStmts(db, S, { teachers = true } = {}) {
+export function deleteSchoolStmts(db, S, { teachers = true, keepOwner = false } = {}) {
+  const tw = keepOwner ? 'school_id = ? AND is_owner = 0' : 'school_id = ?';
   const st = 'SELECT id FROM students WHERE school_id = ?';
   const cl = 'SELECT id FROM classes WHERE school_id = ?';
   return [
     db.prepare(`DELETE FROM sessions WHERE kind = 'student' AND user_id IN (${st})`).bind(S),
-    ...(teachers ? [db.prepare("DELETE FROM sessions WHERE kind = 'teacher' AND user_id IN (SELECT id FROM teachers WHERE school_id = ?)").bind(S)] : []),
+    ...(teachers ? [db.prepare(`DELETE FROM sessions WHERE kind = 'teacher' AND user_id IN (SELECT id FROM teachers WHERE ${tw})`).bind(S)] : []),
     db.prepare('DELETE FROM feedback WHERE school_id = ?').bind(S),
     db.prepare(`DELETE FROM test_windows WHERE class_id IN (${cl})`).bind(S),
     db.prepare(`DELETE FROM assignments WHERE class_id IN (${cl})`).bind(S),
@@ -146,7 +156,7 @@ export function deleteSchoolStmts(db, S, { teachers = true } = {}) {
     db.prepare(`DELETE FROM progress WHERE student_id IN (${st})`).bind(S),
     db.prepare('DELETE FROM students WHERE school_id = ?').bind(S),
     db.prepare('DELETE FROM classes WHERE school_id = ?').bind(S),
-    ...(teachers ? [db.prepare('DELETE FROM teachers WHERE school_id = ?').bind(S)] : []),
+    ...(teachers ? [db.prepare(`DELETE FROM teachers WHERE ${tw}`).bind(S)] : []),
   ];
 }
 
@@ -154,6 +164,7 @@ export function deleteSchoolStmts(db, S, { teachers = true } = {}) {
 function validateBackup(d, teacher) {
   if (d?.app !== 'typing-platform' || ![1, 2].includes(d?.version) || !d.tables || typeof d.tables !== 'object') return '這不是打字平台的備份檔';
   if (d.version === 2 && d.school?.code && d.school.code !== teacher.school_code) return `這是另一間學校（${d.school.name ?? d.school.code}）的備份檔，不能還原到這間學校`;
+  if (d.version === 2 && d.school?.id && d.school.id !== teacher.school_id) return '這份備份屬於另一間（可能已刪除的）同代碼學校，不能還原到這間學校';
   const T = {};
   for (const t of Object.keys(BACKUP)) {
     const rows = d.tables[t] ?? [];
@@ -161,17 +172,25 @@ function validateBackup(d, teacher) {
     if (rows.some((r) => !r || typeof r !== 'object' || Array.isArray(r))) return `備份檔的 ${t} 有不正確的資料`;
     T[t] = rows;
   }
-  const intId = (v) => Number.isInteger(v) && v > 0;
+  // 編號要是正整數而且不可太大（太大會令整個資料庫之後的編號失準）
+  const intId = (v) => Number.isInteger(v) && v > 0 && v < 1e9;
+  const optInt = (v, max) => v === null || v === undefined || (Number.isInteger(v) && v >= 0 && v <= max);
+  const str = (v, re) => typeof v === 'string' && re.test(v);
   const ids = (t, k = 'id') => new Set(T[t].map((r) => r[k]));
   if (!T.teachers.length) return '備份檔沒有教師帳號，不能還原';
   if (!T.teachers.some((r) => r.role === 'admin')) return '備份檔沒有管理員，不能還原';
   for (const r of T.teachers) if (!intId(r.id) || typeof r.username !== 'string' || !/^[a-z0-9_.-]{3,30}$/.test(r.username) || typeof r.pass_hash !== 'string' || typeof r.salt !== 'string') return '備份檔的教師資料不正確';
   for (const r of T.teachers) if (!['admin', 'teacher', undefined].includes(r.role)) return '備份檔的教師身份不正確';
-  if (teacher.is_owner && !T.teachers.some((r) => r.username === teacher.username)) return '備份檔沒有你的帳號（平台營運者），還原後你會無法登入，所以不能還原';
+  for (const r of T.teachers) if (typeof r.name !== 'string' || r.name.length > 40) return '備份檔的教師姓名不正確';
   const tIds = ids('teachers'), cIds = ids('classes'), sIds = ids('students');
   if (tIds.size !== T.teachers.length || cIds.size !== T.classes.length || sIds.size !== T.students.length) return '備份檔有重複的編號';
-  for (const r of T.classes) if (!intId(r.id) || !tIds.has(r.teacher_id)) return '備份檔的班級資料不正確';
-  for (const r of T.students) if (!intId(r.id) || typeof r.sid !== 'string' || (r.class_id !== null && r.class_id !== undefined && !cIds.has(r.class_id))) return '備份檔的學生資料不正確';
+  for (const r of T.classes) if (!intId(r.id) || !tIds.has(r.teacher_id) || !str(r.name, /^[\p{L}\p{N}]{1,12}$/u) || !str(r.year, /^\d{4}-\d{2}$/)) return '備份檔的班級資料不正確';
+  for (const r of T.students) if (!intId(r.id) || !str(r.sid, /^[a-z0-9_-]{3,20}$/) || typeof r.name !== 'string' || r.name.length > 40 || !optInt(r.class_no, 999)
+    || (r.class_id !== null && r.class_id !== undefined && !cIds.has(r.class_id))) return '備份檔的學生資料不正確';
+  for (const r of T.test_attempts) if (!str(r.id, /^[0-9a-f]{8,64}$/) || !str(r.test_id, /^[\w-]{1,20}$/) || !['en', 'zh'].includes(r.lang)) return '備份檔的評測資料不正確';
+  for (const r of T.assignments) if (!intId(r.id) || !['en', 'zh'].includes(r.lang) || !optInt(r.lesson_id, 99)) return '備份檔的功課資料不正確';
+  for (const r of T.test_windows) if (!intId(r.id) || !str(r.test_id, /^[\w-]{1,20}$/)) return '備份檔的評測時段資料不正確';
+  for (const t of ['custom_practice', 'feedback']) for (const r of T[t]) if (!intId(r.id)) return `備份檔的 ${t} 編號不正確`;
   for (const t of ['progress', 'test_attempts']) for (const r of T[t]) if (!sIds.has(r.student_id)) return `備份檔的 ${t} 指向不存在的學生`;
   for (const r of T.progress) if (typeof r.data !== 'string' || r.data.length > 400 * 1024) return '備份檔的進度資料不正確';
   for (const t of ['custom_practice', 'assignments', 'test_windows']) for (const r of T[t]) {
@@ -193,7 +212,19 @@ export async function restoreSchool(env, teacher, b) {
   if (typeof v === 'string') return fail(v);
   const { T } = v;
   const S = teacher.school_id;
-  const stmts = deleteSchoolStmts(db, S);
+  // 平台營運者的帳戶不會被備份檔取代（否則同校管理員還原一份備份，平台就沒有營運者）
+  const owners = (await db.prepare('SELECT id, username FROM teachers WHERE school_id = ? AND is_owner = 1').bind(S).all()).results;
+  const ownerByName = new Map(owners.map((o) => [o.username, o.id]));
+  const remap = new Map();
+  for (const r of T.teachers) {
+    if (ownerByName.has(r.username)) remap.set(r.id, ownerByName.get(r.username));
+    else if (owners.some((o) => o.id === r.id)) return fail('還原失敗，資料沒有改動：備份檔的教師編號跟平台營運者的帳戶重複，請聯絡平台營運者處理。');
+  }
+  T.teachers = T.teachers.filter((r) => !ownerByName.has(r.username));
+  for (const t of ['classes', 'custom_practice', 'assignments', 'test_windows', 'feedback']) {
+    T[t] = T[t].map((r) => (remap.has(r.teacher_id) ? { ...r, teacher_id: remap.get(r.teacher_id) } : r));
+  }
+  const stmts = deleteSchoolStmts(db, S, { keepOwner: true });
   for (const [t, def] of Object.entries(BACKUP)) {
     const cols = HAS_SCHOOL.includes(t) ? [...def.cols, 'school_id'] : def.cols;
     const rows = T[t];
@@ -210,7 +241,6 @@ export async function restoreSchool(env, teacher, b) {
         }))));
     }
   }
-  if (teacher.is_owner) stmts.push(db.prepare('UPDATE teachers SET is_owner = 1 WHERE username = ? AND school_id = ?').bind(teacher.username, S));
   try { await db.batch(stmts); } catch (e) {
     const clash = /UNIQUE|PRIMARY KEY|constraint/i.test(String(e?.message));
     return fail(clash ? '還原失敗，資料沒有改動：備份檔的帳號或編號跟平台上其他學校重複。請聯絡平台營運者處理。' : '還原失敗，資料沒有改動：備份檔內容不正確', 400);

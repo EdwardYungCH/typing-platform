@@ -31,7 +31,7 @@ async function render() {
     $('sync-state').textContent = '同步中…';
     try { await push(); $('sync-state').textContent = '已同步'; } catch (e) { $('sync-state').textContent = `同步失敗：${e.message}`; }
   };
-  $('logout').onclick = async () => { await logout(); location.href = 'index.html'; };
+  $('logout').onclick = async () => { if (!(await logout())) alert('有部分紀錄未能上載到伺服器（可能是網絡問題）。下次在這部電腦登入時會自動補上。'); location.href = 'index.html'; };
 }
 
 /** 我的學習報告：用這部電腦（已登入則已同步）的紀錄砌出來，可以列印或存成 PDF 交給老師、家長 */

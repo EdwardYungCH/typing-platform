@@ -38,7 +38,10 @@ async function run(db, env) {
   await db.batch(stmts.map((x) => db.prepare(x)));
   for (const [table, col, def] of NEW_COLUMNS) {
     const cols = (await db.prepare(`PRAGMA table_info(${table})`).all()).results.map((c) => c.name);
-    if (!cols.includes(col)) await db.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`).run();
+    if (!cols.includes(col)) {
+      // 兩個 worker 同時第一次啟動：另一個可能剛加了這一欄，「duplicate column」當作已完成
+      try { await db.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`).run(); } catch (e) { if (!/duplicate column/i.test(String(e?.message))) throw e; }
+    }
   }
   const v = Number((await db.prepare("SELECT value FROM meta WHERE key = 'schema_version'").first())?.value ?? 0);
   if (v < 6) {
@@ -68,8 +71,13 @@ async function toV6(db, env) {
   }
   const sid = schoolId ?? null;
   const q = (sql, ...args) => db.prepare(sql).bind(...args);
+  // 重建資料表會重設「下一個編號」：先記下，重建後設回，免得新學生用回已刪除學生的編號
+  let seq = [];
+  try { seq = (await db.prepare("SELECT name, seq FROM sqlite_sequence WHERE name IN ('classes', 'students')").all()).results; } catch { /* 讀不到就算 */ }
   await db.batch([
     db.prepare('PRAGMA defer_foreign_keys = true'),
+    // 舊版刪除學生時沒有刪問題回報：清走指向已不存在學生的回報
+    db.prepare('DELETE FROM feedback WHERE student_id IS NOT NULL AND student_id NOT IN (SELECT id FROM students)'),
     // 班級
     db.prepare('CREATE TABLE classes_v5 AS SELECT * FROM classes'),
     db.prepare('DROP TABLE classes'),
@@ -117,4 +125,7 @@ async function toV6(db, env) {
     db.prepare("UPDATE teachers SET is_owner = 1 WHERE id = (SELECT MIN(id) FROM teachers WHERE role = 'admin') AND NOT EXISTS (SELECT 1 FROM teachers WHERE is_owner = 1)"),
     db.prepare("INSERT INTO meta (key, value) VALUES ('schema_version', '6') ON CONFLICT(key) DO UPDATE SET value = excluded.value"),
   ]);
+  for (const r of seq) {
+    try { await db.prepare('UPDATE sqlite_sequence SET seq = MAX(seq, ?) WHERE name = ?').bind(r.seq, r.name).run(); } catch { /* 部分環境不准寫 sqlite_sequence：只影響編號會否重用 */ }
+  }
 }

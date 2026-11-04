@@ -15,8 +15,10 @@ const CLASS_RE = /^[\p{L}\p{N}]{1,12}$/u;
 const YEAR_RE = /^\d{4}-\d{2}$/;
 const TEST_IDS = tests.tests.map((t) => t.id);
 
-const PW_OK = (pw) => pw.length >= 4 && pw.length <= 64;
-const PW_MSG = '學生密碼要 4–64 個字元';
+// 老師設的學生密碼（全班統一密碼、重設密碼）：至少 6 個字元，不可以是太常見的密碼
+const WEAK = new Set(['123456', '1234567', '12345678', '654321', '111111', '000000', '888888', '123123', 'abcdef', 'abc123', 'qwerty', 'password', 'passw0rd', 'iloveyou']);
+const PW_OK = (pw) => pw.length >= 6 && pw.length <= 64 && !WEAK.has(pw.toLowerCase()) && !/^(.)\1+$/.test(pw);
+const PW_MSG = '學生密碼要 6–64 個字元，而且不可以太簡單（例如 123456、全部相同的字元）';
 const MAX_IMPORT = 50;   // 每次最多匯入 50 人（每人一次密碼雜湊，太多會超過伺服器單次運算時限；網頁會自動分批送）
 
 export const SETTING_KEYS = { testsNeedWindow: false, boardDefault: true, studentRemember: true };
@@ -118,7 +120,7 @@ export async function teacherRoutes(req, env, path, teacher) {
     const b = await body(req);
     const username = String(b?.username ?? '').trim().toLowerCase();
     const ip = auth.clientIp(req);
-    const ipKey = `ip:${ip}`, tKey = `t:${username}`, tIpKey = `t:${username}@${ip}`;
+    const ipKey = `tip:${ip}`, tKey = `t:${username}`, tIpKey = `t:${username}@${ip}`;
     const lock = await auth.lockedUntil(db, ipKey, tKey, tIpKey);
     if (lock) return fail(`登入錯誤太多次，${auth.waitMsg(lock)}`, 429);
     const t = await db.prepare('SELECT t.*, s.active AS school_active FROM teachers t LEFT JOIN schools s ON s.id = t.school_id WHERE t.username = ?').bind(username).first();
@@ -191,7 +193,9 @@ export async function teacherRoutes(req, env, path, teacher) {
   const sameSchoolTeacher = (id) => db.prepare('SELECT * FROM teachers WHERE id = ? AND school_id = ?').bind(Number(id), S).first();
   if ((mm = m(/^\/api\/teacher\/teachers\/(\d+)\/role$/)) && req.method === 'POST') {
     if (!isAdmin) return ADMIN('更改');
-    if (!(await sameSchoolTeacher(mm[1]))) return fail('找不到這位老師', 404);
+    const target = await sameSchoolTeacher(mm[1]);
+    if (!target) return fail('找不到這位老師', 404);
+    if (target.is_owner && target.id !== teacher.id) return fail('不能更改平台營運者的帳戶', 403);
     const b = await body(req); const role = b?.role === 'admin' ? 'admin' : 'teacher';
     if (Number(mm[1]) === teacher.id && role !== 'admin') return fail('不能取消自己的管理員身份');
     await db.prepare('UPDATE teachers SET role = ? WHERE id = ?').bind(role, mm[1]).run();
@@ -201,6 +205,8 @@ export async function teacherRoutes(req, env, path, teacher) {
     if (!isAdmin) return ADMIN('重設');
     const t = await sameSchoolTeacher(mm[1]);
     if (!t) return fail('找不到這位老師', 404);
+    // 平台營運者的帳戶只可以由他自己改密碼（否則同校管理員可以接管全部學校）
+    if (t.is_owner && t.id !== teacher.id) return fail('不能重設平台營運者的密碼', 403);
     const b = await body(req); const pw = String(b?.password ?? '');
     if (pw.length < 8) return fail('密碼至少 8 個字元');
     const h = await auth.hashPassword(pw);

@@ -17,9 +17,13 @@ const num = (v, max = 1e6) => { const n = Number(v); return Number.isFinite(n) ?
 const hkDay = (ms) => new Date(ms + 8 * 3600000).toISOString().slice(0, 10);
 const isoOrNull = (v) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(v) ? v : null);
 
-/** 測驗定義：學生每次開始時由伺服器在幾份題目（forms）中隨機抽一份 */
+/**
+ * 登入學生的正式評測：由伺服器在 forms 第 2 份起隨機抽一份。
+ * 第 1 份（text）公開給未登入時試做；網站發佈的 data/tests.json 只有這一份（build.mjs 會刪走 forms），學生無法預先看到正式題目。
+ */
 export function testForms(t) {
-  return Array.isArray(t.forms) && t.forms.length ? t.forms : [t.text];
+  const f = Array.isArray(t.forms) && t.forms.length ? t.forms : [t.text];
+  return f.length > 1 ? f.slice(1) : f;
 }
 
 /**
@@ -112,13 +116,15 @@ async function studentRoutes(req, env, path, student) {
     if (!sid || !pw) return fail('請輸入學號和密碼');
     const school = await findSchool(db, b?.school);
     if (!school) return fail(String(b?.school ?? '').trim() ? '找不到這個學校代碼，請檢查老師給你的登入紙條' : '請輸入學校代碼', 400);
-    const ipKey = `ip:${auth.clientIp(req)}`, accKey = `s:${school.id}:${sid}`, accIpKey = `${accKey}@${auth.clientIp(req)}`;
-    const lock = await auth.lockedUntil(db, ipKey, accKey, accIpKey);
+    // 只按帳號限制，不鎖整個網絡（學校全校共用一個對外 IP，一個同學用程式亂試就會令全校登入不到）；
+    // 防止「同一個常見密碼試遍全班」靠的是老師設的密碼不可以太簡單（worker/teacher.js 的 PW_OK）
+    const accKey = `s:${school.id}:${sid}`, accIpKey = `${accKey}@${auth.clientIp(req)}`;
+    const lock = await auth.lockedUntil(db, accKey, accIpKey);
     if (lock) return fail(`登入錯誤太多次，${auth.waitMsg(lock)}`, 429);
     const s = await db.prepare('SELECT * FROM students WHERE school_id = ? AND sid = ?').bind(school.id, sid).first();
     const ok = s ? await auth.verifyPassword(pw, s.salt, s.pass_hash) : await auth.dummyVerify(pw);
     if (!ok) {
-      await auth.recordFails(db, [[ipKey, auth.LIMITS.ip], [accKey, auth.LIMITS.account], [accIpKey, auth.LIMITS.studentIp]]);
+      await auth.recordFails(db, [[accKey, auth.LIMITS.account], [accIpKey, auth.LIMITS.studentIp]]);
       return fail('學號或密碼不對', 401);
     }
     await auth.clearFails(db, accKey, accIpKey);
