@@ -29,3 +29,7 @@ out = {c: g for c in sorted(ex) if (g := glyph(c))}
 s = json.dumps(out, ensure_ascii=False, separators=(',', ':'))
 open('assets/glyph-bundles/shapes.json', 'w', encoding='utf-8').write(s)
 print(f'字形表例字：{len(out)} 字，{len(s)//1024} KB；合計 {total//1024} KB')
+# 有拆碼圖的字一覽：網頁先查這份清單，沒有的字不用逐個去伺服器碰（免得出現大量 404）
+have = ''.join(sorted(chr(int(f[:-5], 16)) for f in os.listdir('assets/glyphs') if f.endswith('.json')))
+open('assets/glyph-bundles/index.json', 'w', encoding='utf-8').write(json.dumps(have, ensure_ascii=False))
+print(f'索引：{len(have)} 字')

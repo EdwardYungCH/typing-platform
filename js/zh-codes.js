@@ -17,6 +17,10 @@ export const ROOT_GROUPS = [
   { name: '特別鍵', keys: 'x' },
 ];
 
+// 倉頡三代（微軟倉頡）全碼：碼表的 cj 來自第五代，「鬼」系等字的中間碼跟三代不同。顯示全碼時以這裏為準。
+// 速成只取首尾兩碼，兩代相同，所以不影響打字。
+export const CJ3 = { 鬼: 'hi', 塊: 'ghi', 傀: 'ohi', 魂: 'mihi', 醜: 'mwhi', 魔: 'idhi', 應: 'igp', 歷: 'mdylm', 產: 'yhhqm', 彥: 'yhhhh', 兔: 'nui', 腐: 'iiobo' };
+
 let cache = null;
 
 /** 讀取碼表（只讀一次）。路徑相對於目前頁面，子資料夾頁面傳入 '../'。 */
@@ -30,7 +34,7 @@ export async function loadZh(base = '') {
   for (const [ch, code] of Object.entries(d.qfix)) q.set(ch, code);
   cache = {
     quickOf: (ch) => q.get(ch) ?? null,
-    cjOf: (ch) => d.cj[ch] ?? null,
+    cjOf: (ch) => CJ3[ch] ?? d.cj[ch] ?? null,
     /** 某速成碼的候選字（微軟速成次序） */
     candidates: (code) => [...(d.quick[code] ?? '')],
     common: [...d.common],

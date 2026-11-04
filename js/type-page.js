@@ -131,8 +131,11 @@ async function init() {
   const done = PRACTICE || TEST || store.getLessonResult(lang, lessonId)?.done;
   const reached = Object.keys(store.getStepResults(lang, lessonId)).map(Number);
   state.maxReached = done ? L.steps.length - 1 : Math.max(0, ...reached.map((n) => Math.min(n, L.steps.length - 1)));
+  // 可以用網址跳到練習步驟，但不可以跳過練習直接做未解鎖的過關小測
+  const first = L.steps[startStep]?.type === 'test' && startStep > state.maxReached ? state.maxReached : startStep;
+  state.maxReached = Math.max(state.maxReached, first);
   renderSteps();
-  runStep(Math.min(startStep, state.maxReached));
+  runStep(first);
 }
 
 function setupFx() {

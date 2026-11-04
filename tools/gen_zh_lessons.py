@@ -239,7 +239,7 @@ NOTES = {
     '海': '包含省略：字身「每」超過 3 碼，被框住的「戈」省去，尾碼取外框的「卜」。',
     '船': '包含省略：字首「舟」超過 2 碼，省去框內的戈，取「卜」作字首尾碼；全字尾碼＝口。',
     '滿': '包含省略：字身「㒼」超過 3 碼，冂內的「人」省去，尾碼＝月（冂）。',
-    '急': '包含省略：字首「刍」的最後一橫被框住，省去，字首只取弓；尾碼＝心。',
+    '急': '字首「刍」＝弓一（⺕ 取外框），字身心 → 速成 弓心。省略只影響倉頡中間碼，速成不受影響。',
     '搞': '包含省略：字身「高」超過 3 碼，最後框內的口省去，尾碼＝月（冂）。',
     '侮': '包含省略：字身「每」超過 3 碼，省去被框住的戈，尾碼＝卜。',
     '夠': '包含省略：字首「多」超過 2 碼，省去框內的點（戈），字首＝弓弓；尾碼＝口。',
@@ -311,7 +311,7 @@ L.append(split_lesson(5, '取碼原則（二）', '連體與分體、字首與�
     {'title': '連體字：整個字連在一起', 'points': ['筆劃交連、不能切開的字（早、白、太、我）', '首碼＝第一個部件，尾碼＝最後一個部件'], 'codes': rule_chars('早白太我', K5)},
     {'title': '分體字：字首和字身', 'points': ['可以切開的字：左、上或外面的部分是「字首」，其餘是「字身」', '速成首碼＝字首的第一碼；尾碼＝字身的最後一碼'], 'codes': rule_chars('明林字', K5)},
     {'title': '字首看位置，不看部首', 'points': ['字首是按次序第一個能切出來的部分，跟部首或字義無關', '以下都是常見的陷阱'], 'codes': rule_chars('鵬翁參', K5)},
-    {'title': '右上角的點先取', 'points': ['求、我、式 這類字，右上角的點（戈）是第一碼', '筆順和取碼次序不同時，以取碼次序為準'], 'codes': rule_chars('求我式', K5)},
+    {'title': '右上角的點先取', 'points': ['求、式、貳 這類字，右上角的點（戈）是第一碼（後面學到的 成、戒 也是）', '小心：「我」左上角先有一撇（竹），所以 我＝竹手戈，速成 H I', '筆順和取碼次序不同時，以取碼次序為準'], 'codes': rule_chars('求式貳我', K5)},
     {'title': '三個取碼原則', 'points': ['精簡：有幾種拆法時，碼數最少的才對（王＝一土）', '完整：優先取涵蓋筆劃較多的字形（生＝竹手一）', '字形特徵：分割點落在直筆上，不在轉角切，不要把鉤切掉（九＝大弓）'], 'codes': rule_chars('王生九', K5)}],
     basic5 + rule_chars(r5, K5), '自己拆出首碼和尾碼。記住：字首看位置，右上角的點先取。', keys=K5))
 
@@ -323,10 +323,10 @@ add_roots(8, '字形類字根（下）', 'vwy', '女田卜住在 V、W、Y。')
 K9 = learned
 aux = ''.join(ch for k in SHAPES for sh in SHAPES[k] if sh['shape'] != ROOTS[k] for ch in sh['examples'] if ch in first)
 aux = ''.join(dict.fromkeys(aux))
-r9 = '雌剪馳疊成戒夫青海船滿急搞侮夠欄問們間相眼推進陳隊塊雞機東末速拳夷屯秉學氣應感壓歷養'
+r9 = '雌剪馳疊成戒夫青海侮滿搞欄瘸夠問們間相眼推進陳隊塊雞機東末速拳夷屯秉學氣應感壓歷養'
 L.append(split_lesson(9, '取碼原則（三）', '包含省略、複合字、特殊字、特別字首', [
     {'title': '先溫習：字首和原則', 'points': ['字首看位置（雌、剪、馳、疊）；右上角的點先取（成、戒）', '完整原則：夫＝手人、青＝手一月'], 'codes': rule_chars('雌剪馳疊成戒夫青', K9)},
-    {'title': '包含省略：被框住的部件不算', 'points': ['字首超過 2 碼或字身超過 3 碼時，最後一個部件如果被三面或四面包住，就省去它，取外框作尾碼', '外框有 囗 冂 コ 匚 廿 几 乃 凵 ク', '同一個部件單獨成字時碼數不超限，就不用省略（母 田卜戈，但 海 水人田卜）'], 'codes': rule_chars('海船滿急搞母', K9)},
+    {'title': '包含省略：被框住的部件不算', 'points': ['字身超過 3 碼時，最後一個部件如果被三面或四面包住，就省去它，取外框作尾碼——這會改變速成的尾碼', '外框有 囗 冂 コ 匚 廿 几 乃 凵 ク', '同一個部件單獨成字時碼數不超限，就不用省略（母＝田卜戈，尾碼戈；但 海＝水人田卜，尾碼卜）'], 'codes': rule_chars('海侮滿搞欄母', K9)},
     {'title': '複合字：永遠只取首尾兩碼', 'points': ['門＝日弓、目＝月山、隹＝人土、阝＝弓中、鬼＝竹戈、鬥＝中弓、幾＝女戈、虍＝卜心', '作字身時，速成尾碼就是複合字的尾碼'], 'codes': rule_chars('問們相推進陳塊', K9)},
     {'title': '特殊字：重疊的先取木火大心戈', 'points': ['木、火、大、心（七形）、戈 與其他字形重疊時，先取它們，再取疊在上面的字形'], 'codes': rule_chars('東末拳夷屯', K9)},
     {'title': '特別的字首', 'points': ['有些字的上半部整塊當字首，取它的首尾兩碼', '學＝竹月、氣＝人弓、應＝戈土、感＝戈口、壓＝一大'], 'codes': rule_chars('學氣應感壓', K9)}],
@@ -422,6 +422,36 @@ L.append(text_lesson(15, '句子與短文', '把整段話打出來', sentences,
     '連標點一起打。不記得碼時，看提示。', {'wpm': 6, 'accuracy': 90}, limit=120))
 
 # 檢查：所有字都在碼表
+# 第 9 課才教的規則（複合字 隹 目 門 阝 鬼 幾 虍 鬥、包含省略、特殊字、特別字首）：
+# 第 9 課之前，沒有提示的「自行拆字」和「過關小測」不出這些字（有顏色提示的步驟可以保留）
+LATER_LIST = '滿構購雞瞭權間學機都陽除際歷壓確們問每夠隊據氣感應相難觀歡院防進部產海醫東速處'
+def needs_later_rule(c):
+    cj = Z['cj'].get(c, '')
+    if c in LATER_LIST: return True
+    if any(p in cj for p in ('og', 'nl', 'bu', 'yp', 'hui')): return True   # 隹 阝 目 虍 鬼（第五代碼）
+    if '\u9580' <= c <= '\u95ff': return True                               # 門部
+    return False
+# 打字內容用微軟速成較易選到的字形（見 tools/normalize_variants.py）
+VTR = str.maketrans({'着': '著', '裏': '裡', '麪': '麵', '羣': '群', '峯': '峰', '啓': '啟', '牀': '床', '衆': '眾', '爲': '為', '温': '溫', '綫': '線', '衞': '衛', '鷄': '雞'})
+for l in L:
+    for s in l['steps']:
+        if isinstance(s.get('text'), str): s['text'] = s['text'].translate(VTR)
+        g = s.get('gen') or {}
+        if isinstance(g.get('chars'), str): g['chars'] = ''.join(dict.fromkeys(g['chars'].translate(VTR)))
+        if isinstance(g.get('words'), list): g['words'] = [w.translate(VTR) for w in g['words']]
+
+removed = {}
+for l in L:
+    if l['id'] >= 9: continue
+    for s in l['steps']:
+        g = s.get('gen') or {}
+        if g.get('kind') == 'chars' and (s['type'] == 'test' or s.get('hints') == 'less'):
+            keep = ''.join(c for c in g['chars'] if not needs_later_rule(c))
+            if len(keep) >= 12:
+                removed.setdefault(l['id'], set()).update(set(g['chars']) - set(keep))
+                g['chars'] = keep
+for k, v in removed.items(): print(f'第 {k} 課：無提示步驟移走 {len(v)} 個要第 9 課規則的字')
+
 for l in L:
     for s in l['steps']:
         t = s.get('text') or s.get('gen', {}).get('chars') or ''

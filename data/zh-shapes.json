@@ -177,6 +177,12 @@
         "name": "兩點水",
         "pos": "first",
         "examples": "冰"
+      },
+      {
+        "shape": "礻",
+        "name": "示字邊（首碼戈）",
+        "pos": "first",
+        "examples": "社福禮"
       }
     ],
     "j": [
