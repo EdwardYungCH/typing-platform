@@ -195,7 +195,7 @@ function renderSteps() {
     b.className = 'step-pill';
     b.textContent = `${i + 1}. ${s.title}`;
     const rec = store.getStepResults(lang, lessonId)[i + 1]?.latest;
-    if (rec && rec.accuracy !== null) {
+    if (rec && rec.accuracy != null && Number.isFinite(rec.accuracy)) {
       const sc = document.createElement('small');
       sc.className = 'pill-score';
       sc.textContent = rec.stars ? '★'.repeat(rec.stars) : `${Math.floor(rec.accuracy)}%`;

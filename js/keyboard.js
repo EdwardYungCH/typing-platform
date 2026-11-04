@@ -166,7 +166,7 @@ export class Hands {
   constructor(container) {
     this.root = document.createElement('div');
     this.root.className = 'hands';
-    this.root.innerHTML = HAND_SVG + '<p class="hands-label" aria-live="polite"></p>';
+    this.root.innerHTML = HAND_SVG + '<p class="hands-label" aria-live="off"></p>';
     this.label = this.root.querySelector('.hands-label');
     container.append(this.root);
   }

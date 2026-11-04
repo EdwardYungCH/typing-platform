@@ -18,15 +18,16 @@
 /* 選字窗 */
 .ime {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 10px;
-  padding: 10px 14px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line);
+  padding: 10px 14px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--line-strong, var(--line));
   min-height: 58px;
 }
 .ime .comp { display: flex; gap: 4px; min-width: 96px; align-items: center; }
 .ime .comp .empty { color: var(--ink-3); font-size: 14px; }
 .ime .cands { display: flex; flex-wrap: wrap; gap: 4px; font-size: 22px; }
-.ime .cands span { padding: 0 6px; border-radius: 8px; }
-.ime .cands span i { font-style: normal; font-size: 12px; color: var(--ink-3); margin-right: 2px; }
-.ime .cands span.want { background: rgb(var(--glow) / 0.22); outline: 1px solid var(--accent); }
+.ime .cands span { padding: 0 6px; border-radius: var(--radius-sm); }
+.ime .cands span i { font-style: normal; font-size: 13px; color: var(--ink-3); margin-right: 2px; }
+.ime .cands span.want { background: var(--ink); color: #fff; }
+.ime .cands span.want i { color: rgb(255 255 255 / 0.75); }
 .ime .pg { font-size: 12px; color: var(--ink-3); }
 .ime .hint { flex-basis: 100%; font-size: 14px; color: var(--ink-2); }
 .ime .warn { flex-basis: 100%; color: var(--bad); font-weight: 700; }
@@ -62,8 +63,12 @@
 .pair-main { display: grid; justify-items: center; gap: 10px; }
 .pair-glyph {
   width: 168px; height: 168px; display: grid; place-items: center; padding: 10px;
-  border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 1px;
+  border-radius: var(--radius); border: 1px solid var(--line-strong, var(--line));
   font-size: 128px; line-height: 1; color: var(--ink);
+  /* 田字格：練習簿的寫字格 */
+  background: var(--surface)
+    linear-gradient(to right, transparent calc(50% - 0.5px), var(--line) calc(50% - 0.5px), var(--line) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(50% - 0.5px), var(--line) calc(50% - 0.5px), var(--line) calc(50% + 0.5px), transparent calc(50% + 0.5px));
 }
 .pair-boxes { display: flex; gap: 12px; }
 .pbox {

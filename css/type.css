@@ -459,3 +459,8 @@ body.typing .lesson-head .steps { flex: 0 1 auto; min-width: 0; margin-left: aut
   .stage-head h2 { font-size: var(--fs-md); }
   .stage-head p { font-size: var(--fs-sm); }
 }
+
+/* 練習簿橫線：打字文字寫在橫線上；中文世界加一條紅色邊線 */
+.text { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(1.75em - 1px), var(--line) calc(1.75em - 1px), var(--line) 1.75em); }
+.text.big, .text.single { background-image: none; }
+html[data-world="magic"] .text-wrap { border-left: 2px solid color-mix(in srgb, var(--accent) 45%, transparent); padding-left: 12px; }
