@@ -143,22 +143,22 @@ export class VirtualKeyboard {
 
 // 手形圖：兩隻手的俯視圖，標示要用的手指。
 const HAND_SVG = `
-<svg viewBox="0 0 420 150" class="hands-svg" role="img" aria-label="手形提示">
+<svg viewBox="0 0 420 152" class="hands-svg" role="img" aria-label="手形提示：亮起的是要用的手指">
   <g class="hand left">
-    <rect class="palm" x="28" y="78" width="132" height="64" rx="26"/>
-    <rect class="finger f-violet" data-finger="L5" x="30" y="44" width="24" height="52" rx="12"/>
-    <rect class="finger f-blue"   data-finger="L4" x="60" y="22" width="25" height="72" rx="12.5"/>
-    <rect class="finger f-green"  data-finger="L3" x="91" y="12" width="25" height="82" rx="12.5"/>
-    <rect class="finger f-orange" data-finger="L2" x="122" y="24" width="25" height="70" rx="12.5"/>
-    <rect class="finger f-gray thumb" data-finger="TH" x="150" y="88" width="48" height="24" rx="12" transform="rotate(-24 150 100)"/>
+    <rect class="finger f-gray thumb" data-finger="TH" x="146" y="104" width="54" height="24" rx="12" transform="rotate(-28 146 116)"/>
+    <rect class="finger f-violet" data-finger="L5" x="36" y="48" width="23" height="62" rx="11.5"/>
+    <rect class="finger f-blue" data-finger="L4" x="63" y="24" width="25" height="84" rx="12.5"/>
+    <rect class="finger f-green" data-finger="L3" x="92" y="14" width="25" height="94" rx="12.5"/>
+    <rect class="finger f-orange" data-finger="L2" x="121" y="28" width="25" height="80" rx="12.5"/>
+    <path class="palm" d="M34 96 C34 88 40 84 48 84 L142 84 C152 84 158 90 158 100 L158 118 C158 134 146 146 128 146 L58 146 C44 146 34 136 34 122 Z"/>
   </g>
-  <g class="hand right">
-    <rect class="palm" x="260" y="78" width="132" height="64" rx="26"/>
-    <rect class="finger f-orange" data-finger="R2" x="273" y="24" width="25" height="70" rx="12.5"/>
-    <rect class="finger f-green"  data-finger="R3" x="304" y="12" width="25" height="82" rx="12.5"/>
-    <rect class="finger f-blue"   data-finger="R4" x="335" y="22" width="25" height="72" rx="12.5"/>
-    <rect class="finger f-violet" data-finger="R5" x="366" y="44" width="24" height="52" rx="12"/>
-    <rect class="finger f-gray thumb" data-finger="TH" x="222" y="88" width="48" height="24" rx="12" transform="rotate(24 270 100)"/>
+  <g class="hand right" transform="translate(420 0) scale(-1 1)">
+    <rect class="finger f-gray thumb" data-finger="TH" x="146" y="104" width="54" height="24" rx="12" transform="rotate(-28 146 116)"/>
+    <rect class="finger f-violet" data-finger="R5" x="36" y="48" width="23" height="62" rx="11.5"/>
+    <rect class="finger f-blue" data-finger="R4" x="63" y="24" width="25" height="84" rx="12.5"/>
+    <rect class="finger f-green" data-finger="R3" x="92" y="14" width="25" height="94" rx="12.5"/>
+    <rect class="finger f-orange" data-finger="R2" x="121" y="28" width="25" height="80" rx="12.5"/>
+    <path class="palm" d="M34 96 C34 88 40 84 48 84 L142 84 C152 84 158 90 158 100 L158 118 C158 134 146 146 128 146 L58 146 C44 146 34 136 34 122 Z"/>
   </g>
 </svg>`;
 

@@ -32,8 +32,10 @@ function render() {
   $('grid').innerHTML = list.map((it) => {
     const has = owned(it.id), on = e[kind] === it.id, can = balance() >= it.price;
     const face = it.kind === 'kb' ? `<span class="kb-swatch" style="--a:${it.colors[0]};--b:${it.colors[1]}"><i></i><i></i><i></i><i></i></span>` : `<span class="title-chip big">${it.name}</span>`;
-    const btn = on ? `<button class="btn" data-off="${it.id}" type="button">脫下</button>` : has ? `<button class="btn primary" data-on="${it.id}" type="button">裝上</button>` : `<button class="btn primary" data-buy="${it.id}" type="button" ${can ? '' : 'disabled'}>★ ${it.price} 買</button>`;
-    return `<div class="shop-item card${on ? ' on' : ''}${has ? ' has' : ''}">${face}<b>${it.name}</b><small>${it.desc}</small><div class="form-actions">${btn}${has ? '<span class="muted mini">已擁有</span>' : ''}</div></div>`;
+    // 一般按鈕用次要樣式；買不起的停用並說明還差幾多星
+    const btn = on ? `<button class="btn" data-off="${it.id}" type="button">脫下</button>` : has ? `<button class="btn" data-on="${it.id}" type="button">裝上</button>` : `<button class="btn" data-buy="${it.id}" type="button" ${can ? '' : 'disabled'}>★ ${it.price} 買</button>`;
+    const note = has ? '<span class="muted mini">已擁有</span>' : can ? '' : `<span class="muted mini">還差 ${it.price - balance()} ★</span>`;
+    return `<div class="shop-item card${on ? ' on' : ''}${has ? ' has' : ''}">${face}${it.kind === 'kb' ? `<b>${it.name}</b>` : ''}<small>${it.desc}</small><div class="form-actions">${btn}${note}</div></div>`;
   }).join('') || '<p class="muted">這個世界沒有這類貨品。</p>';
   $('grid').querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => { const it = items.find((x) => x.id === b.dataset.buy); const r = buy(it); if (!r.ok) alert(r.msg); else celebrate(it); preview(); render(); });
   $('grid').querySelectorAll('[data-on]').forEach((b) => b.onclick = () => { equip(kind, b.dataset.on); preview(); render(); });

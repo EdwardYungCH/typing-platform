@@ -302,11 +302,11 @@
 
 .hands { text-align: center; }
 .hands-svg { width: min(100%, 360px); height: auto; display: block; margin: 0 auto; }
-.hands .palm { fill: var(--surface-2); stroke: var(--line); stroke-width: 2; }
+.hands .palm { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.5; }
 .hands .finger {
-  fill: var(--kb);
+  fill: var(--surface);
   stroke: var(--kc);
-  stroke-width: 2;
+  stroke-width: 1.5;
   transition: fill 0.12s;
 }
 .hands .finger.active { fill: var(--kc); }
