@@ -3150,6 +3150,142 @@
      "text": "Last Saturday our class visited a farm in the New Territories. The farmer showed us how to plant lettuce and pick tomatoes. We also fed the goats, which were very hungry and a little noisy. At lunch we ate the vegetables we had picked, and they tasted much better than the ones from the supermarket. Before we left, the farmer gave each of us a small pot with a seed in it. Mine has already started to grow!"
     }
    ]
+  },
+  {
+   "id": 17,
+   "title": "數字列符號",
+   "subtitle": "@ # $ % & * ( ) _ + =",
+   "newKeys": [
+    "Digit1",
+    "Digit2",
+    "Digit3",
+    "Digit4",
+    "Digit5",
+    "Digit6",
+    "Digit7",
+    "Digit8",
+    "Digit9",
+    "Digit0",
+    "Equal",
+    "Minus",
+    "BracketLeft",
+    "BracketRight"
+   ],
+   "pass": {
+    "wpm": 8,
+    "accuracy": 90
+   },
+   "steps": [
+    {
+     "type": "drill",
+     "title": "示範",
+     "hint": "這些符號在數字鍵上面：按住 Shift（對側尾指），再按數字鍵。@ 是 Shift＋2、# 是 Shift＋3、$ 是 Shift＋4、% 是 Shift＋5、& 是 Shift＋7、* 是 Shift＋8、( ) 是 Shift＋9 和 0。",
+     "display": "big",
+     "text": "@ # $ % & * ( )"
+    },
+    {
+     "type": "drill",
+     "title": "單鍵",
+     "hint": "每個符號打三下，記得用對側尾指按 Shift。",
+     "text": "@@@ ### $$$ %%% &&& *** ((( ))) ___ +++ === @@@ ### $$$ %%% &&& *** ((( )))"
+    },
+    {
+     "type": "drill",
+     "title": "組合",
+     "hint": "符號和數字、字母一起用。",
+     "gen": {
+      "kind": "words",
+      "words": [
+       "$5",
+       "20%",
+       "(a)",
+       "(b)",
+       "1+1=2",
+       "#2",
+       "A&B",
+       "4*5",
+       "x_y",
+       "@hk"
+      ],
+      "count": 16
+     }
+    },
+    {
+     "type": "drill",
+     "title": "真實用法",
+     "hint": "電郵地址、價錢、百分比、括號、算式。",
+     "gen": {
+      "kind": "words",
+      "words": [
+       "ken@school.edu.hk",
+       "amy@mail.com",
+       "$25.50",
+       "$8",
+       "$120",
+       "50%",
+       "100%",
+       "(S1A)",
+       "(Form 2)",
+       "Q&A",
+       "Tom & Amy",
+       "3*4=12",
+       "2+3=5",
+       "10-4=6",
+       "#1",
+       "#hk",
+       "\"OK\"",
+       "a_b",
+       "C++",
+       "[1]",
+       "9:30",
+       "p.12",
+       "(yes)",
+       "R&D"
+      ],
+      "count": 16
+     }
+    },
+    {
+     "type": "test",
+     "title": "過關小測",
+     "hint": "45 秒內打得愈多愈好，速度達 8 WPM、準確率達 90% 即過關。",
+     "timeLimit": 45,
+     "pass": {
+      "wpm": 8,
+      "accuracy": 90
+     },
+     "gen": {
+      "kind": "words",
+      "words": [
+       "ken@school.edu.hk",
+       "amy@mail.com",
+       "$25.50",
+       "$8",
+       "$120",
+       "50%",
+       "100%",
+       "(S1A)",
+       "(Form 2)",
+       "Q&A",
+       "Tom & Amy",
+       "3*4=12",
+       "2+3=5",
+       "10-4=6",
+       "#1",
+       "#hk",
+       "\"OK\"",
+       "a_b",
+       "C++",
+       "[1]",
+       "9:30",
+       "p.12",
+       "(yes)",
+       "R&D"
+      ],
+      "count": 40
+     }
+    }
+   ]
   }
  ]
 }

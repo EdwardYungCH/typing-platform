@@ -227,6 +227,21 @@ lessons.append({
         {"type": "test", "title": "過關小測", "hint": test_hint(16, 60), "timeLimit": 60, "pass": test_pass(16), "text": test_para},
     ]})
 
+# ---- 第 17 課：數字列符號（電郵、價錢、百分比、括號、算式）----
+SPEED[17] = 8
+syms = ['ken@school.edu.hk', 'amy@mail.com', '$25.50', '$8', '$120', '50%', '100%', '(S1A)', '(Form 2)', 'Q&A', 'Tom & Amy', '3*4=12', '2+3=5',
+        '10-4=6', '#1', '#hk', '"OK"', 'a_b', 'C++', '[1]', '9:30', 'p.12', '(yes)', 'R&D']
+lessons.append({
+    "id": 17, "title": "數字列符號", "subtitle": "@ # $ % & * ( ) _ + =", "newKeys": [keycode(c) for c in '1234567890'] + ['Equal', 'Minus', 'BracketLeft', 'BracketRight'],
+    "pass": test_pass(17), "steps": [
+        {"type": "drill", "title": "示範", "hint": "這些符號在數字鍵上面：按住 Shift（對側尾指），再按數字鍵。@ 是 Shift＋2、# 是 Shift＋3、$ 是 Shift＋4、% 是 Shift＋5、& 是 Shift＋7、* 是 Shift＋8、( ) 是 Shift＋9 和 0。",
+         "display": "big", "text": "@ # $ % & * ( )"},
+        {"type": "drill", "title": "單鍵", "hint": "每個符號打三下，記得用對側尾指按 Shift。", "text": "@@@ ### $$$ %%% &&& *** ((( ))) ___ +++ === @@@ ### $$$ %%% &&& *** ((( )))"},
+        {"type": "drill", "title": "組合", "hint": "符號和數字、字母一起用。", "gen": {"kind": "words", "words": ['$5', '20%', '(a)', '(b)', '1+1=2', '#2', 'A&B', '4*5', 'x_y', '@hk'], "count": 16}},
+        {"type": "drill", "title": "真實用法", "hint": "電郵地址、價錢、百分比、括號、算式。", "gen": {"kind": "words", "words": syms, "count": 16}},
+        {"type": "test", "title": "過關小測", "hint": test_hint(17), "timeLimit": 45, "pass": test_pass(17), "gen": {"kind": "words", "words": syms, "count": 40}},
+    ]})
+
 # 句子庫（每日任務、練習區「句子」用）：每句記下要學到第幾課才打得到
 def need_lesson(t):
     if re.search(r"['\"?!:\-]", t): return 14
