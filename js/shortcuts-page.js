@@ -39,6 +39,17 @@ function eventCombo(e) {
   if (e.ctrlKey) mods.add('Ctrl'); if (e.shiftKey) mods.add('Shift'); if (e.altKey) mods.add('Alt'); if (e.metaKey) mods.add('Win');
   return comboKey(mods, e.code);
 }
+// 「Ctrl＋+」可以用主鍵盤的 =（有沒有按 Shift 都可以）或數字鍵盤的 +；- 和 0 同理
+const NUMPAD = { Equal: 'NumpadAdd', Minus: 'NumpadSubtract', Digit0: 'Numpad0' };
+function sameCombo(e, it) {
+  const want = itemCombo(it);
+  if (eventCombo(e) === want) return true;
+  if (!NUMPAD[it.code]) return false;
+  const mods = new Set(); if (e.ctrlKey) mods.add('Ctrl'); if (e.altKey) mods.add('Alt'); if (e.metaKey) mods.add('Win');
+  const wantNoShift = comboKey(new Set(it.keys.filter((k) => MODS.includes(k) && k !== 'Shift')), it.code);
+  const code = e.code === NUMPAD[it.code] ? it.code : e.code;
+  return comboKey(mods, code) === wantNoShift;
+}
 const isModifierCode = (c) => /^(Control|Shift|Alt|Meta|OS)(Left|Right)?$/.test(c);
 
 // ---------- 單元列表 ----------
@@ -86,13 +97,13 @@ function run(unit, quiz, all) {
   const pool = shuffle(unit.items);
   const n = quiz ? Math.min(all ? 20 : 12, pool.length) : pool.length;
   const queue = pool.slice(0, n).map((it, i) => ({ it, kind: quiz && i % 3 === 2 ? 'choose' : 'do', tries: 0 }));
-  let pos = 0, score = 0, firstTry = 0, wrongTotal = 0, picked = new Set(), locked = false;
+  let pos = 0, score = 0, firstTry = 0, wrongTotal = 0, picked = new Set(), locked = false, shownAt = 0;
   const total = queue.length;
 
   function render() {
     const q = queue[pos];
     if (!q) return finish();
-    picked = new Set(); locked = false;
+    picked = new Set(); locked = false; shownAt = performance.now();
     const { it } = q;
     const head = `<div class="sc-count">${quiz ? '小測' : '練習'}　第 ${Math.min(pos + 1, queue.length)} / ${queue.length} 題${quiz ? '' : `　一次答對 ${firstTry}`}</div>`;
     if (q.kind === 'choose') {
@@ -181,7 +192,10 @@ function run(unit, quiz, all) {
   const onKey = (e) => {
     const q = queue[pos];
     if (!q || e.target?.closest?.('dialog')) return;
-    if (locked) { if (e.key === 'Enter') { e.preventDefault(); next(); } return; }
+    if (locked) { if (e.key === 'Enter' && !e.repeat) { e.preventDefault(); next(); } return; }
+    // 新題目出現後 0.3 秒內的按鍵不算（連按兩下 Enter 不會答錯下一題）；不用 Enter／空白鍵的題目，這兩個鍵不算答案
+    if (performance.now() - shownAt < 300) { e.preventDefault(); return; }
+    if ((e.key === 'Enter' || e.key === ' ') && !/Enter|Space/.test(itemCombo(q.it))) { e.preventDefault(); return; }
     if (q.kind === 'choose') { if (/^[1-4]$/.test(e.key)) { e.preventDefault(); $('body').querySelectorAll('.sc-opt')[Number(e.key) - 1]?.click(); } return; }
     if (isModifierCode(e.code) || e.repeat) return;
     if (!q.it.real && !e.ctrlKey && !e.altKey && !e.metaKey) return;   // 系統快捷鍵：普通打字不算答
@@ -191,7 +205,7 @@ function run(unit, quiz, all) {
       $('msg').textContent = '這一題網頁收不到真實按鍵，請在螢幕鍵盤點選。';
       return;
     }
-    answer(eventCombo(e) === itemCombo(q.it));
+    answer(sameCombo(e, q.it));
   };
   window.addEventListener('keydown', onKey);
   cleanup = () => window.removeEventListener('keydown', onKey);

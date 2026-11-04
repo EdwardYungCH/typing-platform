@@ -18,13 +18,14 @@ function preview() {
   const title = titleName(items);
   $('preview').innerHTML = `<div class="pv-text"><b style="font-size:22px">${me ? me.name : '你'}${title ? ` <span class="title-chip">${title}</span>` : ''}</b>
       <p class="muted" style="margin:4px 0 0">裝備中：${KINDS.map(([k, n]) => `${n}：${items.find((x) => x.id === e[k])?.name ?? '無'}`).join('　')}</p>
-      <div class="tabs" style="margin:8px 0 0">${Object.entries(WORLDS).map(([w, n]) => `<a class="btn${w === world ? ' primary' : ''}" href="shop.html?world=${w}&kind=${kind}">${n}</a>`).join('')}</div></div>`;
+      <div class="tabs" role="tablist" style="margin:8px 0 0">${Object.entries(WORLDS).map(([w, n]) => `<a role="tab" aria-selected="${w === world}" href="shop.html?world=${w}&kind=${kind}" style="text-decoration:none">${n}</a>`).join('')}</div></div>`;
   $('bal').textContent = balance();
   $('earned').textContent = `共賺 ${earned()}`;
 }
 
 function render() {
-  $('tabs').innerHTML = KINDS.map(([k, n]) => `<button class="btn${k === kind ? ' primary' : ''}" data-k="${k}" type="button">${n}</button>`).join('');
+  $('tabs').setAttribute('role', 'tablist');
+  $('tabs').innerHTML = KINDS.map(([k, n]) => `<button role="tab" aria-selected="${k === kind}" data-k="${k}" type="button">${n}</button>`).join('');
   $('tabs').querySelectorAll('button').forEach((b) => b.onclick = () => { kind = b.dataset.k; render(); });
   const e = equipped();
   const list = items.filter((it) => it.kind === kind && (!it.world || it.world === world));

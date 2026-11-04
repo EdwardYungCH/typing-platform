@@ -13,7 +13,7 @@
 /* 焦點：下一課 */
 .next { display: grid; grid-template-columns: 1fr auto; gap: 32px; padding: 32px 36px; }
 @media (max-width: 760px) { .next { grid-template-columns: 1fr; padding: 24px; } }
-.next .eyebrow { margin: 0; font-size: 13px; font-weight: 600; color: var(--accent); }
+.next .eyebrow { margin: 0; font-size: 13px; font-weight: 700; color: var(--accent); }
 .next .eyebrow span { color: var(--ink-3); font-weight: 500; }
 .next h1 { margin: 6px 0 0; font-size: clamp(30px, 4vw, 42px); }
 .next .lead { margin: 8px 0 0; color: var(--ink-2); font-size: 17px; }
@@ -35,30 +35,30 @@
 /* 目錄 + 其他 */
 .home-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 40px; margin-top: 36px; }
 @media (max-width: 860px) { .home-grid { grid-template-columns: 1fr; gap: 28px; } }
-.toc h2, .side h2 { margin: 0 0 10px; font-size: 15px; font-family: var(--font); font-weight: 600; color: var(--ink-3); letter-spacing: 0.02em; }
+.toc h2, .side h2 { margin: 0 0 10px; font-size: 15px; font-family: var(--font); font-weight: 700; color: var(--ink-3); letter-spacing: 0.02em; }
 .toc-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .toc-list li { border-bottom: 1px solid var(--line); }
 .toc-list a { display: grid; grid-template-columns: 44px 1fr auto; gap: 14px; align-items: center; padding: 12px 6px; color: var(--ink); text-decoration: none; }
 .toc-list a:hover { background: var(--surface); }
 .toc-list .n { font-family: var(--mono); font-size: 14px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.toc-list .t b { display: block; font-weight: 600; }
+.toc-list .t b { display: block; font-weight: 700; }
 .toc-list .t small { display: block; color: var(--ink-3); font-size: 13px; }
 .toc-list .t small.hw { color: var(--accent); }
 .toc-list .t small.hw.late { color: var(--bad); }
 .toc-list .s { font-size: 13px; color: var(--ink-3); white-space: nowrap; }
-.toc-list .s.stars { color: var(--star); letter-spacing: 1px; }
+.toc-list .s.stars { color: var(--star-ink, #8a6100); letter-spacing: 1px; }
 .toc-list li.done .n, .toc-list li.done .t b { color: var(--ink-2); font-weight: 500; }
 .toc-list li.cur a { background: var(--surface); }
-.toc-list li.cur .n { color: var(--accent); font-weight: 600; }
-.toc-list li.cur .s { color: var(--accent); font-weight: 600; }
+.toc-list li.cur .n { color: var(--accent); font-weight: 700; }
+.toc-list li.cur .s { color: var(--accent); font-weight: 700; }
 .side-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .side-list li { border-bottom: 1px solid var(--line); }
 .side-list a { display: block; padding: 12px 6px; color: var(--ink); text-decoration: none; }
 .side-list a:hover { background: var(--surface); }
-.side-list b { display: block; font-weight: 600; }
+.side-list b { display: block; font-weight: 700; }
 .side-list small { display: block; color: var(--ink-3); font-size: 13px; }
 .note { margin-top: 32px; font-size: 14px; }
-.wallet-btn { color: var(--star); font-weight: 700; }
+.wallet-btn { color: var(--star-ink, #8a6100); font-weight: 700; }
 
 /* 其他頁沿用的列表（評測區）：每項一行，細線分隔 */
 .map { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
@@ -67,11 +67,11 @@
 .node .num { flex: none; width: 36px; font-family: var(--mono); font-size: 14px; color: var(--ink-3); text-align: center; }
 .node.done .num { color: var(--ok); }
 .node .t { flex: 1; min-width: 0; }
-.node .t b { display: block; font-weight: 600; }
+.node .t b { display: block; font-weight: 700; }
 .node .t span { font-size: 13px; color: var(--ink-3); }
-.node .s { color: var(--star); letter-spacing: 1px; white-space: nowrap; }
-.node.locked { opacity: 0.5; cursor: not-allowed; }
-.tabs { display: flex; gap: 8px; margin: 8px 0 16px; flex-wrap: wrap; }
+.node .s { color: var(--star-ink, #8a6100); letter-spacing: 1px; white-space: nowrap; }
+.node.locked { color: var(--ink-3); cursor: not-allowed; }
+.node.locked:hover { background: none; }
 .sc-home { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; padding: 14px 16px; margin-top: 16px; text-decoration: none; color: inherit; }
 .sc-home .num { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 22px; }
 .sc-home .t { display: grid; gap: 2px; }

@@ -81,7 +81,8 @@ function enMilestones() {
 async function render() {
   applyWorld(lang === 'zh' ? 'magic' : 'planet');
   document.title = `里程碑｜${lang === 'zh' ? '中文速成' : '英文打字'}`;
-  $('tabs').innerHTML = ['en', 'zh'].map((l) => `<button type="button" class="btn ${l === lang ? 'primary' : ''}" data-lang="${l}">${l === 'en' ? '英文打字' : '中文速成'}</button>`).join('');
+  $('tabs').setAttribute('role', 'tablist');
+  $('tabs').innerHTML = ['en', 'zh'].map((l) => `<button type="button" role="tab" aria-selected="${l === lang}" data-lang="${l}">${l === 'en' ? '英文打字' : '中文速成'}</button>`).join('');
   $('tabs').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { lang = b.dataset.lang; history.replaceState(null, '', `?lang=${lang}`); render(); }));
   const dp = dailyProgress(lang);
   const due = mastery.due(lang).length;

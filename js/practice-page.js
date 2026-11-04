@@ -42,7 +42,8 @@ function opt(name, value, label, sub, checked) {
 
 function render() {
   applyWorld(lang === 'zh' ? 'magic' : 'planet');
-  $('tabs').innerHTML = ['en', 'zh'].map((l) => `<button type="button" class="btn ${l === lang ? 'primary' : ''}" data-lang="${l}">${l === 'en' ? '英文打字' : '中文速成'}</button>`).join('');
+  $('tabs').setAttribute('role', 'tablist');
+  $('tabs').innerHTML = ['en', 'zh'].map((l) => `<button type="button" role="tab" aria-selected="${l === lang}" data-lang="${l}">${l === 'en' ? '英文打字' : '中文速成'}</button>`).join('');
   $('tabs').querySelectorAll('button').forEach((b) => b.onclick = () => { lang = b.dataset.lang; history.replaceState(null, '', `?lang=${lang}`); render(); });
   const kinds = lang === 'zh' ? ZH_KINDS : EN_KINDS;
   $('kinds').innerHTML = kinds.map(([v, l, s], i) => opt('kind', v, l, s, i === 0)).join('');

@@ -42,12 +42,16 @@ async function report(user) {
   const attempts = store.attempts ?? [];
   const minutes = Math.round(attempts.reduce((a, x) => a + (x.seconds ?? 0), 0) / 60);
   const doneN = (lang) => lessons[lang].filter((l) => store.lessons?.[`${lang}:${l.id}`]?.done && !store.lessons[`${lang}:${l.id}`].skipped).length;
-  const best = (lang) => Math.round(Math.max(0, ...attempts.filter((a) => a.lang === lang).map((a) => a.wpm ?? 0)));
-  const dayset = new Set(attempts.map((a) => (a.at ?? '').slice(0, 10)));
+  // 最佳速度只計真正打字（英文、速成選字、系統輸入法），字根和字形練習的「個/分」不算
+  const typing = (a) => ['en', 'quick', 'ime'].includes(a.input) || (!a.input && a.lang === 'en');
+  const best = (lang) => Math.round(Math.max(0, ...attempts.filter((a) => a.lang === lang && typing(a)).map((a) => a.wpm ?? 0),
+    ...Object.entries(store.lessons ?? {}).filter(([k, v]) => k.startsWith(`${lang}:`) && !v.skipped).map(([, v]) => v.bestWpm ?? 0)));
+  const localDay = (iso) => (iso ? new Date(iso).toLocaleDateString('sv') : '');
+  const dayset = new Set(attempts.map((a) => localDay(a.at)));
   const tile = (l, v, sub = '') => `<div class="rp-tile"><small>${l}</small><b>${v}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
-  const days = [...Array(30)].map((_, i) => { const dt = new Date(); dt.setDate(dt.getDate() - 29 + i); return dt.toISOString().slice(0, 10); });
+  const days = [...Array(30)].map((_, i) => { const dt = new Date(); dt.setDate(dt.getDate() - 29 + i); return dt.toLocaleDateString('sv'); });
   const perDay = Object.fromEntries(days.map((x) => [x, 0]));
-  for (const a of attempts) { const k = (a.at ?? '').slice(0, 10); if (k in perDay) perDay[k] += (a.seconds ?? 0) / 60; }
+  for (const a of attempts) { const k = localDay(a.at); if (k in perDay) perDay[k] += (a.seconds ?? 0) / 60; }
   const maxMin = Math.max(1, ...Object.values(perDay));
   const chart = `<div class="rp-dist days" role="img" aria-label="最近 30 天每日練習分鐘">${days.map((k) => `<div class="rp-col" title="${k}：${Math.round(perDay[k])} 分鐘"><span class="rp-bar" style="height:${(perDay[k] / maxMin) * 100}%"></span><i>${Math.round(perDay[k]) || ''}</i><small>${k.slice(8)}</small></div>`).join('')}</div>`;
   const table = (lang) => `<table class="rp-table"><thead><tr><th>課</th><th>星</th><th>最佳${lang === 'en' ? ' WPM' : '字/分'}</th><th>準確率</th></tr></thead><tbody>${lessons[lang].map((l) => {

@@ -150,7 +150,7 @@ a { color: var(--accent); }
   background: var(--surface);
   color: var(--ink);
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
@@ -208,7 +208,7 @@ a { color: var(--accent); }
 /* 回報問題按鈕（每頁右下角） */
 .fb-btn { position: fixed; right: 14px; bottom: 14px; z-index: 50; padding: 7px 12px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: inherit; font-size: 13px; cursor: pointer; opacity: 0.75; }
 .fb-btn:hover, .fb-btn:focus-visible { opacity: 1; color: var(--ink); }
-.fb-dlg { border: 1px solid var(--line); border-radius: 16px; padding: 20px; background: var(--surface); color: var(--ink); width: min(480px, calc(100% - 32px)); }
+.fb-dlg { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; background: var(--surface); color: var(--ink); width: min(480px, calc(100% - 32px)); }
 .fb-dlg::backdrop { background: rgb(0 0 0 / 0.5); }
 .fb-dlg h3 { margin: 0 0 6px; }
 .fb-dlg textarea { width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); padding: 8px 10px; font: inherit; }

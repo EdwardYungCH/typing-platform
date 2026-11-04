@@ -13,6 +13,8 @@ import { json, fail, body, serverError } from './http.js';
 const MAX_PROGRESS_BYTES = 400 * 1024;
 const LANGS = ['en', 'zh'];
 const num = (v, max = 1e6) => { const n = Number(v); return Number.isFinite(n) ? Math.min(Math.max(n, 0), max) : 0; };
+// 香港日期（UTC+8，沒有夏令時間）
+const hkDay = (ms) => new Date(ms + 8 * 3600000).toISOString().slice(0, 10);
 const isoOrNull = (v) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(v) ? v : null);
 
 /** 測驗定義：學生每次開始時由伺服器在幾份題目（forms）中隨機抽一份 */
@@ -48,7 +50,7 @@ export function summarize(data, nowMs = Date.now()) {
     const s = num(a?.seconds, 3600);
     seconds += s;
     const at = isoOrNull(a?.at);
-    if (at && Date.parse(at) > since) { const d = at.slice(0, 10); out.days[d] = (out.days[d] ?? 0) + s; }
+    if (at && Date.parse(at) > since) { const d = hkDay(Date.parse(at)); out.days[d] = (out.days[d] ?? 0) + s; }
     if (at && (!out.lastActive || at > out.lastActive)) out.lastActive = at;
   }
   for (const d of Object.keys(out.days)) out.days[d] = Math.round(out.days[d] / 60);
@@ -74,7 +76,7 @@ function cleanProgress(data) {
 
 /** 最近 7 日練習分鐘（由摘要的 days 計） */
 function weekMinutes(days, nowMs = Date.now()) {
-  const from = new Date(nowMs - 6 * 86400000).toISOString().slice(0, 10);
+  const from = hkDay(nowMs - 6 * 86400000);
   return Object.entries(days ?? {}).filter(([d]) => d >= from).reduce((s, [, m]) => s + num(m, 1440), 0);
 }
 

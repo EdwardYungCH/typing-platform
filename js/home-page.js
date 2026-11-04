@@ -45,7 +45,7 @@ function render() {
   const placement = getSetting(`placement:${lang}`, null);
   const dp = dailyProgress(lang);
   const st = streakInfo();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString('sv');   // 本地日期 YYYY-MM-DD
   const hwOf = (id) => homework.find((h) => h.lang === lang && h.lesson_id === id);
 
   $('world-tabs').innerHTML = Object.entries(WORLDS).map(([w, i]) => `<button class="wtab${w === world ? ' on' : ''}" data-w="${w}" type="button" aria-pressed="${w === world}">${i.name}<small>${i.sub}</small></button>`).join('');

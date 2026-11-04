@@ -5,17 +5,17 @@ kbd { display: inline-grid; place-items: center; min-width: 2em; padding: 3px 9p
 .sc-units { display: grid; gap: 10px; margin-top: 12px; }
 .sc-unit { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 14px 16px; text-decoration: none; color: inherit; }
 .sc-unit:hover { border-color: var(--accent); }
-.sc-unit .num { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--surface-2); font-weight: 800; }
+.sc-unit .num { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius); background: var(--surface-2); font-weight: 700; }
 .sc-unit .t { display: grid; gap: 2px; }
 .sc-unit .t span { color: var(--ink-2); font-size: 14px; }
 .sc-unit .r { display: grid; justify-items: end; gap: 2px; }
 .sc-unit .r small { color: var(--ink-2); }
-.sc-stars { color: #ffc940; letter-spacing: 2px; }
+.sc-stars { color: var(--star-ink, #8a6100); letter-spacing: 2px; }
 .sc-stars.big { font-size: 34px; }
 .sc-tabs { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; }
 .sc-body { padding: 18px; }
 .sc-cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
-.sc-card { display: grid; gap: 6px; align-content: start; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.sc-card { display: grid; gap: 6px; align-content: start; padding: 12px 14px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line); }
 .sc-card small { color: var(--ink-2); font-size: 13px; }
 .sc-card .sc-tag { color: var(--warn, #e0a030); }
 .sc-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
@@ -23,7 +23,7 @@ kbd { display: inline-grid; place-items: center; min-width: 2em; padding: 3px 9p
 .sc-count { color: var(--ink-2); font-size: 14px; margin-bottom: 8px; }
 .sc-q { text-align: center; margin: 6px 0 12px; }
 .sc-q .sc-keys { justify-content: center; }
-.sc-action { font-size: 28px; font-weight: 800; margin: 4px 0; }
+.sc-action { font-size: 28px; font-weight: 700; margin: 4px 0; }
 .sc-picked { display: flex; justify-content: center; align-items: center; gap: 2px; min-height: 44px; margin-bottom: 10px; }
 .vkb { display: grid; gap: 5px; justify-content: center; user-select: none; }
 .vkr { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
@@ -43,7 +43,7 @@ kbd { display: inline-grid; place-items: center; min-width: 2em; padding: 3px 9p
 .sc-msg.bad { color: var(--bad); }
 .sc-msg small { color: var(--ink-2); }
 .sc-done { text-align: center; }
-.sc-score { font-size: 40px; font-weight: 800; margin: 4px 0; }
+.sc-score { font-size: 40px; font-weight: 700; margin: 4px 0; }
 @media (max-width: 600px) {
   .vk { min-width: 28px; height: 36px; padding: 0 5px; font-size: 12px; }
   .vk.wide { min-width: 48px; }

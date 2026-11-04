@@ -3,27 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>登入</title>
+  <title>學生登入｜打字練習平台</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/world.css">
   <link rel="stylesheet" href="css/home.css">
   <link rel="stylesheet" href="css/account.css">
 </head>
 <body>
-  <div class="page">
+  <div class="page narrow">
     <header class="topbar">
       <a class="brand" href="index.html">打字練習平台</a>
       <span class="spacer"></span>
       <a class="btn ghost" href="index.html">回首頁</a>
     </header>
-    <form class="card form-card" id="form" autocomplete="off">
-      <h2>學生登入</h2>
-      <p class="hint">用老師派發的學號和密碼登入，紀錄會在不同電腦之間同步。沒有帳號也可以直接練習，紀錄只存在這部電腦。</p>
+    <div class="login-head">
+      <p class="eyebrow" id="school-name"></p>
+      <h1>學生登入</h1>
+      <p class="lead">用老師派發的帳號登入，課堂進度和評測成績會保存在學校的帳戶，在家和在學校都可以繼續。</p>
+    </div>
+    <section class="card form-card" id="already" hidden>
+      <p id="already-text"></p>
+      <div class="form-actions"><a class="btn primary" id="continue" href="index.html">繼續</a><button class="btn" id="switch" type="button">不是我，登出</button></div>
+    </section>
+    <form class="card form-card" id="form" autocomplete="off" novalidate>
+      <div class="field" id="school-field" hidden>
+        <label for="school">學校代碼</label>
+        <input id="school" name="school" autocapitalize="none" spellcheck="false" placeholder="見登入紙條，例如 sphrc">
+      </div>
       <div class="field"><label for="sid">學號</label><input id="sid" name="username" autocomplete="username" required placeholder="例如 s27001" autocapitalize="none" spellcheck="false"></div>
-      <div class="field"><label for="pw">密碼</label><input id="pw" name="password" type="password" autocomplete="current-password" required></div>
+      <div class="field"><label for="pw">密碼</label><input id="pw" name="password" type="password" autocomplete="current-password" required>
+        <p class="caps-warn" id="caps" hidden role="status">Caps Lock 開着：密碼會變成大楷</p></div>
+      <label class="check" for="remember"><input type="checkbox" id="remember"> 記住我 30 日<span class="muted">（只在自己的電腦剔；學校電腦不要剔）</span></label>
+      <label class="check" for="keep" id="keep-row" hidden><input type="checkbox" id="keep" checked> 把這部電腦未登入時的練習紀錄加到我的帳戶</label>
       <p class="form-msg" id="msg" aria-live="polite"></p>
       <div class="form-actions">
         <button class="btn primary" type="submit" id="go">登入</button>
@@ -31,6 +45,7 @@
       </div>
       <p class="hint">忘記密碼？請找老師在後台重設。</p>
     </form>
+    <footer class="site-foot"><a href="privacy.html">私隱政策</a><a href="terms.html">使用條款</a><a href="credits.html">鳴謝及版權</a></footer>
   </div>
   <script type="module" src="js/login-page.js"></script>
 </body>

@@ -1,17 +1,27 @@
 /* 登入頁、我的帳戶頁、教師後台共用的表單樣式 */
-.form-card { max-width: 440px; margin: 16px auto 0; padding: 22px; display: grid; gap: 14px; }
+.page.narrow { max-width: 560px; }
+.login-head { margin: 8px 0 4px; }
+.login-head h1 { margin: 2px 0 6px; }
+.login-head .eyebrow { margin: 0; font-size: var(--fs-sm, 14px); font-weight: 700; color: var(--accent); letter-spacing: 0.04em; }
+.login-head .lead { margin: 0; color: var(--ink-2); }
+.form-card { max-width: 440px; margin: 16px 0 0; padding: 22px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.page.narrow .form-card { max-width: none; }
 .form-card h2 { margin: 0; font-size: 22px; }
 .field { display: grid; gap: 6px; }
 .field label { font-size: 14px; color: var(--ink-2); }
 .field input, .field select, .field textarea {
-  font: inherit; padding: 10px 12px; border-radius: 12px; width: 100%; box-sizing: border-box;
-  background: var(--surface-2); color: var(--ink); border: 1px solid var(--line);
+  font: inherit; padding: 10px 12px; border-radius: var(--radius-sm); width: 100%; box-sizing: border-box;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong, var(--line));
 }
-.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
-.form-msg { min-height: 1.4em; font-size: 14px; color: var(--bad); }
+.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
+.form-msg { font-size: 14px; color: var(--bad); margin: 0; }
 .form-msg.ok { color: var(--ok); }
 .form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .acct { display: grid; gap: 14px; max-width: 640px; }
 .acct .row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; border-bottom: 1px solid var(--line); padding: 8px 0; }
 .acct .row b { font-size: 16px; }
 .hint { font-size: 14px; color: var(--ink-2); margin: 0; }
+label.check { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 14px; cursor: pointer; }
+label.check input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+label.check .muted { font-size: 13px; }
+.caps-warn { margin: 2px 0 0; font-size: 13px; font-weight: 700; color: var(--bad); }

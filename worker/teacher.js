@@ -40,7 +40,8 @@ function cleanPractice(lang, kind, raw) {
   const removed = new Set();
   let content;
   if (lang === 'zh') {
-    const keep = (c) => ZH_PUNCT.includes(c) || quickOf(c);
+    // 只留內置速成打得到的字：碼要是 a–y 一至兩個字母（（）《》…… 等符號的碼以 z 開頭，學生打不到）
+    const keep = (c) => ZH_PUNCT.includes(c) || /^[a-y]{1,2}$/.test(quickOf(c) ?? '');
     const src = raw.replace(/,/g, '，').replace(/\?/g, '？').replace(/!/g, '！').replace(/:/g, '：').replace(/;/g, '；').replace(/\s+/g, '');
     content = [...src].filter((c) => { if (keep(c)) return true; removed.add(c); return false; }).join('');
     if (kind !== 'text') content = [...new Set([...content].filter((c) => !ZH_PUNCT.includes(c)))].join('');

@@ -1,6 +1,6 @@
 /* 學生自己的學習報告（me.html），列印時只印這一段 */
 .rp-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-.rp-tile { padding: 10px 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); display: grid; gap: 2px; }
+.rp-tile { padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line); display: grid; gap: 2px; }
 .rp-tile small { color: var(--ink-2); }
 .rp-tile b { font-size: 22px; }
 .rp-tile span { color: var(--ink-2); font-size: 13px; }
@@ -13,7 +13,7 @@
 .rp-table th, .rp-table td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; }
 .rp-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .rp-table tr.muted td { color: var(--ink-2); }
-.rp-stars { color: #ffc940; letter-spacing: 1px; }
+.rp-stars { color: var(--star-ink, #8a6100); letter-spacing: 1px; }
 .rp-names { display: flex; flex-wrap: wrap; gap: 6px; }
 .rp-names span { padding: 4px 10px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 700; }
 .rp-names small { font-weight: 400; color: var(--ink-2); margin-left: 4px; }

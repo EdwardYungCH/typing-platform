@@ -9,7 +9,9 @@
   --line: #d3d7d1;          /* 只用在表格、分隔線 */
   --ink: #17202a;
   --ink-2: #4b5664;
-  --ink-3: #66717f;
+  --ink-3: #5a6472;         /* 次要字：紙面上 5.2:1 */
+  --line-strong: #8b9299;   /* 輸入框和按鈕邊框：3.1:1 */
+  --star-ink: #8a6100;      /* 星星數字（文字用）；★ 圖形 20px 以上才用 --star */
   --ok: #1f7a46;
   --ok-bg: #e3f2e8;
   --bad: #b3261e;
@@ -27,6 +29,12 @@
   --font: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
   --font-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
   --mono: "IBM Plex Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+  --code-first: #c62d32;    /* 速成首碼（紅）*/
+  --code-last: #1f5fbf;     /* 速成尾碼（藍）*/
+  /* 字級（1.2 比例）：只用這幾級 */
+  --fs-xs: 12px; --fs-sm: 14px; --fs-base: 16px; --fs-md: 18px; --fs-lg: 22px; --fs-xl: 28px; --fs-2xl: 36px; --fs-3xl: 48px;
+  --accent-ui: var(--accent);   /* 互動狀態（主要按鈕、目前步驟、游標）用的顏色 */
+  accent-color: var(--accent);
 }
 
 :root[data-world="planet"] {
@@ -41,6 +49,8 @@
   --accent-ink: #ffffff;
   --accent-bg: #f6e4df;
   --glow: 166 57 43;
+  /* 中文世界：印章紅只留給品牌和首碼；互動狀態用墨色，免得跟「打錯」的紅色混淆 */
+  --accent-ui: #17202a;
 }
 
 html[data-world] body { background: var(--bg); }
@@ -51,20 +61,24 @@ html[data-world] .topbar .brand { font-family: var(--font-display); font-weight:
 html[data-world] .topbar .muted { font-size: 14px; }
 
 /* 標題：襯線、緊字距 */
-html[data-world] h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.01em; line-height: 1.25; font-size: clamp(26px, 3.2vw, 34px); }
-html[data-world] h2 { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.01em; font-size: 22px; }
-html[data-world] h3 { font-size: 17px; }
+:where(html[data-world]) h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.01em; line-height: 1.25; font-size: clamp(26px, 3.2vw, 34px); }
+:where(html[data-world]) h2 { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.01em; font-size: 22px; }
+:where(html[data-world]) h3 { font-size: 17px; }
 
 /* 按鈕：方正、實心墨色為主，強調色只給主要動作 */
 html[data-world] .btn {
   min-height: 40px; padding: 8px 16px; border-radius: var(--radius-sm);
-  background: var(--surface); border: 1px solid #b4bac3; color: var(--ink);
-  font-weight: 600; transition: background 0.15s ease-out, color 0.15s ease-out, transform 0.1s ease-out;
+  background: var(--surface); border: 1px solid var(--line-strong); color: var(--ink);
+  font-weight: 500; white-space: nowrap; transition: background 0.15s ease-out, color 0.15s ease-out, transform 0.1s ease-out;
 }
 html[data-world] .btn:hover { background: var(--ink); color: var(--surface); }
 html[data-world] .btn:active { transform: scale(0.98); }
-html[data-world] .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-html[data-world] .btn.primary:hover { background: color-mix(in srgb, var(--accent) 85%, #000); border-color: color-mix(in srgb, var(--accent) 85%, #000); filter: none; }
+html[data-world] .btn.primary { background: var(--accent-ui); border-color: var(--accent-ui); color: #fff; font-weight: 700; }
+html[data-world] .btn.primary:hover { background: color-mix(in srgb, var(--accent-ui) 85%, #000); border-color: color-mix(in srgb, var(--accent-ui) 85%, #000); filter: none; }
+html[data-world] .btn:disabled, html[data-world] .btn[aria-disabled="true"] { background: var(--surface-2); border-color: var(--line); color: var(--ink-3); cursor: not-allowed; transform: none; }
+html[data-world] .btn.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, var(--line-strong)); }
+html[data-world] .btn.danger:hover { background: var(--bad); color: #fff; }
+html[data-world] .btn.sm { min-height: 32px; padding: 4px 10px; font-size: var(--fs-sm); }
 html[data-world] .btn.ghost { background: transparent; border-color: transparent; color: var(--ink-2); font-weight: 500; }
 html[data-world] .btn.ghost:hover { background: var(--surface-2); color: var(--ink); }
 html[data-world] .btn.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
@@ -72,15 +86,18 @@ html[data-world] .btn.ghost[aria-pressed="true"] { color: var(--ink); }
 
 /* 卡片：白紙放在灰紙上，沒有邊框和陰影；需要分隔時用留白 */
 html[data-world] .card { background: var(--surface); border: 0; border-radius: var(--radius); box-shadow: none; }
+/* 卡片預設內距（各頁要不同內距就設 --card-pad 或寫自己的 padding） */
+:where(html[data-world]) .card { padding: var(--card-pad, 20px 24px); }
+@media (max-width: 600px) { :where(html[data-world]) .card { padding: var(--card-pad, 16px); } }
 
 /* 標籤：小寫字、無膠囊 */
 .badge {
-  display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 12px; font-weight: 600; line-height: 20px;
+  display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 12px; font-weight: 700; line-height: 20px;
   background: var(--accent-bg); color: var(--accent);
 }
 
 /* 表單元件 */
-html[data-world] .field input, html[data-world] .field select, html[data-world] .field textarea { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+html[data-world] .field input, html[data-world] .field select, html[data-world] .field textarea { background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); caret-color: var(--accent); }
 html[data-world] .field input:focus-visible, html[data-world] .field select:focus-visible, html[data-world] .field textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
 
 /* 結果彈窗內的鼓勵語 */
@@ -88,3 +105,34 @@ html[data-world] .field input:focus-visible, html[data-world] .field select:focu
 
 /* 回報問題按鈕淡一點 */
 html[data-world] .fb-btn { border-color: var(--line); background: var(--surface); }
+
+/* 頁首在手機：可以換行，按鈕字不會一個字一行 */
+html[data-world] .topbar .brand, html[data-world] .topbar .btn { white-space: nowrap; }
+@media (max-width: 640px) {
+  html[data-world] .topbar { flex-wrap: wrap; gap: 4px; padding: 10px 0; margin-bottom: 18px; }
+  html[data-world] .topbar .btn.ghost { padding: 8px 10px; min-height: 44px; font-size: var(--fs-sm); }
+  html[data-world] .topbar #crumb, html[data-world] .topbar > .muted { display: none; }
+}
+
+/* 分頁標籤（全站統一）：底線式，不像主要按鈕 */
+.tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--line); margin: 0 0 16px; overflow-x: auto; }
+.tabs [role="tab"] { background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; padding: 8px 0 10px; font: inherit; font-size: var(--fs-base); font-weight: 500; color: var(--ink-3); cursor: pointer; white-space: nowrap; }
+.tabs [role="tab"]:hover { color: var(--ink); }
+.tabs [role="tab"][aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent-ui); font-weight: 700; }
+
+/* 表單訊息：空白時不佔位 */
+html[data-world] .form-msg:empty { display: none; }
+
+/* 瀏覽器元件 */
+html[data-world] ::selection { background: var(--accent-bg); color: var(--ink); }
+
+/* 螢幕閱讀器專用文字 */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* 頁尾：私隱政策、使用條款、版權 */
+.site-foot { margin: 48px 0 0; padding: 16px 0 0; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: var(--fs-sm); color: var(--ink-3); }
+.site-foot a { color: var(--ink-2); text-decoration: none; }
+.site-foot a:hover { text-decoration: underline; }
+.site-foot .spacer { flex: 1; }
+@media print { .site-foot, .fb-btn { display: none !important; } }
+@media print { html[data-world] body { background: #fff; } }

@@ -17,7 +17,8 @@ function writeAll(d) {
 }
 
 const DAY = 86400000;
-export const today = () => Math.floor(Date.now() / DAY);
+// 用本地日期（香港午夜轉日），不是 UTC（否則早上 8 時才轉日）
+export const today = () => { const d = new Date(); return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY); };
 
 /** 記錄一批作答：results = { id: { ok: 答對次數, err: 答錯次數 } }。每項按「這次有沒有錯」升降盒。 */
 export function record(lang, results) {
@@ -29,9 +30,9 @@ export function record(lang, results) {
     it.ok += r.ok ?? 0;
     it.err += r.err ?? 0;
     it.seen += 1;
-    if ((r.err ?? 0) > 0) it.box = Math.max(0, it.box - 2);
-    else it.box = Math.min(INTERVAL_DAYS.length - 1, it.box + 1);
-    it.due = t + INTERVAL_DAYS[it.box];
+    // 答錯就降級；答對只在「到期」時才升級（同一日在幾課見到同一個字，不會即日變成「已掌握」）
+    if ((r.err ?? 0) > 0) { it.box = Math.max(0, it.box - 2); it.due = t + INTERVAL_DAYS[it.box]; }
+    else if ((it.due ?? t) <= t) { it.box = Math.min(INTERVAL_DAYS.length - 1, it.box + 1); it.due = t + INTERVAL_DAYS[it.box]; }
     it.last = t;
   }
   writeAll(d);

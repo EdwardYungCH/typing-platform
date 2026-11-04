@@ -39,7 +39,8 @@ if (lang === 'en') {
   const ks = new Set();
   for (const l of doneLessons) for (const s of l.steps) for (const k of s.gen?.keys ?? []) if (ROOTS[k]) ks.add(k);
   keys = [...ks];
-  if (keys.length < 4) keys = [...'abcdefg'];
+  var starterKeys = keys.length < 4;   // 未學夠字根：先用 A–G 讓學生試玩
+  if (starterKeys) keys = [...'abcdefg'];
   // 學過的字根能拆出的常用字（只要首尾碼都學過）
   chars = zh.common.filter((ch) => { const q = zh.quickOf(ch); return q && q.length === 2 && [...q].every((k) => keys.includes(k)); }).slice(0, 300);
 }
@@ -66,17 +67,18 @@ function saveScore(game, score) {
 
 // ---------- 選單 ----------
 const GAMES = [
-  { id: 'rain', name: lang === 'zh' ? '字根雨' : '鍵雨', desc: lang === 'zh' ? `字根（${keys.length > 10 ? '和常用字' : ''}）由上面落下，落地前按對它的鍵${chars.length ? '；字要打首尾兩碼' : ''}。60 秒，3 條命。` : '字母由上面落下，落地前按對它。60 秒，3 條命。', run: runRain },
+  { id: 'rain', name: lang === 'zh' ? '字根雨' : '鍵雨', desc: lang === 'zh' ? `字根${chars.length ? '和常用字' : ''}由上面落下，落地前按對它的鍵${chars.length ? '；字要打首尾兩碼' : ''}。60 秒，3 條命。` : '字母由上面落下，落地前按對它。60 秒，3 條命。', run: runRain },
   { id: 'blitz', name: '限時快打', desc: lang === 'zh' ? '30 秒內打出最多的字（首尾碼），打錯扣 2 秒。' : '30 秒內打出最多的詞，打錯扣 2 秒。', run: runBlitz },
 ];
 function menu() {
   const g = games();
-  $('app').innerHTML = `<h1 style="margin:0 0 4px">小遊戲</h1><p class="muted" style="margin:0 0 14px">只會出你學過的${lang === 'zh' ? '字根和字' : '鍵'}（已學 ${keys.length} 個${lang === 'zh' && chars.length ? `，可拆的常用字 ${chars.length} 個` : ''}）。破個人紀錄每日每款遊戲 +1 ★。</p>
-    <div class="game-grid">${GAMES.map((x) => `<button class="card game-card" data-g="${x.id}" type="button"><b>${x.name}</b><span>${x.desc}</span><small>最佳：${g[`${lang}:${x.id}`]?.best ?? 0}・玩過 ${g[`${lang}:${x.id}`]?.plays ?? 0} 次</small></button>`).join('')}</div>`;
+  $('app').innerHTML = `<h1 style="margin:0 0 4px">小遊戲</h1><p class="lead">${(lang === 'zh' ? typeof starterKeys !== 'undefined' && starterKeys : !doneLessons.length) ? '你還未完成課堂，先用基本的鍵試玩；完成課堂後會出你學過的鍵。' : `只會出你學過的${lang === 'zh' ? '字根和字' : '鍵'}（已學 ${keys.length} 個${lang === 'zh' && chars.length ? `，可拆的常用字 ${chars.length} 個` : ''}）。`}破個人紀錄每日每款遊戲 +1 ★。</p>
+    <div class="game-grid">${GAMES.map((x) => `<button class="card game-card" data-g="${x.id}" type="button"><b>${x.name}</b><span>${x.desc}</span><small>${g[`${lang}:${x.id}`]?.plays ? `最佳 ${g[`${lang}:${x.id}`].best}・玩過 ${g[`${lang}:${x.id}`].plays} 次` : '未玩過'}</small></button>`).join('')}</div>`;
   $('app').querySelectorAll('[data-g]').forEach((b) => b.onclick = () => GAMES.find((x) => x.id === b.dataset.g).run());
 }
 
-function result(game, score, extra) {
+function result(game, score, extra, quit = false) {
+  if (quit) { menu(); return; }   // 中途離開不計分、不給星
   const r = saveScore(game, score);
   const g = GAMES.find((x) => x.id === game);
   $('app').innerHTML = `<section class="card game-over"><h2>${r.record && score > 0 ? '新紀錄！' : '完成'}</h2><div class="score">${score}</div><p class="muted">${g.name}・最佳 ${r.best}${extra ? `・${extra}` : ''}</p>
@@ -99,7 +101,7 @@ function runRain() {
   const box = $('rain');
   let score = 0, lives = 3, t0 = performance.now(), last = 0, spawnAt = 0, drops = [], over = false, combo = 0, raf;
   let typed = '';   // 速成字：已打的首碼
-  $('quit').onclick = () => end();
+  $('quit').onclick = () => end(true);
   const H = () => box.clientHeight - 34;
   function spawn(now) {
     const useChar = lang === 'zh' && chars.length && Math.random() < 0.35;
@@ -134,12 +136,13 @@ function runRain() {
     e.preventDefault();
     // 最低的一個符合的先消
     const sorted = [...drops].sort((a, b) => b.y - a.y);
-    let hit = sorted.find((d) => d.key === k);
+    let hit = typed ? null : sorted.find((d) => d.key === k);
     if (!hit && lang === 'zh') {
       const want = typed ? typed + k : k;
       const cand = sorted.find((d) => d.key.length === 2 && d.key.startsWith(want));
       if (cand && want.length === 1) { typed = want; cand.el.classList.add('half'); return; }
       if (cand && want.length === 2) hit = cand;
+      if (!hit && typed) hit = sorted.find((d) => d.key === k);   // 首碼之後按的不是任何字的尾碼：當作打字根
     }
     typed = '';
     drops.forEach((d) => d.el.classList.remove('half'));
@@ -150,7 +153,7 @@ function runRain() {
     drops = drops.filter((d) => d !== hit);
     sfx.key(); if (combo % 10 === 0) sfx.combo(1);
   });
-  function end() { over = true; cancelAnimationFrame(raf); stopListen(); result('rain', score, lives > 0 ? `時間到` : '三條命用完'); }
+  function end(quit = false) { over = true; cancelAnimationFrame(raf); stopListen(); result('rain', score, lives > 0 ? '時間到' : '三條命用完', quit === true); }
   raf = requestAnimationFrame((now) => { t0 = now; last = now; spawnAt = now + 300; frame(now); });
 }
 
@@ -169,7 +172,7 @@ function runBlitz() {
     $('target').innerHTML = lang === 'zh' ? `<span class="big">${cur}</span><span class="code">${[...w].map((k, i) => `<b class="${i < typed.length ? 'done' : ''}">${ROOTS[k]}<small>${k.toUpperCase()}</small></b>`).join('')}</span>` : [...w].map((c, i) => `<b class="${i < typed.length ? 'done' : ''}">${c}</b>`).join('');
     $('typed').textContent = typed || ' ';
   }
-  $('quit').onclick = () => end();
+  $('quit').onclick = () => end(true);
   listen((e) => {
     if (e.target.closest('dialog, input, textarea, button')) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : null;
@@ -188,7 +191,7 @@ function runBlitz() {
     if (timeLeft <= 0) return end();
     raf = requestAnimationFrame(frame);
   }
-  function end() { over = true; cancelAnimationFrame(raf); stopListen(); result('blitz', score, `打錯 ${errs} 次`); }
+  function end(quit = false) { over = true; cancelAnimationFrame(raf); stopListen(); result('blitz', score, `打錯 ${errs} 次`, quit === true); }
   next(); raf = requestAnimationFrame(frame);
 }
 

@@ -8,7 +8,7 @@
 .shop-preview { display: flex; gap: 18px; align-items: center; margin-top: 14px; padding: 16px 20px; position: relative; }
 .shop-preview.pop { animation: pop 0.5s; }
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.15) rotate(-4deg); } 100% { transform: scale(1); } }
-.shop-say { position: absolute; right: 20px; top: 8px; background: var(--ink); color: var(--surface); font-weight: 600; padding: 6px 12px; border-radius: 4px; animation: say 1.8s forwards; }
+.shop-say { position: absolute; right: 20px; top: 8px; background: var(--ink); color: var(--surface); font-weight: 700; padding: 6px 12px; border-radius: 4px; animation: say 1.8s forwards; }
 @keyframes say { 0% { opacity: 0; transform: translateY(8px); } 15% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
 .shop-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
 .shop-item { display: grid; gap: 4px; justify-items: center; text-align: center; padding: 16px 12px; }
@@ -16,7 +16,7 @@
 .shop-item .emoji { font-size: 48px; line-height: 1.2; }
 .shop-item small { color: var(--ink-2); min-height: 2.6em; }
 .shop-item .form-actions { justify-content: center; margin-top: 4px; }
-.title-chip { display: inline-block; padding: 0 8px; border-radius: 4px; background: var(--accent-bg); color: var(--accent); font-weight: 600; font-size: 13px; line-height: 22px; vertical-align: middle; }
+.title-chip { display: inline-block; padding: 0 8px; border-radius: 4px; background: var(--accent-bg); color: var(--accent); font-weight: 700; font-size: 13px; line-height: 22px; vertical-align: middle; }
 .title-chip.big { font-size: 20px; padding: 8px 16px; margin: 8px 0; font-family: var(--font-display); }
 .kb-swatch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; width: 120px; margin: 10px 0; }
 .kb-swatch i { height: 26px; border-radius: 6px; background: var(--a); }
