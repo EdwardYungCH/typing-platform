@@ -138,6 +138,15 @@ async function init() {
   runStep(first);
 }
 
+// 練習時切換到其他分頁或視窗：計時暫停，回來再繼續（評測和小測照常計時）
+document.addEventListener('visibilitychange', () => {
+  const e = state.engine;
+  const step = state.lesson?.steps?.[state.stepIndex];
+  if (!e || !e.started || e.finished || TEST || step?.type === 'test' || step?.timeLimit) return;
+  if (document.hidden) state.hiddenAt = performance.now();
+  else if (state.hiddenAt) { e.startTime += performance.now() - state.hiddenAt; state.hiddenAt = null; }
+});
+
 function setupFx() {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const level = store.getSetting('fxLevel', reduce ? 0 : 2);
