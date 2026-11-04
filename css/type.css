@@ -48,7 +48,6 @@
 .step-pill { white-space: nowrap; }
 .step-pill[aria-current="step"] { color: var(--accent-ui); border-bottom-color: var(--accent-ui); font-weight: 700; }
 .step-pill:disabled { color: #7d858d; cursor: default; }
-.step-pill:disabled::after { content: ""; display: inline-block; width: 8px; height: 9px; margin-left: 5px; vertical-align: 0; border: 1.5px solid currentColor; border-radius: 2px; }
 
 /* ---- 舞台 ---- */
 
@@ -446,3 +445,17 @@ body.typing .lesson-head { margin-bottom: 10px; align-items: center; }
 body.panel-open .combo { visibility: hidden; }
 .meters dd .wait { color: var(--ink-3); }
 .warn-bar { margin: 0 0 10px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--bad-bg); color: var(--bad); font-weight: 700; font-size: var(--fs-sm); }
+
+/* 標題和步驟列放同一行（步驟多時橫向捲動，不換行） */
+body.typing .lesson-head { flex-wrap: nowrap; }
+body.typing .lesson-head > div:first-child { flex: 0 1 auto; min-width: 0; }
+body.typing .lesson-head .steps { flex: 0 1 auto; min-width: 0; margin-left: auto; }
+@media (max-width: 900px) { body.typing .lesson-head { flex-wrap: wrap; } body.typing .lesson-head .steps { justify-content: flex-start; flex-basis: 100%; } }
+@media (max-height: 720px) {
+  body.typing .lesson-head h1 .h1-sub { display: none; }
+  .text-wrap { max-height: calc(1.75em * 2); }
+  .start-hint { margin-top: 6px; font-size: var(--fs-xs); }
+  .ime { padding: 6px 12px; margin-top: 8px; min-height: 0; }
+  .stage-head h2 { font-size: var(--fs-md); }
+  .stage-head p { font-size: var(--fs-sm); }
+}

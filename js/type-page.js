@@ -209,6 +209,8 @@ function renderSteps() {
     li.append(b);
     ol.append(li);
   });
+  // 步驟多時（例如常用字 11 步）：把目前一步捲到看得見的位置
+  ol.querySelector('[aria-current="step"]')?.scrollIntoView?.({ block: 'nearest', inline: 'center' });
 }
 
 // ---------- 執行一個步驟 ----------

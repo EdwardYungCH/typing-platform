@@ -107,7 +107,7 @@ dialog.t-dialog form { display: grid; gap: 14px; }
 /* 學生詳細頁 */
 .stp { display: inline-block; margin: 2px 4px 2px 0; padding: 0 8px; border-radius: 4px; background: var(--surface-2); font-size: var(--fs-xs); line-height: 22px; white-space: nowrap; }
 .stp.low { background: var(--bad-bg); color: var(--bad); }
-.rp-dist.days { grid-template-columns: repeat(30, 1fr); gap: 2px; }
+.rp-dist.days { grid-template-columns: repeat(30, minmax(0, 1fr)); gap: 2px; }
 .rp-dist.days small { visibility: hidden; }
 .rp-dist.days .rp-col:nth-child(7n+1) small, .rp-dist.days .rp-col:last-child small { visibility: visible; }
 .empty-chart { padding: 24px 0; text-align: center; color: var(--ink-3); }

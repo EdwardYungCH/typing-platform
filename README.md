@@ -2,7 +2,11 @@
 
 中一至中三學生的打字練習網站，分英文打字和中文速成，每部分循「課堂 → 練習 → 評測」由零練到流暢。
 
-目前進度：課堂、練習區、評測區、掌握度／每日任務／里程碑都已完成；**第 4 階段（帳戶與教師後台）**程式已寫好，等 Cloudflare 的 D1 資料庫設定好就可以用。未登入時紀錄只存在學生自己的瀏覽器；登入後同步到伺服器。
+支援多間學校共用一個平台（每校一個學校代碼，資料互相分隔）。未登入時紀錄只存在學生自己的瀏覽器；登入後同步到伺服器。
+
+- 平台營運（部署、開通學校、備份、監察）：[docs/OPERATIONS.md](docs/OPERATIONS.md)
+- 老師：網站上的 `help/teacher-guide.html`；學生：`help/student-guide.html`；常見問題：`help/faq.html`
+- 產品介紹頁：`about.html`
 
 ## 網站如何更新
 
@@ -41,12 +45,7 @@
 
 ### 伺服器做甚麼
 
-| 功能 | 說明 |
-| --- | --- |
-| 登入 | 密碼以 PBKDF2 雜湊儲存；輸錯 8 次鎖 10 分鐘；session 存在 D1，cookie 只有 HttpOnly |
-| 進度同步 | 學生每次有改動，瀏覽器整份紀錄（課堂、步驟、掌握度、每日任務）延遲 1.5 秒送到伺服器；開頁時先拉取；登出會清掉這部電腦的紀錄 |
-| 評測 | 開始時由伺服器發題和記時；交卷只送按鍵紀錄，伺服器用同一套引擎重新計算速度和準確率，並標記可疑情況（速度超出上限、按鍵間隔過分平均、用時不符、瀏覽器分數與伺服器重計相差很大）；每個評測只可做一次，老師可允許重做 |
-| 教師後台 | 班級、匯入學生、重設密碼、帳號紙條、班級進度表（含評測核實標記）、匯出 CSV、新增教師 |
+詳見 [docs/OPERATIONS.md](docs/OPERATIONS.md) 的「保安設定摘要」。主要有：多校隔離、PBKDF2 密碼、登入次數限制、session（學校電腦關閉瀏覽器即登出）、進度同步（兩部電腦同時用會合併，不會互相覆蓋）、伺服器核實的評測（3 份題目隨機抽、按鍵紀錄重新計分、可疑標記、評測時段）、按校備份還原、每日清理。
 
 ### 在自己電腦試伺服器功能
 
@@ -56,7 +55,7 @@
 node --experimental-sqlite tools/dev-server.mjs 8787
 ```
 
-然後開 `http://localhost:8787`。這個模擬伺服器用 Node 內置的 SQLite 代替 D1，資料只在記憶體（加第三個參數可存成檔案，例如 `tools/dev-server.mjs 8787 dev.sqlite`）。
+然後開 `http://localhost:8787`。自動測試：`python3 tools/test/api_test.py`（要全新的記憶體資料庫）。這個模擬伺服器用 Node 內置的 SQLite 代替 D1，資料只在記憶體（加第三個參數可存成檔案，例如 `tools/dev-server.mjs 8787 dev.sqlite`）。
 
 ## 在自己電腦試用
 
@@ -126,7 +125,7 @@ python -m http.server 8000
 
 ## 英文課文來源
 
-第 2–16 課由 `tools/gen_en_lessons.py` 產生，詞語取自開源的 google-10000-english（已排除不雅詞和網站縮寫），句子和段落為原創。重新產生：`python3 tools/gen_en_lessons.py <詞表檔路徑>`（第 0、1 課不受影響）。
+第 2–16 課由 `tools/gen_en_lessons.py` 產生，第 2–11 課的詞語是審定詞表（只用該課已學的鍵、英式串法），小測和第 15 課另用 New General Service List（NGSL 1.01，CC BY-SA 4.0，`tools/src/ngsl/`）；句子和段落為原創。重新產生：`python3 tools/gen_en_lessons.py`（第 0、1 課不受影響）。
 
 ## 中文碼表來源
 

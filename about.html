@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant-HK" data-world="planet">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>產品介紹｜打字練習平台</title>
+  <meta name="description" content="為香港中一至中三而設的英文打字和中文速成課程：伺服器核實的評測、教師後台、成績換算，多校使用。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/world.css">
+  <link rel="stylesheet" href="css/doc.css">
+  <style>
+    .hero { padding: 24px 0 8px; }
+    .hero h1 { font-size: clamp(30px, 4.6vw, 44px); margin: 0 0 12px; }
+    .feat { display: grid; gap: 4px 32px; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); margin: 8px 0 0; }
+    .feat section { border-top: 1px solid var(--line); padding: 14px 0; }
+    .feat h3 { margin: 0 0 4px; font-size: var(--fs-md); }
+    .feat p { margin: 0; color: var(--ink-2); }
+    .cta { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0 8px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="index.html" data-site="productName">打字練習平台</a>
+      <span class="spacer"></span>
+      <a class="btn ghost" href="index.html">試用</a>
+      <a class="btn ghost" href="teacher/">教師後台</a>
+    </header>
+    <main class="doc" style="max-width:62em">
+      <div class="hero">
+        <h1>中一至中三的英文打字和中文速成課程</h1>
+        <p class="lead">一個網站完成教、練、考：33 課有步驟的課堂、每日按掌握度安排的重溫、伺服器核實的評測，以及老師一眼看出誰需要幫忙的後台。學生不用安裝任何軟件，學校電腦和家中電腦都可以用。</p>
+        <div class="cta"><a class="btn primary" href="index.html">立即試用（不用登入）</a><a class="btn" href="help/teacher-guide.html">教師手冊</a><a class="btn" href="#contact">學校查詢</a></div>
+      </div>
+
+      <h2>課程</h2>
+      <div class="feat">
+        <section><h3>英文打字 17 課</h3><p>坐姿和指法、每課最多 3 個新鍵、由基準鍵伸指再回位的練習、中學生用得着的英式詞語、大寫、數字列、標點和連貫段落。</p></section>
+        <section><h3>中文速成 16 課</h3><p>24 個字根和輔助字形、取碼原則、包含省略、複合字、難字 X、常用 1000 字和句子；內置跟 Windows 微軟速成相同次序的選字窗。</p></section>
+        <section><h3>紅藍拆碼圖</h3><p>每個例字以紅色標出首碼部件、藍色標出尾碼部件，學生一看就明白為甚麼這樣拆。</p></section>
+        <section><h3>每日任務和弱項練習</h3><p>按每個字根、字形和鍵的掌握度安排重溫；練習區自動找出常錯的鍵和字。</p></section>
+        <section><h3>評測</h3><p>分級測驗及中一、中二、中三評測，每個 3 份題目隨機抽一份；伺服器按每一下按鍵重新計分，偵測代打和改分。</p></section>
+        <section><h3>電腦快捷鍵</h3><p>Windows 11 常用快捷鍵單元，可以真的按，有小測。</p></section>
+      </div>
+
+      <h2>給老師</h2>
+      <div class="feat">
+        <section><h3>需要留意的同學</h3><p>全班概覽自動列出從未練習、兩星期沒練習、落後全班和評測可疑的同學。</p></section>
+        <section><h3>評測時段</h3><p>按班開放評測 45 分鐘或預約時段，適合在電腦課上統一進行。</p></section>
+        <section><h3>成績換算</h3><p>速度和準確率換算成 0–100 分，連全級名次，一鍵匯出 CSV 到學校成績表。</p></section>
+        <section><h3>功課和自訂練習</h3><p>派指定課堂作功課、追蹤未完成的同學；貼上中文或英文文章即成練習。</p></section>
+        <section><h3>升班和畢業</h3><p>學生紀錄跟着學生升班；畢業時整班刪除。</p></section>
+        <section><h3>帳號紙條</h3><p>批量匯入學生、自動產生密碼、列印紙條，第一次登入要改密碼。</p></section>
+      </div>
+
+      <h2>私隱和保安</h2>
+      <p>只收集教學需要的資料，不收集電郵、電話或相片，沒有廣告和追蹤。每間學校資料互相分隔；密碼只存雜湊值；學校電腦預設關閉瀏覽器即登出；每星期自動雲端備份。詳見<a href="privacy.html">私隱政策</a>和<a href="terms.html">使用條款</a>。</p>
+
+      <h2 id="contact">學校查詢</h2>
+      <p>營運者：<span data-site="operator">（營運者）</span>。電郵：<a data-site="contactEmail" href="#">（請向學校查詢）</a>。開通後，學校會收到教師後台的管理員帳號和學校代碼。</p>
+    </main>
+  </div>
+  <script type="module" src="js/doc-page.js"></script>
+</body>
+</html>

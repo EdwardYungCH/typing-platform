@@ -25,3 +25,10 @@
   #print, .fb-btn { display: none !important; }
   .rp-dist.days .rp-bar { background: #555; }
 }
+/* 手機：30 日長條圖不可以撐闊頁面 */
+.rp-dist.days { grid-template-columns: repeat(30, minmax(0, 1fr)); }
+.rp-dist.days .rp-col { min-width: 0; }
+.rp-dist.days small { visibility: hidden; }
+.rp-dist.days .rp-col:nth-child(7n+1) small, .rp-dist.days .rp-col:last-child small { visibility: visible; }
+.rp-dist.days i { font-size: 10px; overflow: hidden; }
+@media (max-width: 480px) { .rp-table { display: block; overflow-x: auto; } }

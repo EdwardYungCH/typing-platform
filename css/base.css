@@ -216,3 +216,6 @@ a { color: var(--accent); }
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @media print { .fb-btn { display: none; } }
+/* 手機和評測時不顯示浮動的「回報問題」（手機改用頁尾連結） */
+@media (max-width: 640px) { .fb-btn { display: none; } }
+body.focus-mode .fb-btn { display: none; }

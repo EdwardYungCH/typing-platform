@@ -17,7 +17,26 @@ function mountFeedback() {
   if (document.getElementById('fb-btn') || location.pathname.includes('/teacher/')) return;
   const b = document.createElement('button');
   b.id = 'fb-btn'; b.type = 'button'; b.className = 'fb-btn'; b.textContent = '回報問題'; b.setAttribute('aria-label', '回報問題');
-  b.onclick = () => {
+  b.onclick = () => openFeedback();
+  document.body.append(b);
+  mountFooter();
+}
+
+/** 頁尾：私隱政策、使用條款、鳴謝及版權、回報問題（手機上取代右下角的按鈕） */
+function mountFooter() {
+  if (document.querySelector('.site-foot') || /type\.html$/.test(location.pathname)) return;
+  const page = document.querySelector('.page');
+  if (!page) return;
+  const base = /\/(zh|teacher|docs)\//.test(location.pathname) ? '../' : '';
+  const f = document.createElement('footer');
+  f.className = 'site-foot';
+  f.innerHTML = `<a href="${base}privacy.html">私隱政策</a><a href="${base}terms.html">使用條款</a><a href="${base}credits.html">鳴謝及版權</a><span class="spacer"></span><a href="#" id="fb-foot">回報問題</a>`;
+  page.append(f);
+  f.querySelector('#fb-foot').onclick = (e) => { e.preventDefault(); openFeedback(); };
+}
+
+function openFeedback() {
+  {
     const d = document.createElement('dialog');
     d.className = 'fb-dlg';
     d.innerHTML = `<form method="dialog"><h3>回報問題</h3><p class="muted">遇到卡住、顯示錯誤或拆碼圖標錯，寫幾句告訴老師。頁面和瀏覽器資料會自動附上。</p>
@@ -38,7 +57,6 @@ function mountFeedback() {
       } catch (err) { m.className = 'form-msg'; m.textContent = err.message === 'Failed to fetch' ? '現在連不上伺服器，請稍後再試。' : err.message; }
     };
     d.addEventListener('close', () => d.remove());
-  };
-  document.body.append(b);
+  }
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountFeedback); else mountFeedback();

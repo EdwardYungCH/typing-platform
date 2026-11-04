@@ -532,12 +532,13 @@ async function viewMarks(main) {
     const unit = q.test.startsWith('zh') ? '字/分' : 'WPM';
     $('mres').innerHTML = `<div class="t-head" style="margin-bottom:8px"><div><h2 style="margin:0">${q.year} 中${'一二三四五六'[q.form - 1]}・${TEST_NAME[q.test]}</h2>
       <p class="meta">全級 ${d.total} 人，已做 ${d.form.length} 人；全級平均 ${all.length ? Math.round(all.reduce((a, b) => a + b, 0) / all.length) : '—'} 分，中位數 ${all.length ? Math.round(median(all)) : '—'} 分</p></div>
-      <div class="t-actions"><button class="btn" type="button" id="mcsv">匯出 CSV</button><button class="btn" type="button" onclick="window.print()">列印</button></div></div>
+      <div class="t-actions"><button class="btn" type="button" id="mcsv">匯出 CSV</button><button class="btn" type="button" id="mprint">列印</button></div></div>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>班別</th><th class="num">班號</th><th>姓名</th><th>學號</th><th class="num">速度（${unit}）</th><th class="num">準確率</th><th class="num">分數</th><th class="num">全級名次</th><th>標記</th></tr></thead><tbody>
       ${rows.map((s) => `<tr class="${s.mark === null ? 'muted' : ''}"><td>${html(s.className)}</td><td class="num">${s.no ?? ''}</td><td>${html(s.name)}</td><td class="mini">${html(s.sid)}</td>
         <td class="num">${s.wpm === null ? '未做' : Math.round(s.wpm * 10) / 10}</td><td class="num">${s.accuracy === null ? '' : `${Math.round(s.accuracy * 10) / 10}%`}</td>
         <td class="num"><b>${s.mark ?? ''}</b></td><td class="num">${s.rank ? `${s.rank} / ${all.length}` : ''}</td><td class="mini">${s.flags?.length ? `<span class="status warn">${html(s.flags.map(flagText).join('；'))}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="9" class="muted">這一級沒有你可以看的班。</td></tr>'}</tbody></table></div>
       <p class="hint">名次以全級分數計（同分同名次）。其他老師的班只計入名次，不會顯示姓名。</p>`;
+    $('mprint').onclick = () => window.print();
     $('mcsv').onclick = () => {
       const cell = (v) => { let t = String(v ?? ''); if (/^[=+\-@]/.test(t)) t = `'${t}`; return `"${t.replace(/"/g, '""')}"`; };
       const lines = [['班別', '班號', '學號', '姓名', `速度(${unit})`, '準確率', '分數', '全級名次', '標記'].map(cell).join(',')]

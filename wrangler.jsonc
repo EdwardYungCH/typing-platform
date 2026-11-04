@@ -24,8 +24,10 @@
       "database_id": "59418574-a16e-4683-b70d-aea2ad2201df"
     }
   ],
-  // 每星期日香港時間早上 6 時（UTC 22:00 星期六）自動備份一次到 R2
-  "triggers": { "crons": ["0 22 * * 6"] },
+  // 每日香港時間早上 4 時（UTC 20:00）清理過期資料；星期日那一次另外把每間學校備份到 R2
+  "triggers": { "crons": ["0 20 * * *"] },
+  // 第一次升級到多校版本時，現有的老師、班級、學生會放進這間學校（之後在後台「學校設定」可以改名）
+  "vars": { "DEFAULT_SCHOOL_CODE": "sphrc", "DEFAULT_SCHOOL_NAME": "本校" },
   // R2 自動備份：先在 Cloudflare 後台 Storage & Databases → R2 建立名為 typing-backups 的儲存桶，
   // 再把下面兩行前面的 // 刪掉並推上 GitHub。未建立儲存桶就打開會令部署失敗。
   // "r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "typing-backups" }],
