@@ -31,6 +31,7 @@ const BACKUPS = {
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.csv': 'text/csv' };
 
+const CSP = (await readFile(join(ROOT, '_headers'), 'utf8').catch(() => '')).match(/Content-Security-Policy: (.+)/)?.[1] ?? '';
 const ASSETS = {
   async fetch(req) {
     const url = new URL(req.url);
@@ -39,7 +40,9 @@ const ASSETS = {
     const file = join(ROOT, p);
     try {
       if ((await stat(file)).isDirectory()) return Response.redirect(url.origin + p + '/', 302);
-      return new Response(await readFile(file), { headers: { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' } });
+      const headers = { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' };
+      if (extname(file) === '.html' && CSP) headers['content-security-policy'] = CSP;   // 跟正式環境（_headers）一樣
+      return new Response(await readFile(file), { headers });
     } catch { return new Response('Not found', { status: 404 }); }
   },
 };

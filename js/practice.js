@@ -7,7 +7,7 @@ import { getWeak, getLessonResult } from './storage.js';
 import { pickSentences } from './daily.js';
 
 const ALL = 'abcdefghijklmnopqrstuvwyx';
-const EXCLUDE = new Set('呵喫縣臺爾啦黨');  // 詞頻表帶來、不適合課堂的字
+const EXCLUDE = new Set('呵喫縣臺爾啦黨纔于啥');  // 詞頻表帶來、不適合課堂的字
 
 /** 從常用字中挑出只用指定字根就打得到的字。 */
 function zhPool(zh, keys, { two = false, limit = 400 } = {}) {

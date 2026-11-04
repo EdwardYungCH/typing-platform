@@ -17,7 +17,7 @@ export function pickSentences(doneUpTo, n = 2) {
 }
 
 const ALL_ZH = 'abcdefghijklmnopqrstuvwy';
-const EXCLUDE = new Set('呵喫縣臺爾啦黨');
+const EXCLUDE = new Set('呵喫縣臺爾啦黨纔于啥');
 
 /** 已完成課堂教過的鍵 */
 function learnedKeys(lang, lessons) {

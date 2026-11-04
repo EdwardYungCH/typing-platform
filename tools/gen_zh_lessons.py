@@ -13,7 +13,8 @@ for code in sorted(Z['quick']):
     for ch in Z['quick'][code]:
         first.setdefault(ch, code)
 first.update(Z['qfix'])
-EXCLUDE = set('呵喫縣臺爾啦')  # 詞頻表帶來、但不適合香港初中課堂的字
+# 詞頻表（rime-essay，偏內地用字）帶來、但不在香港小學學習字詞表或不適合香港初中課堂的字
+EXCLUDE = set('呵喫縣臺爾啦黨纔于啥')
 COMMON = ''.join(c for c in Z['common'] if c not in EXCLUDE)
 RANK = {c: i for i, c in enumerate(COMMON)}
 PUNCT = set('，。；：？！「」、')
