@@ -18,21 +18,24 @@ function preview() {
   const title = titleName(items);
   $('preview').innerHTML = `<div class="pv-text"><b style="font-size:22px">${me ? me.name : '你'}${title ? ` <span class="title-chip">${title}</span>` : ''}</b>
       <p class="muted" style="margin:4px 0 0">裝備中：${KINDS.map(([k, n]) => `${n}：${items.find((x) => x.id === e[k])?.name ?? '無'}`).join('　')}</p>
-      <div class="tabs" style="margin:8px 0 0">${Object.entries(WORLDS).map(([w, n]) => `<a class="btn${w === world ? ' primary' : ''}" href="shop.html?world=${w}&kind=${kind}">${n}</a>`).join('')}</div></div>`;
+      <div class="tabs" role="tablist" style="margin:8px 0 0">${Object.entries(WORLDS).map(([w, n]) => `<a role="tab" aria-selected="${w === world}" href="shop.html?world=${w}&kind=${kind}" style="text-decoration:none">${n}</a>`).join('')}</div></div>`;
   $('bal').textContent = balance();
   $('earned').textContent = `共賺 ${earned()}`;
 }
 
 function render() {
-  $('tabs').innerHTML = KINDS.map(([k, n]) => `<button class="btn${k === kind ? ' primary' : ''}" data-k="${k}" type="button">${n}</button>`).join('');
+  $('tabs').setAttribute('role', 'tablist');
+  $('tabs').innerHTML = KINDS.map(([k, n]) => `<button role="tab" aria-selected="${k === kind}" data-k="${k}" type="button">${n}</button>`).join('');
   $('tabs').querySelectorAll('button').forEach((b) => b.onclick = () => { kind = b.dataset.k; render(); });
   const e = equipped();
   const list = items.filter((it) => it.kind === kind && (!it.world || it.world === world));
   $('grid').innerHTML = list.map((it) => {
     const has = owned(it.id), on = e[kind] === it.id, can = balance() >= it.price;
     const face = it.kind === 'kb' ? `<span class="kb-swatch" style="--a:${it.colors[0]};--b:${it.colors[1]}"><i></i><i></i><i></i><i></i></span>` : `<span class="title-chip big">${it.name}</span>`;
-    const btn = on ? `<button class="btn" data-off="${it.id}" type="button">脫下</button>` : has ? `<button class="btn primary" data-on="${it.id}" type="button">裝上</button>` : `<button class="btn primary" data-buy="${it.id}" type="button" ${can ? '' : 'disabled'}>★ ${it.price} 買</button>`;
-    return `<div class="shop-item card${on ? ' on' : ''}${has ? ' has' : ''}">${face}<b>${it.name}</b><small>${it.desc}</small><div class="form-actions">${btn}${has ? '<span class="muted mini">已擁有</span>' : ''}</div></div>`;
+    // 一般按鈕用次要樣式；買不起的停用並說明還差幾多星
+    const btn = on ? `<button class="btn" data-off="${it.id}" type="button">脫下</button>` : has ? `<button class="btn" data-on="${it.id}" type="button">裝上</button>` : `<button class="btn" data-buy="${it.id}" type="button" ${can ? '' : 'disabled'}>★ ${it.price} 買</button>`;
+    const note = has ? '<span class="muted mini">已擁有</span>' : can ? '' : `<span class="muted mini">還差 ${it.price - balance()} ★</span>`;
+    return `<div class="shop-item card${on ? ' on' : ''}${has ? ' has' : ''}">${face}${it.kind === 'kb' ? `<b>${it.name}</b>` : ''}<small>${it.desc}</small><div class="form-actions">${btn}${note}</div></div>`;
   }).join('') || '<p class="muted">這個世界沒有這類貨品。</p>';
   $('grid').querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => { const it = items.find((x) => x.id === b.dataset.buy); const r = buy(it); if (!r.ok) alert(r.msg); else celebrate(it); preview(); render(); });
   $('grid').querySelectorAll('[data-on]').forEach((b) => b.onclick = () => { equip(kind, b.dataset.on); preview(); render(); });

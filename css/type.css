@@ -27,7 +27,10 @@
 
 .steps {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  max-width: 100%;
   gap: 18px;
   margin: 0;
   padding: 0;
@@ -42,8 +45,9 @@
 
 .step-pill.done { color: var(--ink-2); }
 .step-pill.done::before { content: "✓ "; color: var(--ok); }
-.step-pill[aria-current="step"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
-.step-pill:disabled { opacity: 0.45; cursor: default; }
+.step-pill { white-space: nowrap; }
+.step-pill[aria-current="step"] { color: var(--accent-ui); border-bottom-color: var(--accent-ui); font-weight: 700; }
+.step-pill:disabled { color: #7d858d; cursor: default; }
 
 /* ---- 舞台 ---- */
 
@@ -74,7 +78,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
-.meters small { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.meters small { font-size: 12px; font-weight: 700; color: var(--ink-2); }
 
 .progress {
   height: 4px;
@@ -121,24 +125,25 @@
 .ch { position: relative; border-radius: 3px; }
 .ch.ok { color: var(--ink); }
 .ch.fixed { color: var(--ink); text-decoration: underline wavy var(--warn); text-underline-offset: 6px; }
-.ch.bad { color: var(--bad); background: var(--bad-bg); text-decoration: underline var(--bad); text-underline-offset: 6px; }
+.ch.bad { color: var(--bad); background: var(--bad-bg); text-decoration: underline 3px var(--bad); text-underline-offset: 6px; }
 
+/* 目前要打的字：實色底，60 cm 外都看得見 */
 .ch.cur {
-  color: var(--ink);
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  box-shadow: inset 0 -3px 0 var(--accent);
+  color: #fff;
+  background: var(--accent-ui);
+  border-radius: 3px;
 }
 .ch.space.cur::after {
   content: "␣";
   position: absolute;
   inset: 0;
   text-align: center;
-  color: var(--accent);
+  color: #fff;
   font-size: 0.8em;
   line-height: 2.1;
 }
 
-.ch.err { animation: shake 0.24s; background: var(--bad-bg); }
+.ch.err { animation: shake 0.24s; background: var(--bad); color: #fff; }
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -228,7 +233,7 @@
   border: 1px solid var(--line);
   border-bottom-width: 3px;
   font-size: clamp(11px, 1.6vw, 15px);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink-2);
   transition: transform 0.08s, background 0.12s, opacity 0.2s;
 }
@@ -248,10 +253,12 @@
 .f-orange { --kc: var(--f-orange); --kb: var(--f-orange-bg); }
 .f-gray   { --kc: var(--f-gray);   --kb: var(--f-gray-bg); }
 
+/* 手指顏色只在鍵底邊；下一個要按的鍵才整個填色，令它成為鍵盤上唯一的實色 */
 .vkb.show-fingers .vkb-key {
-  background: var(--kb);
-  border-color: color-mix(in srgb, var(--kc) 35%, transparent);
-  border-bottom-color: var(--kc);
+  background: var(--surface);
+  border-color: var(--line);
+  border-bottom: 3px solid var(--kc);
+  color: var(--ink-2);
 }
 
 .vkb-key.bump::after {
@@ -264,7 +271,8 @@
   background: currentColor;
 }
 
-.vkb-key.dim { opacity: 0.35; }
+.vkb-key.dim { opacity: 1; background: var(--surface); color: #8b9299; border-color: var(--line); }
+.vkb.show-fingers .vkb-key.dim { border-bottom-color: var(--line); }
 
 .vkb .vkb-key.next {
   opacity: 1;
@@ -284,6 +292,8 @@
   border-color: var(--bad);
   color: #fff;
 }
+/* 打錯：除了顏色，再加一個 ✕，色弱同學也分得出 */
+.vkb .vkb-key.wrong::before { content: "✕"; position: absolute; top: 1px; right: 4px; font-size: 10px; line-height: 1; }
 
 .vkb.blind .vkb-key .cap,
 .vkb.blind .vkb-key .cap-shift { visibility: hidden; }
@@ -292,18 +302,18 @@
 
 .hands { text-align: center; }
 .hands-svg { width: min(100%, 360px); height: auto; display: block; margin: 0 auto; }
-.hands .palm { fill: var(--surface-2); stroke: var(--line); stroke-width: 2; }
+.hands .palm { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.5; }
 .hands .finger {
-  fill: var(--kb);
+  fill: var(--surface);
   stroke: var(--kc);
-  stroke-width: 2;
+  stroke-width: 1.5;
   transition: fill 0.12s;
 }
 .hands .finger.active { fill: var(--kc); }
 .hands-label {
   min-height: 1.6em;
   margin: 2px 0 0;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink-2);
 }
 
@@ -373,13 +383,13 @@
 }
 
 /* 步驟列上的最近成績（重做會刷新） */
-.step-pill .pill-score { margin-left: 6px; font-size: 11px; color: var(--star); font-weight: 700; }
+.step-pill .pill-score { margin-left: 6px; font-size: var(--fs-xs); color: var(--star-ink, #8a6100); font-weight: 700; }
 
 /* 單鍵步：大鍵卡＋手指提示 */
 .single-card { display: flex; gap: 22px; align-items: center; justify-content: center; margin: 6px 0 10px; }
 .single-card[hidden] { display: none; }
-.keycap { width: 120px; height: 120px; display: grid; place-items: center; border-radius: 22px; font: 800 64px/1 var(--mono, ui-monospace, monospace);
-  background: var(--kb, var(--surface-2)); color: var(--kc, var(--ink)); border: 2px solid var(--kc, var(--line)); border-bottom-width: 8px; transition: transform 0.08s; }
+.keycap { width: 120px; height: 120px; display: grid; place-items: center; border-radius: var(--radius); font: 700 64px/1 var(--mono, ui-monospace, monospace);
+  background: var(--kb, var(--surface-2)); color: var(--kc, var(--ink)); border: 2px solid var(--kc, var(--line)); border-bottom-width: 3px; transition: transform 0.08s; }
 .keycap.press { transform: translateY(5px); border-bottom-width: 3px; }
 .single-info { display: grid; gap: 4px; }
 .single-info b { font-size: 26px; }
@@ -389,3 +399,68 @@
 .single-dots i.on { background: var(--ok); border-color: var(--ok); }
 .text-wrap.single { max-height: calc(1.75em * 1.2); font-size: 20px; opacity: 0.8; }
 .text.single { text-align: center; letter-spacing: 0.1em; }
+
+/* ---- 學校電腦（1366×768，瀏覽器可用高度約 640px）：緊湊版面，令文字、鍵盤、手指提示一屏看得完 ---- */
+body.typing .topbar { padding: 8px 0; margin-bottom: 12px; }
+body.typing .lesson-head { margin-bottom: 10px; align-items: center; }
+.lesson-head h1 .h1-sub { display: block; font-family: var(--font); font-size: var(--fs-base); font-weight: 500; color: var(--ink-2); letter-spacing: 0; margin-top: 2px; }
+@media (max-height: 860px) {
+  body.typing .lesson-head h1 { font-size: var(--fs-lg); }
+  body.typing .lesson-head .eyebrow { display: inline; margin-right: 8px; }
+  body.typing .lesson-head h1 .h1-sub { display: inline; margin-left: 8px; font-size: var(--fs-sm); }
+  .stage { padding: 14px 22px 12px; }
+  .progress { margin: 8px 0 10px; }
+  .kb-area { margin-top: 10px; gap: 4px; }
+  .vkb-key { height: clamp(28px, 4.6vh, 44px); }
+  .hands-svg { width: min(100%, 300px); }
+  .text-wrap { font-size: clamp(20px, 2.3vw, 28px); }
+}
+/* 闊屏：手形放在鍵盤旁邊，不再佔高度 */
+@media (min-width: 1200px) {
+  .kb-area { grid-template-columns: minmax(0, 780px) 220px; justify-content: center; align-items: center; column-gap: 20px; }
+  .kb-area .hands-svg { width: 220px; }
+}
+
+/* 設定選單（音效、特效、手指顏色） */
+.settings-menu { position: relative; }
+.settings-menu > summary { list-style: none; }
+.settings-menu > summary::-webkit-details-marker { display: none; }
+.settings-menu[open] > div { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; display: grid; gap: 2px; min-width: 180px; padding: 6px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: 0 6px 24px rgb(0 0 0 / 0.12); }
+.settings-menu[open] > div .btn { justify-content: flex-start; width: 100%; }
+
+/* 電話：打字要用實體鍵盤 */
+.phone-note { display: none; }
+@media (max-width: 600px) {
+  .phone-note { display: block; margin: 0 0 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--f-orange-bg); font-size: var(--fs-sm); }
+  #kb-area { display: none; }
+}
+
+/* 結果彈窗：一個大數字帶頭 */
+.panel-hero { display: flex; justify-content: center; align-items: baseline; gap: 18px; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
+.panel-hero b { font-family: var(--font-display); font-size: var(--fs-3xl); line-height: 1; }
+.panel-hero span { font-size: var(--fs-xl); color: var(--ink-2); }
+.panel-hero small { font-size: var(--fs-sm); color: var(--ink-3); margin-left: 4px; }
+.panel-compare { font-size: var(--fs-sm); color: var(--ok); margin: 0 0 10px; }
+body.panel-open .combo { visibility: hidden; }
+.meters dd .wait { color: var(--ink-3); }
+.warn-bar { margin: 0 0 10px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--bad-bg); color: var(--bad); font-weight: 700; font-size: var(--fs-sm); }
+
+/* 標題和步驟列放同一行（步驟多時橫向捲動，不換行） */
+body.typing .lesson-head { flex-wrap: nowrap; }
+body.typing .lesson-head > div:first-child { flex: 0 1 auto; min-width: 0; }
+body.typing .lesson-head .steps { flex: 0 1 auto; min-width: 0; margin-left: auto; }
+@media (max-width: 900px) { body.typing .lesson-head { flex-wrap: wrap; } body.typing .lesson-head .steps { justify-content: flex-start; flex-basis: 100%; } }
+@media (max-height: 720px) {
+  body.typing .lesson-head h1 .h1-sub { display: none; }
+  .text-wrap { max-height: calc(1.75em * 2); }
+  .start-hint { margin-top: 6px; font-size: var(--fs-xs); }
+  .ime { padding: 6px 12px; margin-top: 8px; min-height: 0; }
+  .stage-head h2 { font-size: var(--fs-md); }
+  .stage-head p { font-size: var(--fs-sm); }
+}
+
+/* 練習簿橫線：打字文字寫在橫線上；中文世界加一條紅色邊線 */
+.text { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(1.75em - 1px), var(--line) calc(1.75em - 1px), var(--line) 1.75em); }
+.text.big, .text.single { background-image: none; }
+html[data-world="magic"] .text-wrap { border-left: 2px solid color-mix(in srgb, var(--accent) 45%, transparent); padding-left: 12px; }

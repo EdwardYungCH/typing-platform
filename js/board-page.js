@@ -27,7 +27,8 @@ if (!me) {
 }
 
 function render(d) {
-  $('tabs').innerHTML = BOARDS.map(([k, n]) => `<button class="btn${k === which ? ' primary' : ''}" data-k="${k}" type="button">${n}</button>`).join('');
+  $('tabs').setAttribute('role', 'tablist');
+  $('tabs').innerHTML = BOARDS.map(([k, n]) => `<button role="tab" aria-selected="${k === which}" data-k="${k}" type="button">${n}</button>`).join('');
   $('tabs').querySelectorAll('button').forEach((b) => b.onclick = () => { which = b.dataset.k; render(d); });
   const [, name, val, fmt] = BOARDS.find((b) => b[0] === which);
   const list = d.students.map((s) => ({ ...s, v: val(s) })).filter((s) => s.v > 0).sort((a, b) => b.v - a.v || (a.no ?? 99) - (b.no ?? 99));

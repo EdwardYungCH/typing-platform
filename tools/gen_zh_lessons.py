@@ -13,7 +13,8 @@ for code in sorted(Z['quick']):
     for ch in Z['quick'][code]:
         first.setdefault(ch, code)
 first.update(Z['qfix'])
-EXCLUDE = set('呵喫縣臺爾啦')  # 詞頻表帶來、但不適合香港初中課堂的字
+# 詞頻表（rime-essay，偏內地用字）帶來、但不在香港小學學習字詞表或不適合香港初中課堂的字
+EXCLUDE = set('呵喫縣臺爾啦黨纔于啥')
 COMMON = ''.join(c for c in Z['common'] if c not in EXCLUDE)
 RANK = {c: i for i, c in enumerate(COMMON)}
 PUNCT = set('，。；：？！「」、')
@@ -239,7 +240,7 @@ NOTES = {
     '海': '包含省略：字身「每」超過 3 碼，被框住的「戈」省去，尾碼取外框的「卜」。',
     '船': '包含省略：字首「舟」超過 2 碼，省去框內的戈，取「卜」作字首尾碼；全字尾碼＝口。',
     '滿': '包含省略：字身「㒼」超過 3 碼，冂內的「人」省去，尾碼＝月（冂）。',
-    '急': '包含省略：字首「刍」的最後一橫被框住，省去，字首只取弓；尾碼＝心。',
+    '急': '字首「刍」＝弓一（⺕ 取外框），字身心 → 速成 弓心。省略只影響倉頡中間碼，速成不受影響。',
     '搞': '包含省略：字身「高」超過 3 碼，最後框內的口省去，尾碼＝月（冂）。',
     '侮': '包含省略：字身「每」超過 3 碼，省去被框住的戈，尾碼＝卜。',
     '夠': '包含省略：字首「多」超過 2 碼，省去框內的點（戈），字首＝弓弓；尾碼＝口。',
@@ -311,7 +312,7 @@ L.append(split_lesson(5, '取碼原則（二）', '連體與分體、字首與�
     {'title': '連體字：整個字連在一起', 'points': ['筆劃交連、不能切開的字（早、白、太、我）', '首碼＝第一個部件，尾碼＝最後一個部件'], 'codes': rule_chars('早白太我', K5)},
     {'title': '分體字：字首和字身', 'points': ['可以切開的字：左、上或外面的部分是「字首」，其餘是「字身」', '速成首碼＝字首的第一碼；尾碼＝字身的最後一碼'], 'codes': rule_chars('明林字', K5)},
     {'title': '字首看位置，不看部首', 'points': ['字首是按次序第一個能切出來的部分，跟部首或字義無關', '以下都是常見的陷阱'], 'codes': rule_chars('鵬翁參', K5)},
-    {'title': '右上角的點先取', 'points': ['求、我、式 這類字，右上角的點（戈）是第一碼', '筆順和取碼次序不同時，以取碼次序為準'], 'codes': rule_chars('求我式', K5)},
+    {'title': '右上角的點先取', 'points': ['求、式、貳 這類字，右上角的點（戈）是第一碼（後面學到的 成、戒 也是）', '小心：「我」左上角先有一撇（竹），所以 我＝竹手戈，速成 H I', '筆順和取碼次序不同時，以取碼次序為準'], 'codes': rule_chars('求式貳我', K5)},
     {'title': '三個取碼原則', 'points': ['精簡：有幾種拆法時，碼數最少的才對（王＝一土）', '完整：優先取涵蓋筆劃較多的字形（生＝竹手一）', '字形特徵：分割點落在直筆上，不在轉角切，不要把鉤切掉（九＝大弓）'], 'codes': rule_chars('王生九', K5)}],
     basic5 + rule_chars(r5, K5), '自己拆出首碼和尾碼。記住：字首看位置，右上角的點先取。', keys=K5))
 
@@ -323,10 +324,10 @@ add_roots(8, '字形類字根（下）', 'vwy', '女田卜住在 V、W、Y。')
 K9 = learned
 aux = ''.join(ch for k in SHAPES for sh in SHAPES[k] if sh['shape'] != ROOTS[k] for ch in sh['examples'] if ch in first)
 aux = ''.join(dict.fromkeys(aux))
-r9 = '雌剪馳疊成戒夫青海船滿急搞侮夠欄問們間相眼推進陳隊塊雞機東末速拳夷屯秉學氣應感壓歷養'
+r9 = '雌剪馳疊成戒夫青海侮滿搞欄瘸夠問們間相眼推進陳隊塊雞機東末速拳夷屯秉學氣應感壓歷養'
 L.append(split_lesson(9, '取碼原則（三）', '包含省略、複合字、特殊字、特別字首', [
     {'title': '先溫習：字首和原則', 'points': ['字首看位置（雌、剪、馳、疊）；右上角的點先取（成、戒）', '完整原則：夫＝手人、青＝手一月'], 'codes': rule_chars('雌剪馳疊成戒夫青', K9)},
-    {'title': '包含省略：被框住的部件不算', 'points': ['字首超過 2 碼或字身超過 3 碼時，最後一個部件如果被三面或四面包住，就省去它，取外框作尾碼', '外框有 囗 冂 コ 匚 廿 几 乃 凵 ク', '同一個部件單獨成字時碼數不超限，就不用省略（母 田卜戈，但 海 水人田卜）'], 'codes': rule_chars('海船滿急搞母', K9)},
+    {'title': '包含省略：被框住的部件不算', 'points': ['字身超過 3 碼時，最後一個部件如果被三面或四面包住，就省去它，取外框作尾碼——這會改變速成的尾碼', '外框有 囗 冂 コ 匚 廿 几 乃 凵 ク', '同一個部件單獨成字時碼數不超限，就不用省略（母＝田卜戈，尾碼戈；但 海＝水人田卜，尾碼卜）'], 'codes': rule_chars('海侮滿搞欄母', K9)},
     {'title': '複合字：永遠只取首尾兩碼', 'points': ['門＝日弓、目＝月山、隹＝人土、阝＝弓中、鬼＝竹戈、鬥＝中弓、幾＝女戈、虍＝卜心', '作字身時，速成尾碼就是複合字的尾碼'], 'codes': rule_chars('問們相推進陳塊', K9)},
     {'title': '特殊字：重疊的先取木火大心戈', 'points': ['木、火、大、心（七形）、戈 與其他字形重疊時，先取它們，再取疊在上面的字形'], 'codes': rule_chars('東末拳夷屯', K9)},
     {'title': '特別的字首', 'points': ['有些字的上半部整塊當字首，取它的首尾兩碼', '學＝竹月、氣＝人弓、應＝戈土、感＝戈口、壓＝一大'], 'codes': rule_chars('學氣應感壓', K9)}],
@@ -389,8 +390,8 @@ def batch_lesson(lid, title, subtitle, start, end, test_pass, test_count):
                   'gen': {'kind': 'chars', 'chars': COMMON[start:end], 'count': test_count}})
     return {'id': lid, 'title': title, 'subtitle': subtitle, 'newKeys': [], 'pass': test_pass, 'steps': steps}
 
-L.append(batch_lesson(12, '常用字（一）', '最常用 500 字，分 10 批', 0, 500, {'wpm': 3, 'accuracy': 90}, 120))
-L.append(batch_lesson(13, '常用字（二）', '第 501 至 1000 字，分 10 批', 500, 1000, {'wpm': 5, 'accuracy': 90}, 150))
+L.append(batch_lesson(12, '常用字（一）', '最常用 500 字，分 10 批', 0, 500, {'wpm': 6, 'accuracy': 90}, 120))
+L.append(batch_lesson(13, '常用字（二）', '第 501 至 1000 字，分 10 批', 500, 1000, {'wpm': 8, 'accuracy': 90}, 150))
 
 # 第 14 課：詞語（原創的香港常用兩字詞，用頓號分隔；部分字要翻頁，例如「學」）
 WORDS = """學校 老師 同學 課室 功課 考試 上課 下課 放學 早餐 午餐 晚餐 朋友 家人 爸爸 媽媽 哥哥 姐姐 弟弟 妹妹
@@ -407,7 +408,7 @@ rnd = random.Random(2027)
 def word_text(k):
     return '、'.join(rnd.sample(words, k)) + '。'
 L.append(text_lesson(14, '詞語', '常用兩字詞', [word_text(8), word_text(8), word_text(10), word_text(30)],
-    '詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按空白鍵。', {'wpm': 6, 'accuracy': 90}, unit='組'))
+    '詞語之間用頓號「、」分隔（按 \\ 鍵）。要翻頁的字按空白鍵。', {'wpm': 10, 'accuracy': 90}, unit='組'))
 
 # 第 15 課：句子與短文（原創）
 sentences = [
@@ -419,9 +420,56 @@ sentences = [
     '學習打字需要耐心。開始時速度會比較慢，但只要每天練習十分鐘，手指就會慢慢記住每個字根的位置。先求準確，再求速度，你一定可以做到！',
 ]
 L.append(text_lesson(15, '句子與短文', '把整段話打出來', sentences,
-    '連標點一起打。不記得碼時，看提示。', {'wpm': 6, 'accuracy': 90}, limit=120))
+    '連標點一起打。不記得碼時，看提示。', {'wpm': 12, 'accuracy': 90}, limit=120))
+
+# 第 16 課：常見翻頁字（最常用 700 字中不在第一頁的字，要背熟「碼＋空白鍵次數＋數字」）
+def flip_seq(c):
+    code = first[c]; i = Z['quick'][code].index(c)
+    return code, i // 9, i % 9 + 1
+FLIP = [c for c in COMMON[:700] if c in first and Z['quick'][first[c]].index(c) >= 9][:40]
+ex = '、'.join(f"{c} {first[c].upper()}{'␣' * flip_seq(c)[1]}{flip_seq(c)[2]}" for c in FLIP[:8])
+rep = lambda cs, n: ''.join(cs) * n
+L.append({'id': 16, 'title': '常見翻頁字', 'subtitle': '不在第一頁的常用字', 'newKeys': [], 'pass': {'wpm': 6, 'accuracy': 90}, 'steps': [
+    guide('常見翻頁字', [
+        {'title': '為甚麼要背翻頁字', 'points': ['最常用的 700 個字之中，大約 130 個不在候選字的第一頁', '這些字幾乎每段文章都會出現（個、這、就、學、說……）', '背熟「速成碼 → 按幾次空白鍵 → 揀第幾個」，手指就不用停下來找'], 'show': 'keyboard'},
+        {'title': '讀法', 'points': [f'例子：{ex}', '␣ 代表按一下空白鍵（翻到下一頁），最後的數字是揀第幾個', '多練幾次，手指會記住整個動作，不用每次看候選字']}]),
+    {'type': 'drill', 'mode': 'quick', 'title': '第 1 組', 'hint': '每個字打三次。按提示翻頁，記住空白鍵要按幾次。', 'text': rep(FLIP[:12], 3)},
+    {'type': 'drill', 'mode': 'quick', 'title': '第 2 組', 'hint': '每個字打三次。', 'text': rep(FLIP[12:24], 3)},
+    {'type': 'drill', 'mode': 'quick', 'title': '第 3 組', 'hint': '每個字打兩次。', 'text': rep(FLIP[24:40], 2)},
+    {'type': 'test', 'mode': 'quick', 'title': '過關小測', 'timeLimit': 90, 'pass': {'wpm': 6, 'accuracy': 90},
+     'hint': '90 秒內打得愈多愈好，沒有提示。速度達每分鐘 6 字、準確率達 90% 即過關。', 'gen': {'kind': 'chars', 'chars': ''.join(FLIP), 'count': 40}}]})
 
 # 檢查：所有字都在碼表
+# 第 9 課才教的規則（複合字 隹 目 門 阝 鬼 幾 虍 鬥、包含省略、特殊字、特別字首）：
+# 第 9 課之前，沒有提示的「自行拆字」和「過關小測」不出這些字（有顏色提示的步驟可以保留）
+LATER_LIST = '滿構購雞瞭權間學機都陽除際歷壓確們問每夠隊據氣感應相難觀歡院防進部產海醫東速處'
+def needs_later_rule(c):
+    cj = Z['cj'].get(c, '')
+    if c in LATER_LIST: return True
+    if any(p in cj for p in ('og', 'nl', 'bu', 'yp', 'hui')): return True   # 隹 阝 目 虍 鬼（第五代碼）
+    if '\u9580' <= c <= '\u95ff': return True                               # 門部
+    return False
+# 打字內容用微軟速成較易選到的字形（見 tools/normalize_variants.py）
+VTR = str.maketrans({'着': '著', '裏': '裡', '麪': '麵', '羣': '群', '峯': '峰', '啓': '啟', '牀': '床', '衆': '眾', '爲': '為', '温': '溫', '綫': '線', '衞': '衛', '鷄': '雞'})
+for l in L:
+    for s in l['steps']:
+        if isinstance(s.get('text'), str): s['text'] = s['text'].translate(VTR)
+        g = s.get('gen') or {}
+        if isinstance(g.get('chars'), str): g['chars'] = ''.join(dict.fromkeys(g['chars'].translate(VTR)))
+        if isinstance(g.get('words'), list): g['words'] = [w.translate(VTR) for w in g['words']]
+
+removed = {}
+for l in L:
+    if l['id'] >= 9: continue
+    for s in l['steps']:
+        g = s.get('gen') or {}
+        if g.get('kind') == 'chars' and (s['type'] == 'test' or s.get('hints') == 'less'):
+            keep = ''.join(c for c in g['chars'] if not needs_later_rule(c))
+            if len(keep) >= 12:
+                removed.setdefault(l['id'], set()).update(set(g['chars']) - set(keep))
+                g['chars'] = keep
+for k, v in removed.items(): print(f'第 {k} 課：無提示步驟移走 {len(v)} 個要第 9 課規則的字')
+
 for l in L:
     for s in l['steps']:
         t = s.get('text') or s.get('gen', {}).get('chars') or ''

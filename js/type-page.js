@@ -85,7 +85,7 @@ async function init() {
         $('step-hint').innerHTML = `${err.message}。<a href="tests.html?lang=${lang}">回到評測區</a>`;
         return;
       }
-    } else if (state.test && store.getTestResult(state.test.id) && !params.get('again')) {
+    } else if (state.test && store.getTestResult(state.test.id)) {
       $('lesson-title').textContent = '這個評測已經做過';
       $('step-hint').innerHTML = '每個評測只可以做一次。要重做請找老師。<a href="tests.html?lang=' + lang + '">回到評測區</a>';
       return;
@@ -121,16 +121,31 @@ async function init() {
   document.title = PRACTICE ? `${L.title}｜練習區` : TEST ? `${L.title}｜評測區` : DAILY ? '每日任務｜打字練習' : `第 ${L.id} 課：${L.title}｜打字練習`;
   $('crumb').textContent = lang === 'en' ? '英文打字' : '中文速成';
   $('lesson-eyebrow').textContent = `${lang === 'zh' ? '字根魔法學院' : '鍵帽星系'}　${PRACTICE ? '練習區' : TEST ? '評測區' : DAILY ? '每日任務' : `第 ${L.id} 課`}`;
-  $('lesson-title').textContent = `${L.title}　${L.subtitle ?? ''}`.trim();
+  const t = $('lesson-title');
+  t.textContent = L.title;
+  if (L.subtitle) { const sub = document.createElement('span'); sub.className = 'h1-sub'; sub.textContent = L.subtitle; t.append(sub); }
+  document.body.classList.add('typing');
 
   const startStep = Math.min(Math.max(Number(params.get('step') ?? 1) - 1, 0), L.steps.length - 1);
   // 做過的課：全部步驟都可以直接跳去重做；做過的步驟也可以
   const done = PRACTICE || TEST || store.getLessonResult(lang, lessonId)?.done;
   const reached = Object.keys(store.getStepResults(lang, lessonId)).map(Number);
-  state.maxReached = done ? L.steps.length - 1 : Math.max(startStep, ...reached.map((n) => Math.min(n, L.steps.length - 1)));
+  state.maxReached = done ? L.steps.length - 1 : Math.max(0, ...reached.map((n) => Math.min(n, L.steps.length - 1)));
+  // 可以用網址跳到練習步驟，但不可以跳過練習直接做未解鎖的過關小測
+  const first = L.steps[startStep]?.type === 'test' && startStep > state.maxReached ? state.maxReached : startStep;
+  state.maxReached = Math.max(state.maxReached, first);
   renderSteps();
-  runStep(startStep);
+  runStep(first);
 }
+
+// 練習時切換到其他分頁或視窗：計時暫停，回來再繼續（評測和小測照常計時）
+document.addEventListener('visibilitychange', () => {
+  const e = state.engine;
+  const step = state.lesson?.steps?.[state.stepIndex];
+  if (!e || !e.started || e.finished || TEST || step?.type === 'test' || step?.timeLimit) return;
+  if (document.hidden) state.hiddenAt = performance.now();
+  else if (state.hiddenAt) { e.startTime += performance.now() - state.hiddenAt; state.hiddenAt = null; }
+});
 
 function setupFx() {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -189,7 +204,7 @@ function renderSteps() {
     b.className = 'step-pill';
     b.textContent = `${i + 1}. ${s.title}`;
     const rec = store.getStepResults(lang, lessonId)[i + 1]?.latest;
-    if (rec && rec.accuracy !== null) {
+    if (rec && rec.accuracy != null && Number.isFinite(rec.accuracy)) {
       const sc = document.createElement('small');
       sc.className = 'pill-score';
       sc.textContent = rec.stars ? '★'.repeat(rec.stars) : `${Math.floor(rec.accuracy)}%`;
@@ -203,6 +218,8 @@ function renderSteps() {
     li.append(b);
     ol.append(li);
   });
+  // 步驟多時（例如常用字 11 步）：把目前一步捲到看得見的位置
+  ol.querySelector('[aria-current="step"]')?.scrollIntoView?.({ block: 'nearest', inline: 'center' });
 }
 
 // ---------- 執行一個步驟 ----------
@@ -238,8 +255,9 @@ function runStep(i) {
   state.mode = step.mode ?? (lang === 'zh' ? 'roots' : 'en');
   state.unit = { quick: '字/分', split: '字/分', ime: '字/分', roots: '個/分', shapes: '個/分', chart: '個/分', en: 'WPM' }[state.mode] ?? 'WPM';
   $('m-unit').textContent = ` ${state.unit}`;
-  // 速成評測不提示下一個鍵（否則變成跟住發光的鍵按）
-  state.hideNext = lang === 'zh' && step.type === 'test';
+  // 小測和評測不提示下一個鍵（否則變成跟住發光的鍵按，量度不到盲打）；正式評測連鍵盤和手形都收起
+  state.hideNext = step.type === 'test';
+  $('kb-area').hidden = !!TEST;
     const focus = step.type === 'test';
   state.fx.setFocus(focus);
   document.body.classList.toggle('focus-mode', focus);
@@ -306,9 +324,13 @@ function runGuide(step) {
     const nav = e.target.closest('[data-nav]')?.dataset.nav;
     if (nav) go(nav === 'next' ? 1 : -1);
   };
+  // 按住 Enter 不會一口氣跳過全部投影片（只接受第一下；每頁最少停 0.4 秒）
+  let shownAt = performance.now();
   const onKey = (e) => {
-    if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); go(1); }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+    if (e.repeat) { if (e.key === 'Enter') e.preventDefault(); return; }
+    if ((e.key === 'Enter' || e.key === 'ArrowRight') && performance.now() - shownAt < 400) { e.preventDefault(); return; }
+    if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); go(1); shownAt = performance.now(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); shownAt = performance.now(); }
   };
   const cleanup = () => {
     box.removeEventListener('click', onClick);
@@ -439,6 +461,8 @@ function runTyping(step) {
     },
     onTick: (eng) => updateMeters(eng, step),
     onFinish: (eng) => onTypingDone(step, eng),
+    onIme: () => warnBar('偵測到中文輸入法：請按 Shift 或 Win＋空白鍵切換到英文，再繼續打。'),
+    onCapsLock: () => warnBar('Caps Lock 開着（字母會變大楷）：按一下鍵盤左邊的 Caps Lock 關掉，這一下不計錯。'),
   });
   state.engine = engine;
   paint(spans, engine);
@@ -596,7 +620,7 @@ function renderPair(eng, step, isTest, wrongNow) {
   }
   $('pair-hint').innerHTML = hint;
   const right = eng.status.filter((x) => x === 'ok').length;
-  $('pair-count').textContent = `第 ${eng.pos + 1} / ${total} 題　一次答啱 ${right}　答錯 ${state.pairWrong}`;
+  $('pair-count').textContent = `第 ${eng.pos + 1} / ${total} 題　一次答對 ${right}　答錯 ${state.pairWrong}`;
 
   // 右邊：評測顯示字形表；練習顯示上一題的雙色拆碼
   // 右邊只放字根和輔助字形表（多欄，一眼看完）；上一題的雙色拆碼放左邊提示下面
@@ -875,6 +899,16 @@ function showNextKey(ch) {
   state.hands.setFinger(fingers, label);
 }
 
+/** 打字區上方的提示條（輸入法、Caps Lock）：5 秒後自動消失 */
+function warnBar(text) {
+  let el = $('warn-bar');
+  if (!el) { el = document.createElement('p'); el.id = 'warn-bar'; el.className = 'warn-bar'; el.setAttribute('role', 'alert'); $('text-wrap').before(el); }
+  el.textContent = text;
+  el.hidden = false;
+  clearTimeout(warnBar.t);
+  warnBar.t = setTimeout(() => { el.hidden = true; }, 5000);
+}
+
 function flashError(span) {
   if (!span) return;
   span.classList.remove('err');
@@ -890,7 +924,9 @@ function updateMeters(eng, step) {
     return;
   }
   const st = statsOf(eng);
-  $('m-wpm').textContent = fmt(st.netWpm);
+  // 頭幾秒的速度不準（打了兩個字就顯示 200 WPM）：打夠 10 個字或 5 秒才顯示
+  const enough = st.seconds >= 5 || (eng.pos ?? eng.typed ?? 10) >= 10;
+  $('m-wpm').textContent = enough ? fmt(st.netWpm) : '—';
   $('m-acc').textContent = fmtAcc(st.accuracy);
   $('m-time').textContent = step.timeLimit ? clock(eng.remainingSec()) : clock(st.seconds);
 }
@@ -919,7 +955,7 @@ async function onTypingDone(step, eng) {
     state.testResult = { stats, stars };
   }
   store.saveAttempt({
-    lang, mode: PRACTICE ? 'practice' : TEST ? 'test' : DAILY ? 'daily' : 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0,
+    lang, mode: PRACTICE ? 'practice' : TEST ? 'test' : DAILY ? 'daily' : 'lesson', lessonId, step: state.stepIndex + 1, stats, stars: stars ?? 0, input: state.mode,
   });
   if (TEST) {
     // 本機也記一份（登入時是伺服器核實後的成績；按鍵紀錄由伺服器保存）
@@ -1063,8 +1099,15 @@ function finishStep({ stats, stars, step, rest, guide }) {
   let title;
   let msg = '';
   if (isTest && !passed) {
-    title = '差一點就過關';
-    msg = `準確率要達 ${step.pass.accuracy}% 才過關。慢慢來，先求準。`;
+    // 講清楚是哪一個條件未達到
+    const needAcc = step.pass?.accuracy ?? 0, needWpm = step.pass?.wpm ?? 0;
+    const accShort = (stats?.accuracy ?? 0) < needAcc, wpmShort = (stats?.netWpm ?? 0) < needWpm;
+    const close = (!accShort || stats.accuracy >= needAcc - 5) && (!wpmShort || stats.netWpm >= needWpm * 0.85);
+    title = close ? '差一點就過關' : '未過關';
+    const parts = [];
+    if (wpmShort) parts.push(`速度要達 ${needWpm} ${state.unit}（你 ${fmt(stats.netWpm)}）`);
+    if (accShort) parts.push(`準確率要達 ${needAcc}%（你 ${fmtAcc(stats.accuracy)}%）`);
+    msg = `${parts.join('；')}。${accShort ? '慢慢來，先求準。' : '準確率已經夠，多練幾次手指熟了自然會快。'}`;
     actions.push(['再試一次', () => runStep(state.stepIndex), true]);
     actions.push(['回到練習', () => runStep(Math.max(0, state.stepIndex - 1)), false]);
   } else if (isLast) {
@@ -1101,7 +1144,7 @@ function saveLessonDone(stars, stats) {
   mastery.introduce(lang, lessonItems(state.lesson));
   if (stars && next.stars > prev.stars && prev.done) return `新紀錄：${next.stars} 粒星！`;
   if (stars && stars < 3) return '想拿更多星星？可以再試一次，打得更準、更快。';
-  return '已解鎖下一課。';
+  return state.lessons.some((l) => l.id === lessonId + 1) ? '可以開始下一課。' : '你已完成整個課程！';
 }
 
 /** 這一課教過的項目（字根、輔助字形、英文鍵），完成課堂後加入重溫名單。 */
@@ -1157,9 +1200,21 @@ function showPanel({ title, msg, stars, stats, actions, celebrate = false, earne
       starsEl.after(e);
     }
   }
+  // 一個大數字帶頭：速度（大）＋準確率，其餘放下面
+  $('panel-hero')?.remove();
+  const sp = stats.find(([k]) => k === '速度'), ac = stats.find(([k]) => k === '準確率');
+  const rest = stats.filter(([k]) => k !== '速度' && k !== '準確率');
+  if (sp && ac) {
+    const hero = document.createElement('div'); hero.id = 'panel-hero'; hero.className = 'panel-hero';
+    const [num, ...unit] = String(sp[1]).split(' ');
+    hero.innerHTML = `<div><b>${num}</b><small>${unit.join(' ')}</small></div><span>${ac[1]}<small>準確率</small></span>`;
+    $('panel-msg').before(hero);
+  }
   const dl = $('panel-stats');
-  dl.innerHTML = stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
-  dl.hidden = stats.length === 0;
+  const shown = sp && ac ? rest : stats;
+  dl.innerHTML = shown.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  dl.hidden = shown.length === 0;
+  const sr = $('sr-status'); if (sr) sr.textContent = `${title}。${stats.map(([k, v]) => `${k} ${v}`).join('，')}`;
 
   const box = $('panel-actions');
   box.innerHTML = '';
@@ -1173,13 +1228,28 @@ function showPanel({ title, msg, stars, stats, actions, celebrate = false, earne
   });
 
   $('overlay').hidden = false;
+  document.body.classList.add('panel-open');
   state.kb.setNext([]);
   state.hands.setFinger([], '');
+  // 彈窗開着時 Tab 只在彈窗內移動
+  state.panelTrap = (e) => {
+    if (e.key !== 'Tab') return;
+    const items = [...panel.querySelectorAll('button, a[href]')].filter((x) => !x.disabled && x.offsetParent);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (!panel.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  window.addEventListener('keydown', state.panelTrap);
+  panel.focus();
   // 延遲一點才接受 Enter，避免學生打完最後一個字時誤按
   setTimeout(() => {
     box.querySelector('.primary')?.focus();
     state.panelKey = (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); box.querySelector('.primary')?.click(); }
+      if (e.key === 'Enter' && !e.repeat) { e.preventDefault(); box.querySelector('.primary')?.click(); }
+      // 空白鍵不會立即跳走（學生打完還在按空白鍵），要用滑鼠或 Enter
+      if (e.key === ' ' && document.activeElement?.closest?.('#panel-actions')) e.preventDefault();
     };
     window.addEventListener('keydown', state.panelKey);
   }, 400);
@@ -1206,8 +1276,10 @@ function confetti(host) {
 
 function hidePanel() {
   $('overlay').hidden = true;
+  document.body.classList.remove('panel-open');
   if (state.panelKey) window.removeEventListener('keydown', state.panelKey);
-  state.panelKey = null;
+  if (state.panelTrap) window.removeEventListener('keydown', state.panelTrap);
+  state.panelKey = null; state.panelTrap = null;
 }
 
 // ---------- 速成導覽的例子 ----------

@@ -36,24 +36,42 @@ async function addColumns(db) {
 const MAX_PROGRESS_BYTES = 400 * 1024;
 
 
-/** 由整份進度紀錄抽出老師後台要看的摘要 */
+const num = (v, max = 1e6) => { const n = Number(v); return Number.isFinite(n) ? Math.min(Math.max(n, 0), max) : 0; };
+const isoOrNull = (v) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(v) ? v : null);
+
+/**
+ * 由整份進度紀錄抽出老師後台要看的摘要。
+ * 進度紀錄由學生的瀏覽器送來，不可信：數字一律轉成有範圍的數字、課號要符合格式，免得有人把 HTML 塞進老師後台。
+ */
 export function summarize(data) {
-  const out = { en: { lessons: 0, stars: 0, bestWpm: 0 }, zh: { lessons: 0, stars: 0, bestWpm: 0 }, minutes: 0, streak: { en: 0, zh: 0 }, lastActive: null };
-  const lessons = data?.store?.lessons ?? {};
-  out.done = [];
+  const out = { en: { lessons: 0, stars: 0, bestWpm: 0 }, zh: { lessons: 0, stars: 0, bestWpm: 0 }, minutes: 0, streak: { en: 0, zh: 0 }, lastActive: null, done: [] };
+  const store = data?.store && typeof data.store === 'object' ? data.store : {};
+  const lessons = store.lessons && typeof store.lessons === 'object' ? store.lessons : {};
   for (const [id, v] of Object.entries(lessons)) {
-    const lang = id.split(':')[0];
-    if (!out[lang] || !v?.done) continue;
+    const m = /^(en|zh):(\d{1,3})$/.exec(id);
+    if (!m || !v || typeof v !== 'object' || !v.done) continue;
     out.done.push(id);
-    out[lang].lessons += 1;
-    out[lang].stars += v.stars ?? 0;
-    out[lang].bestWpm = Math.max(out[lang].bestWpm, v.bestWpm ?? 0);
+    out[m[1]].lessons += 1;
+    out[m[1]].stars += Math.round(num(v.stars, 3));
+    out[m[1]].bestWpm = Math.max(out[m[1]].bestWpm, Math.round(num(v.bestWpm, 300) * 10) / 10);
   }
-  const attempts = data?.store?.attempts ?? [];
-  out.minutes = Math.round(attempts.reduce((s, a) => s + (a.seconds ?? 0), 0) / 60);
-  if (attempts.length) out.lastActive = attempts[attempts.length - 1].at ?? null;
-  for (const l of ['en', 'zh']) out.streak[l] = data?.daily?.[l]?.streak ?? 0;
+  const attempts = Array.isArray(store.attempts) ? store.attempts : [];
+  out.minutes = Math.round(attempts.reduce((s, a) => s + num(a?.seconds, 3600), 0) / 60);
+  for (const a of attempts) { const at = isoOrNull(a?.at); if (at && (!out.lastActive || at > out.lastActive)) out.lastActive = at; }
+  for (const l of ['en', 'zh']) out.streak[l] = Math.round(num(data?.daily?.[l]?.streak, 10000));
   return out;
+}
+
+/** 每星期清理（跟自動備份同一個排程）：過期登入、一日前的登入失敗紀錄、30 日前開始但未交卷的評測、一年前已處理的問題回報 */
+async function cleanup(db) {
+  const ago = (days) => new Date(Date.now() - days * 86400000).toISOString();
+  const r = await db.batch([
+    db.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(ago(0)),
+    db.prepare('DELETE FROM login_fails WHERE window_start < ? AND (locked_until IS NULL OR locked_until < ?)').bind(ago(1), ago(0)),
+    db.prepare('DELETE FROM test_attempts WHERE submitted_at IS NULL AND started_at < ?').bind(ago(30)),
+    db.prepare('DELETE FROM feedback WHERE resolved = 1 AND created_at < ?').bind(ago(365).replace('T', ' ').slice(0, 19)),
+  ]);
+  return r.map((x) => x.meta?.changes ?? 0);
 }
 
 // ---------- 學生 ----------
@@ -82,7 +100,7 @@ async function studentRoutes(req, env, path, student) {
     }
     await db.prepare('UPDATE students SET fail_count = 0, locked_until = NULL WHERE id = ?').bind(s.id).run();
     await auth.sweepSessions(db);
-    const { header } = await auth.createSession(db, 'student', s.id);
+    const { header } = await auth.createSession(db, 'student', s.id, !!b?.remember);
     const cls = s.class_id ? await db.prepare('SELECT name FROM classes WHERE id = ?').bind(s.class_id).first() : null;
     return json({ ok: true, user: { sid: s.sid, name: s.name, className: cls?.name ?? null, classNo: s.class_no, mustChange: !!s.initial_pw } }, 200, { 'set-cookie': header });
   }
@@ -105,7 +123,9 @@ async function studentRoutes(req, env, path, student) {
     if (!(await auth.verifyPassword(oldPw, student.salt, student.pass_hash))) return fail('舊密碼不對', 401);
     if (newPw.length < 6 || newPw.length > 64) return fail('新密碼至少 6 個字元');
     const h = await auth.hashPassword(newPw);
-    await db.prepare('UPDATE students SET pass_hash = ?, salt = ?, initial_pw = NULL WHERE id = ?').bind(h.hash, h.salt, student.id).run();
+    await db.batch([db.prepare('UPDATE students SET pass_hash = ?, salt = ?, initial_pw = NULL WHERE id = ?').bind(h.hash, h.salt, student.id),
+      // 改密碼後登出其他裝置（保留這一部）
+      db.prepare("DELETE FROM sessions WHERE kind = 'student' AND user_id = ? AND token != ?").bind(student.id, student._token)]);
     return json({ ok: true });
   }
 
@@ -159,10 +179,12 @@ async function studentRoutes(req, env, path, student) {
       let d = null; try { d = r.data ? JSON.parse(r.data) : null; } catch { /* ignore */ }
       const lessons = d?.store?.lessons ?? {}, attempts = d?.store?.attempts ?? [];
       let stars = 0, en = 0, zh = 0;
-      for (const [k, v] of Object.entries(lessons)) { if (!v?.done || v.skipped) continue; stars += v.stars ?? 0; if (k.startsWith('en:')) en = Math.max(en, v.bestWpm ?? 0); if (k.startsWith('zh:')) zh = Math.max(zh, v.bestWpm ?? 0); }
-      for (const r2 of Object.values(d?.store?.shortcuts ?? {})) stars += r2.stars ?? 0;
-      const week = Math.round(attempts.filter((a) => a.at && Date.parse(a.at) > weekAgo).reduce((x, a) => x + (a.seconds ?? 0), 0) / 60);
-      const title = d?.store?.settings?.wallet?.equip?.title ?? null;
+      // 全部轉成有範圍的數字（進度由學生的瀏覽器送來，不可信）
+      for (const [k, v] of Object.entries(lessons)) { if (!v?.done || v.skipped) continue; stars += Math.round(num(v.stars, 3)); if (k.startsWith('en:')) en = Math.max(en, num(v.bestWpm, 300)); if (k.startsWith('zh:')) zh = Math.max(zh, num(v.bestWpm, 300)); }
+      for (const r2 of Object.values(d?.store?.shortcuts ?? {})) stars += Math.round(num(r2?.stars, 3));
+      const week = Math.round((Array.isArray(attempts) ? attempts : []).filter((a) => isoOrNull(a?.at) && Date.parse(a.at) > weekAgo).reduce((x, a) => x + num(a.seconds, 3600), 0) / 60);
+      const t0 = d?.store?.settings?.wallet?.equip?.title;
+      const title = typeof t0 === 'string' && /^[\w-]{1,40}$/.test(t0) ? t0 : null;
       return { id: r.id, name: r.name, no: r.class_no, stars, week, en: Math.round(en), zh: Math.round(zh), title };
     });
     return json({ enabled: true, me: student.id, students: list });
@@ -190,10 +212,13 @@ async function studentRoutes(req, env, path, student) {
     const prev = await db.prepare('SELECT id, submitted_at FROM test_attempts WHERE student_id = ? AND test_id = ?').bind(student.id, t.id).first();
     if (prev?.submitted_at) return fail('這個評測已經做過，要重做請找老師', 409);
     if (prev) await db.prepare('DELETE FROM test_attempts WHERE id = ?').bind(prev.id).run();
+    // 正式評測：由第 2 份題目起隨機抽一份（第 1 份公開給未登入時試做；網站發佈的 data/tests.json 只有第 1 份）
+    const forms = Array.isArray(t.forms) && t.forms.length > 1 ? t.forms.slice(1) : [t.text];
+    const text = forms[Math.floor(Math.random() * forms.length)];
     const id = auth.randomHex(16);
     await db.prepare('INSERT INTO test_attempts (id, student_id, test_id, lang, text, time_limit, started_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-      .bind(id, student.id, t.id, t.lang, t.text, t.timeLimit, now).run();
-    return json({ attemptId: id, text: t.text, timeLimit: t.timeLimit, startedAt: now });
+      .bind(id, student.id, t.id, t.lang, text, t.timeLimit, now).run();
+    return json({ attemptId: id, text, timeLimit: t.timeLimit, startedAt: now });
   }
 
   if (path === '/api/test/submit' && req.method === 'POST') {
@@ -205,9 +230,11 @@ async function studentRoutes(req, env, path, student) {
     const serverElapsedSec = (Date.now() - new Date(a.started_at).getTime()) / 1000;
     if (serverElapsedSec > a.time_limit + 60 * 60) return fail('評測已逾時，請找老師重開', 410);   // 60 分鐘寬限：網絡斷了可以稍後補交
     const r = verify({ lang: a.lang, text: a.text, timeLimit: a.time_limit, keystrokes: b.keystrokes, pass: t?.pass ?? {}, serverElapsedSec, client: b.client ?? null });
-    const keys = JSON.stringify((Array.isArray(b.keystrokes) ? b.keystrokes : []).slice(0, 6000).map((k) => ({ t: k.t, key: k.key })));
+    const keys = JSON.stringify((Array.isArray(b.keystrokes) ? b.keystrokes : []).slice(0, 6000)
+      .filter((k) => k && typeof k.key === 'string' && k.key.length <= 16 && Number.isFinite(Number(k.t))).map((k) => ({ t: Math.round(Number(k.t)), key: k.key })));
+    const cnum = (v) => (v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
     await db.prepare(`UPDATE test_attempts SET submitted_at = ?, client_wpm = ?, client_acc = ?, client_seconds = ?, wpm = ?, accuracy = ?, seconds = ?, stars = ?, flags = ?, keystrokes = ? WHERE id = ?`)
-      .bind(now, b.client?.wpm ?? null, b.client?.accuracy ?? null, b.client?.seconds ?? null, r.wpm, r.accuracy, r.seconds, r.stars, JSON.stringify(r.flags), keys, a.id).run();
+      .bind(now, cnum(b.client?.wpm), cnum(b.client?.accuracy), cnum(b.client?.seconds), r.wpm, r.accuracy, r.seconds, r.stars, JSON.stringify(r.flags), keys, a.id).run();
     return json({ ok: true, result: r });
   }
 
@@ -218,8 +245,9 @@ export default {
   // 每週自動備份到 R2（wrangler.jsonc 的 triggers.crons）；未設定 BACKUPS 儲存桶時只記錄一句
   async scheduled(event, env, ctx) {
     if (!env.DB) return;
-    if (!env.BACKUPS) { console.log('未設定 R2 儲存桶 BACKUPS，略過自動備份'); return; }
     await ensureSchema(env.DB);
+    ctx.waitUntil(cleanup(env.DB).then((r) => console.log('清理完成', JSON.stringify(r))).catch((e) => console.error('清理失敗', e)));
+    if (!env.BACKUPS) { console.log('未設定 R2 儲存桶 BACKUPS，略過自動備份'); return; }
     ctx.waitUntil(autoBackup(env).then((k) => console.log('自動備份完成', k)).catch((e) => console.error('自動備份失敗', e)));
   },
   async fetch(req, env) {
@@ -243,8 +271,9 @@ export default {
       const r = await studentRoutes(req, env, path, student);
       return r ?? fail('沒有這個 API', 404);
     } catch (err) {
-      console.error(err);
-      return fail(`伺服器錯誤：${err.message}`, 500);
+      const eid = Math.random().toString(36).slice(2, 8).toUpperCase();
+      console.error(`[錯誤 ${eid}]`, err?.stack ?? err);
+      return fail(`伺服器出錯（編號 ${eid}），請稍後再試；如果一直出現，請把編號告訴老師`, 500);
     }
   },
 };

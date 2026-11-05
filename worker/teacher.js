@@ -39,7 +39,8 @@ function cleanPractice(lang, kind, raw) {
   const removed = new Set();
   let content;
   if (lang === 'zh') {
-    const keep = (c) => ZH_PUNCT.includes(c) || quickOf(c);
+    // 只留內置速成打得到的字（（）《》…… 等符號的碼以 z 開頭，學生打不到）
+    const keep = (c) => ZH_PUNCT.includes(c) || /^[a-y]{1,2}$/.test(quickOf(c) ?? '');
     const src = raw.replace(/,/g, '，').replace(/\?/g, '？').replace(/!/g, '！').replace(/:/g, '：').replace(/;/g, '；').replace(/\s+/g, kind === 'text' ? '' : '');
     content = [...src].filter((c) => { if (keep(c)) return true; removed.add(c); return false; }).join('');
     if (kind !== 'text') content = [...new Set([...content].filter((c) => !ZH_PUNCT.includes(c)))].join('');
@@ -236,7 +237,8 @@ export async function teacherRoutes(req, env, path, teacher) {
       const tm = tmap[idOf[r.sid]] ?? {};
       const cells = [r.class_no ?? '', r.sid, r.name, s?.en.lessons ?? 0, s?.en.stars ?? 0, Math.round(s?.en.bestWpm ?? 0), s?.zh.lessons ?? 0, s?.zh.stars ?? 0, Math.round(s?.zh.bestWpm ?? 0), s?.minutes ?? 0];
       for (const t of testIds) { const x = tm[t]; cells.push(x ? Math.round(x.wpm * 10) / 10 : '', x ? Math.round(x.accuracy * 10) / 10 : '', x ? x.stars : '', x ? JSON.parse(x.flags).join(' ') : ''); }
-      lines.push(cells.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','));
+      // 以 = + - @ 開頭的文字加 ' ，防止 Excel 當成公式執行
+      lines.push(cells.map((c) => { let t = String(c); if (typeof c === 'string' && /^[=+\-@]/.test(t)) t = `'${t}`; return `"${t.replace(/"/g, '""')}"`; }).join(','));
     }
     return new Response('﻿' + lines.join('\r\n'), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${cls.year}-${cls.name}.csv"` } });
   }
@@ -425,6 +427,20 @@ export async function teacherRoutes(req, env, path, teacher) {
       tests: tests.map((t) => ({ ...t, flags: JSON.parse(t.flags), keystrokes: t.keystrokes ? JSON.parse(t.keystrokes) : null })) });
   }
 
+  // 個人資料查閱（《個人資料（私隱）條例》的查閱要求）：學生全部紀錄，一個 JSON 檔（不含密碼）
+  if ((mm = m(/^\/api\/teacher\/students\/(\d+)\/export$/))) {
+    if (!(await canStudent(mm[1]))) return NO();
+    const s = await db.prepare('SELECT s.sid, s.name, s.class_no, s.created_at, c.name AS class_name, c.year FROM students s LEFT JOIN classes c ON c.id = s.class_id WHERE s.id = ?').bind(mm[1]).first();
+    const p = await db.prepare('SELECT data, updated_at FROM progress WHERE student_id = ?').bind(mm[1]).first();
+    const t = (await db.prepare('SELECT test_id, started_at, submitted_at, wpm, accuracy, seconds, stars, flags, text, keystrokes FROM test_attempts WHERE student_id = ?').bind(mm[1]).all()).results;
+    const f = (await db.prepare('SELECT page, message, created_at FROM feedback WHERE student_id = ?').bind(mm[1]).all()).results;
+    const parse = (x, d) => { try { return JSON.parse(x); } catch { return d; } };
+    const out = { exportedAt: new Date().toISOString(), student: s, progress: p ? parse(p.data, null) : null, progressUpdatedAt: p?.updated_at ?? null,
+      tests: t.map((x) => ({ ...x, flags: parse(x.flags, []), keystrokes: x.keystrokes ? parse(x.keystrokes, null) : null })), feedback: f };
+    return new Response(JSON.stringify(out, null, 1), { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store',
+      'content-disposition': `attachment; filename="student-${s?.sid ?? mm[1]}.json"` } });
+  }
+
   // ----- 功課指派 -----
   if ((mm = m(/^\/api\/teacher\/classes\/(\d+)\/assignments$/)) && req.method === 'GET') {
     if (!(await canClass(mm[1]))) return NO();
@@ -440,7 +456,7 @@ export async function teacherRoutes(req, env, path, teacher) {
     const b = await body(req);
     const lang = b?.lang === 'en' ? 'en' : 'zh';
     const lesson = Number(b?.lessonId);
-    if (!Number.isInteger(lesson) || lesson < 0 || lesson > 16) return fail('請選課');
+    if (!Number.isInteger(lesson) || lesson < 0 || lesson > 30) return fail('請選課');
     const due = /^\d{4}-\d{2}-\d{2}$/.test(b?.due ?? '') ? b.due : null;
     const dup = await db.prepare('SELECT id FROM assignments WHERE class_id = ? AND lang = ? AND lesson_id = ?').bind(mm[1], lang, lesson).first();
     if (dup) return fail('這一課已經派過給這班；要改截止日請先刪除再派', 409);
@@ -470,6 +486,7 @@ export async function teacherRoutes(req, env, path, teacher) {
     await db.batch([
       db.prepare('DELETE FROM test_attempts WHERE student_id = ?').bind(id),
       db.prepare('DELETE FROM progress WHERE student_id = ?').bind(id),
+      db.prepare('DELETE FROM feedback WHERE student_id = ?').bind(id),
       db.prepare("DELETE FROM sessions WHERE kind = 'student' AND user_id = ?").bind(id),
       db.prepare('DELETE FROM students WHERE id = ?').bind(id),
     ]);

@@ -4,10 +4,14 @@
 const cache = new Map();
 const ready = new Map();
 
+// 有拆碼圖的字一覽（tools/bundle_glyphs.py 產生）；讀不到清單時照舊逐字嘗試
+let index = null;
+const loadIndex = (base) => (index ??= fetch(`${base}assets/glyph-bundles/index.json`).then((r) => (r.ok ? r.json() : null)).then((s) => (s ? new Set(s) : null)).catch(() => null));
+
 export function loadGlyph(ch, base = '') {
   if (!cache.has(ch)) {
-    cache.set(ch, fetch(`${base}assets/glyphs/${ch.codePointAt(0).toString(16)}.json`)
-      .then((r) => (r.ok ? r.json() : null)).catch(() => null));
+    cache.set(ch, loadIndex(base).then((have) => (have && !have.has(ch) ? null
+      : fetch(`${base}assets/glyphs/${ch.codePointAt(0).toString(16)}.json`).then((r) => (r.ok ? r.json() : null)))).catch(() => null));
   }
   return cache.get(ch);
 }

@@ -7,17 +7,33 @@ applyWorld('planet');
 const $ = (id) => document.getElementById(id);
 const app = $('app');
 const html = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const FLAG_TEXT = { 'too-fast': '速度超出合理上限', robotic: '按鍵間隔過分平均（疑似程式代打）', 'time-mismatch': '用時跟伺服器記錄不符', 'client-mismatch': '瀏覽器報的分數跟伺服器重計相差很大', 'over-time': '超出時限', empty: '沒有作答' };
+const FLAG_TEXT = { 'too-fast': '速度超出合理上限', robotic: '按鍵間隔過分平均（疑似程式代打）', 'time-mismatch': '用時跟伺服器記錄不符', 'client-mismatch': '瀏覽器報的分數跟伺服器重計相差很大',
+  'over-time': '超出時限', empty: '沒有作答', late: '超過時限很久才交卷（可能斷了網絡後補交）', 'non-monotonic': '按鍵紀錄的時間次序不對（紀錄可能被改過）' };
+const flagText = (f) => FLAG_TEXT[f] ?? (/^restart-(\d)$/.test(f) ? `中途重新開始過 ${f.slice(8)} 次` : f);
 const TEST_NAME = { 'en-placement': '英文分級', 'en-s1': '英文中一', 'en-s2': '英文中二', 'en-s3': '英文中三', 'zh-placement': '速成分級', 'zh-s1': '速成中一', 'zh-s2': '速成中二', 'zh-s3': '速成中三' };
 const id = Number(new URLSearchParams(location.search).get('id'));
-$('print').onclick = () => window.print();
+$('print-report').onclick = () => window.print();
+$('export').href = `../api/teacher/students/${id}/export`;
+
+// 進度紀錄由學生的瀏覽器送來，不可信：顯示前把每個欄位轉成有範圍的數字或固定格式，免得有人塞入 HTML
+const n = (v, max = 1e6) => { const x = Number(v); return Number.isFinite(x) ? Math.min(Math.max(x, 0), max) : 0; };
+const nn = (v, max) => (v === null || v === undefined || v === '' ? null : n(v, max));
+const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+function cleanStore(raw) {
+  const st = obj(raw), out = { lessons: {}, steps: {}, weak: {}, attempts: [] };
+  for (const [k, v0] of Object.entries(obj(st.lessons))) { if (!/^(en|zh):\d{1,3}$/.test(k)) continue; const v = obj(v0); out.lessons[k] = { done: !!v.done, skipped: !!v.skipped, stars: Math.round(n(v.stars, 3)), bestWpm: n(v.bestWpm, 500), bestAccuracy: n(v.bestAccuracy, 100) }; }
+  for (const [k, v0] of Object.entries(obj(st.steps))) { if (!/^(en|zh):\d{1,3}:\d{1,2}$/.test(k)) continue; const lt = obj(obj(v0).latest); out.steps[k] = { latest: { accuracy: nn(lt.accuracy, 100), wpm: nn(lt.wpm, 1000), stars: Math.round(n(lt.stars, 3)) } }; }
+  for (const lang of ['en', 'zh']) { out.weak[lang] = {}; for (const [k, v0] of Object.entries(obj(obj(st.weak)[lang]))) { if (k.length > 4) continue; const v = obj(v0); out.weak[lang][k] = { tries: Math.round(n(v.tries)), errors: Math.round(n(v.errors)) }; } }
+  for (const a0 of Array.isArray(st.attempts) ? st.attempts : []) { const a = obj(a0); out.attempts.push({ at: typeof a.at === 'string' && /^\d{4}-\d\d-\d\dT[\d:.]+Z$/.test(a.at) ? a.at : null, seconds: n(a.seconds, 3600), wpm: n(a.wpm, 1000), lang: a.lang === 'zh' ? 'zh' : 'en' }); }
+  return out;
+}
 
 async function boot() {
   let d;
   try { d = await api(`/api/teacher/students/${id}/detail`); } catch (e) { app.innerHTML = `<p class="form-msg">${html(e.message)}</p>`; return; }
   const lessons = {};
   for (const lang of ['en', 'zh']) lessons[lang] = (await fetch(`../data/${lang}-lessons.json`).then((r) => r.json())).lessons;
-  const s = d.student, P = d.progress ?? {}, store = P.store ?? {};
+  const s = d.student, P = d.progress ?? {}, store = cleanStore(P.store);
   if (s.class_id) $('back').href = `index.html#class=${s.class_id}`;
   document.title = `${s.name}｜學生紀錄`;
 
@@ -30,11 +46,11 @@ async function boot() {
   const tile = (l, v, sub = '') => `<div class="rp-tile"><small>${l}</small><b>${v}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
 
   // ---- 最近 30 天 ----
-  const days = [...Array(30)].map((_, i) => { const dt = new Date(); dt.setDate(dt.getDate() - 29 + i); return dt.toISOString().slice(0, 10); });
+  const days = [...Array(30)].map((_, i) => { const dt = new Date(); dt.setDate(dt.getDate() - 29 + i); return dt.toLocaleDateString('sv'); });
   const perDay = Object.fromEntries(days.map((x) => [x, 0]));
-  for (const a of attempts) { const k = (a.at ?? '').slice(0, 10); if (k in perDay) perDay[k] += (a.seconds ?? 0) / 60; }
+  for (const a of attempts) { const k = a.at ? new Date(a.at).toLocaleDateString('sv') : ''; if (k in perDay) perDay[k] += (a.seconds ?? 0) / 60; }
   const maxMin = Math.max(1, ...Object.values(perDay));
-  const chart = `<div class="rp-dist days" role="img" aria-label="最近 30 天每日練習分鐘">${days.map((k) => `<div class="rp-col" title="${k}：${Math.round(perDay[k])} 分鐘"><span class="rp-bar" style="height:${(perDay[k] / maxMin) * 100}%"></span><i>${Math.round(perDay[k]) || ''}</i><small>${k.slice(8)}</small></div>`).join('')}</div>`;
+  const chart = !Object.values(perDay).some((v) => v > 0) ? '<p class="empty-chart">近 30 日未有練習紀錄</p>' : `<div class="rp-dist days" role="img" aria-label="最近 30 天每日練習分鐘">${days.map((k) => `<div class="rp-col" title="${k}：${Math.round(perDay[k])} 分鐘"><span class="rp-bar" style="height:${(perDay[k] / maxMin) * 100}%"></span><i>${Math.round(perDay[k]) || ''}</i><small>${k.slice(8)}</small></div>`).join('')}</div>`;
 
   // ---- 每課每步 ----
   const stepsOf = (lang, lid) => Object.entries(store.steps ?? {}).filter(([k]) => k.startsWith(`${lang}:${lid}:`)).map(([k, v]) => [Number(k.split(':')[2]), v]).sort((a, b) => a[0] - b[0]);
@@ -54,13 +70,15 @@ async function boot() {
   const testsHtml = d.tests.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>評測</th><th>開始</th><th>交卷</th><th>速度</th><th>準確率</th><th>星</th><th>標記</th><th></th></tr></thead><tbody>
     ${d.tests.map((t, i) => `<tr><td>${TEST_NAME[t.test_id] ?? t.test_id}</td><td class="mini">${new Date(t.started_at).toLocaleString('zh-HK', { hour12: false })}</td><td class="mini">${t.submitted_at ? new Date(t.submitted_at).toLocaleTimeString('zh-HK', { hour12: false }) : '未交'}</td>
       <td class="num">${t.wpm != null ? Math.round(t.wpm) : '—'}${t.client_wpm != null && Math.abs(t.client_wpm - t.wpm) > 2 ? ` <small class="muted">(瀏覽器 ${Math.round(t.client_wpm)})</small>` : ''}</td><td class="num">${t.accuracy != null ? Math.round(t.accuracy) + '%' : '—'}</td><td>${t.stars ? '★'.repeat(t.stars) : ''}</td>
-      <td class="mini">${t.flags.length ? `<span class="warn">⚠</span> ${t.flags.map((f) => FLAG_TEXT[f] ?? f).join('；')}` : ''}</td>
+      <td class="mini">${t.flags.length ? `<span class="warn">⚠</span> ${t.flags.map(flagText).join('；')}` : ''}</td>
       <td class="act">${t.keystrokes?.length ? `<button class="btn" data-replay="${i}">回放</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">未做過評測。</p>';
 
-  app.innerHTML = `<h1 style="margin:0">${html(s.name)} <small class="muted">${html(s.sid)}・${s.year ? html(`${s.year} ${s.class_name}`) : '未編班'}${s.class_no ? ` (${s.class_no})` : ''}</small></h1>
+  app.innerHTML = `<p class="print-head">${html(s.year ?? '')} ${html(s.class_name ?? '')}・列印日期 ${new Date().toLocaleDateString('zh-HK')}</p>
+    <h1 style="margin:0">${html(s.name)}</h1>
+    <p class="meta" style="margin:4px 0 0;color:var(--ink-2)">${html(s.sid)}・${s.year ? html(`${s.year} ${s.class_name}`) : '未編班'}${s.class_no ? `（${s.class_no} 號）` : ''}</p>
     <p class="hint">進度最後更新：${d.updatedAt ? new Date(d.updatedAt).toLocaleString('zh-HK', { hour12: false }) : '從未同步'}</p>
     <div class="rp">
-      <div class="rp-tiles">${tile('英文完成課數', `${doneN('en')} / 17`)}${tile('中文完成課數', `${doneN('zh')} / 16`)}${tile('總練習時間', `${minutes} 分鐘`, `${attempts.length} 次`)}
+      <div class="rp-tiles">${tile('英文完成課數', `${doneN('en')} / ${lessons.en.length}`)}${tile('中文完成課數', `${doneN('zh')} / ${lessons.zh.length}`)}${tile('總練習時間', `${minutes} 分鐘`, `${attempts.length} 次`)}
         ${tile('英文最佳速度', `${best('en')} WPM`)}${tile('中文最佳速度', `${best('zh')} 字/分`)}${tile('最後活動', last ? new Date(last).toLocaleDateString('zh-HK') : '—')}</div>
       <section class="card" style="margin-top:12px"><h3>最近 30 天練習時間（分鐘）</h3>${chart}</section>
       <section class="card" style="margin-top:12px"><h3>英文課堂</h3>${lessonTable('en')}<h4 style="margin-top:12px">常錯的鍵</h4>${weakHtml('en')}</section>

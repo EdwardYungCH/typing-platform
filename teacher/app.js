@@ -5,9 +5,11 @@ import { applyWorld } from '../js/world.js';
 applyWorld('planet');
 const $ = (id) => document.getElementById(id);
 const app = $('app');
-const html = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const html = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// 進度摘要的數字由學生的瀏覽器送來：顯示前一律轉成數字，免得有人塞入 HTML
+const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const TESTS = [['en-placement', '英分級'], ['en-s1', '英中一'], ['en-s2', '英中二'], ['en-s3', '英中三'], ['zh-placement', '中分級'], ['zh-s1', '中中一'], ['zh-s2', '中中二'], ['zh-s3', '中中三']];
-const FLAG_TEXT = { 'too-fast': '速度超出合理上限', robotic: '按鍵間隔過分平均（疑似程式代打）', 'time-mismatch': '用時跟伺服器記錄不符', 'client-mismatch': '瀏覽器報的分數跟伺服器重計相差很大', 'over-time': '超出時限', empty: '沒有作答' };
+const FLAG_TEXT = { 'too-fast': '速度超出合理上限', robotic: '按鍵間隔過分平均（疑似程式代打）', 'time-mismatch': '用時跟伺服器記錄不符', 'client-mismatch': '瀏覽器報的分數跟伺服器重計相差很大', 'over-time': '超出時限', empty: '沒有作答', 'non-monotonic': '按鍵紀錄的時間次序不對（紀錄可能被改過）' };
 
 let me = null;
 let classes = [];
@@ -212,8 +214,8 @@ function classReport(students) {
   const tile = (label, value, sub = '') => `<div class="rp-tile"><small>${label}</small><b>${value}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
   // 完成課數分佈（0–16 課），每格一個長條
   const dist = (lang) => {
-    const cnt = Array(17).fill(0);
-    for (const s of students) cnt[Math.min(16, sm(s)[lang].lessons)] += 1;
+    const cnt = Array(19).fill(0);
+    for (const s of students) cnt[Math.min(18, num(sm(s)[lang]?.lessons))] += 1;
     const max = Math.max(...cnt, 1);
     return `<div class="rp-dist" role="img" aria-label="${lang === 'en' ? '英文' : '中文'}完成課數分佈">${cnt.map((c, i) => `<div class="rp-col" title="完成 ${i} 課：${c} 人"><span class="rp-bar" style="height:${(c / max) * 100}%"></span><i>${c || ''}</i><small>${i}</small></div>`).join('')}</div>`;
   };
@@ -262,15 +264,15 @@ async function renderClass() {
       const t = s.tests[id];
       if (!t) return `<td class="mini">—</td>`;
       const warn = t.flags.length ? `<span class="warn" title="${html(t.flags.map((f) => FLAG_TEXT[f] ?? f).join('；'))}">⚠</span>` : '';
-      return `<td class="num" title="${label}">${Math.round(t.wpm)} <span class="mini">${Math.round(t.accuracy)}%</span> ${'★'.repeat(t.stars)}${warn}</td>`;
+      return `<td class="num" title="${label}">${Math.round(num(t.wpm))} <span class="mini">${Math.round(num(t.accuracy))}%</span> ${'★'.repeat(Math.min(3, Math.max(0, num(t.stars))))}${warn}</td>`;
     }).join('');
-    const last = sm?.lastActive ? new Date(sm.lastActive).toLocaleDateString('zh-HK') : '—';
+    const last = sm?.lastActive && !Number.isNaN(Date.parse(sm.lastActive)) ? new Date(sm.lastActive).toLocaleDateString('zh-HK') : '—';
     return `<tr data-id="${s.id}" data-sid="${html(s.sid)}" data-name="${html(s.name)}">
       <td class="num">${s.class_no ?? ''}</td><td>${html(s.sid)}</td><td><a href="student.html?id=${s.id}" title="看這位學生的詳細紀錄">${html(s.name)}</a></td>
       <td class="mini">${s.pw_initial ? '初始' : '已自改'}</td>
-      <td class="num">${sm?.en.lessons ?? 0}</td><td class="num">${sm?.en.stars ?? 0}</td><td class="num">${Math.round(sm?.en.bestWpm ?? 0)}</td>
-      <td class="num">${sm?.zh.lessons ?? 0}</td><td class="num">${sm?.zh.stars ?? 0}</td><td class="num">${Math.round(sm?.zh.bestWpm ?? 0)}</td>
-      <td class="num">${sm?.minutes ?? 0}</td><td class="mini">${last}</td>${tests}
+      <td class="num">${num(sm?.en?.lessons)}</td><td class="num">${num(sm?.en?.stars)}</td><td class="num">${Math.round(num(sm?.en?.bestWpm))}</td>
+      <td class="num">${num(sm?.zh?.lessons)}</td><td class="num">${num(sm?.zh?.stars)}</td><td class="num">${Math.round(num(sm?.zh?.bestWpm))}</td>
+      <td class="num">${num(sm?.minutes)}</td><td class="mini">${html(last)}</td>${tests}
       <td class="act"><button class="btn" data-act="reset">重設密碼</button><button class="btn" data-act="retake">重做評測</button><button class="btn" data-act="del">刪除</button></td></tr>`;
   }).join('');
   main.innerHTML = `<section class="card">
@@ -360,7 +362,11 @@ function importDialog() {
       const common = document.querySelector('input[name="pwmode"]:checked').value === 'common';
       const password = common ? $('cpw').value.trim() : '';
       if (common && password.length < 4) throw new Error('請輸入統一密碼（至少 4 個字元），或選「每人隨機產生」');
-      const r = await api('/api/teacher/import', { method: 'POST', body: { classId: current.id, rows, password, applyToExisting: common && $('applyold').checked } });
+      const r = { rows: [] };
+      for (let i = 0; i < rows.length; i += 40) {
+        msg($('m'), `處理中… ${Math.min(i + 40, rows.length)} / ${rows.length}`, true);
+        r.rows.push(...(await api('/api/teacher/import', { method: 'POST', body: { classId: current.id, rows: rows.slice(i, i + 40), password, applyToExisting: common && $('applyold').checked } })).rows);
+      }
       $('res').innerHTML = `<table class="tbl"><thead><tr><th>學號</th><th>姓名</th><th>密碼</th><th>結果</th></tr></thead><tbody>${r.rows.map((x) => `<tr><td>${html(x.sid)}</td><td>${html(x.name)}</td><td class="pw">${html(x.password ?? '')}</td><td class="mini">${html(x.status)}</td></tr>`).join('')}</tbody></table><p class="hint">密碼之後可在「列印帳號紙條」再看。</p>`;
       $('dlg').dataset.keep = '1';
       classes = (await api('/api/teacher/classes')).classes; current = classes.find((c) => c.id === current.id);

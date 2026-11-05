@@ -1,39 +1,195 @@
 {
-  "_說明": "評測區的題目。正式推出後，老師自訂的評測會存在伺服器，這裏只是內置的評測。placement 是分級測驗，結果用來建議由第幾課開始。",
-  "tests": [
+ "_說明": "評測區的題目。每個評測有 3 份程度相近的題目（forms）：登入的學生由伺服器隨機抽一份，減少同學之間互相「背題」；未登入時用第一份（text）。題目不可以跟課堂內容重複。placement 是分級測驗，結果用來建議由第幾課開始。速度目標參考香港政府文書職位入職要求（英文每分鐘 30 字、中文每分鐘 20 字）和外國中學鍵盤課程，試用一個學期後應按全校數據再調整。",
+ "tests": [
+  {
+   "id": "en-placement",
+   "lang": "en",
+   "kind": "placement",
+   "title": "英文分級測驗",
+   "subtitle": "3 分鐘，看看你已經到哪個程度",
+   "timeLimit": 180,
+   "pass": {},
+   "text": "Our school library opens at eight o'clock every morning. Students can borrow two books at a time and keep them for two weeks. There are quiet tables near the windows, a corner for magazines and six computers for homework. Last month the librarian asked us to vote for new books, and our class chose a detective story, a book about space and a guide to drawing comics. Please remember to return your books on time, because other students are waiting to read them too.",
+   "levels": [
     {
-      "id": "en-placement", "lang": "en", "kind": "placement", "title": "英文分級測驗", "subtitle": "3 分鐘，看看你已經到哪個程度",
-      "timeLimit": 180, "pass": {},
-      "text": "The sun is up and we go to school. I like to read books in the library. My friend has a small brown dog. Please open your book to page ten. We will have a test on Friday. Thank you for your help today! The cat sat on the warm window. We need to drink water and sleep well. Typing gets easier when you practise every day. What time does the bus leave in the morning?",
-      "levels": [
-        { "minWpm": 0, "minAcc": 0, "startLesson": 0, "note": "由第 0 課開始，先學指法。" },
-        { "minWpm": 8, "minAcc": 85, "startLesson": 6, "note": "基準鍵和上排已經熟習，可由第 6 課開始。" },
-        { "minWpm": 15, "minAcc": 90, "startLesson": 12, "note": "字母都熟了，由第 12 課（Shift 與大寫）開始。" },
-        { "minWpm": 25, "minAcc": 92, "startLesson": 15, "note": "已經很流暢，直接做第 15、16 課，然後去練習區練速度。" }
-      ]
+     "minWpm": 0,
+     "minAcc": 0,
+     "startLesson": 0,
+     "note": "由第 0 課開始，先學指法。"
     },
     {
-      "id": "zh-placement", "lang": "zh", "kind": "placement", "title": "速成分級測驗", "subtitle": "3 分鐘，看看你已經到哪個程度",
-      "timeLimit": 180, "pass": {},
-      "text": "今天天氣很好，我們一起去公園跑步。上課的時候，請大家專心聽老師講解。香港的交通十分方便，乘坐地鐵和巴士可以到達不同的地方。學習打字需要耐心，先求準確，再求速度。",
-      "levels": [
-        { "minWpm": 0, "minAcc": 0, "startLesson": 0, "note": "由第 0 課開始，先認字根。" },
-        { "minWpm": 4, "minAcc": 80, "startLesson": 9, "note": "字根已經認得，由第 9 課（取碼原則三）開始；第 2、5 課的取碼原則可以回看。" },
-        { "minWpm": 8, "minAcc": 88, "startLesson": 12, "note": "拆字已上手，由第 12 課（常用字）開始練速度。" },
-        { "minWpm": 15, "minAcc": 92, "startLesson": 15, "note": "已經很流暢，做第 15 課後去練習區練速度。" }
-      ]
+     "minWpm": 8,
+     "minAcc": 85,
+     "startLesson": 6,
+     "note": "基準鍵和上排已經熟習，可由第 6 課開始。"
     },
-    { "id": "en-s1", "lang": "en", "kind": "test", "title": "英文評測：中一", "subtitle": "2 分鐘，目標 10 WPM、準確率 90%", "timeLimit": 120, "pass": { "wpm": 10, "accuracy": 90 },
-      "text": "My school is near the park. Every morning I walk there with my friend. We like to play football after lunch. The library is a quiet place to read. Our teacher says that practice makes perfect. Today we learn to type with ten fingers. It is slow at first, but it gets faster every day." },
-    { "id": "en-s2", "lang": "en", "kind": "test", "title": "英文評測：中二", "subtitle": "2 分鐘，目標 20 WPM、準確率 90%", "timeLimit": 120, "pass": { "wpm": 20, "accuracy": 90 },
-      "text": "Hong Kong is a busy city with many tall buildings. People travel by train, bus and ferry every day. On weekends, families go hiking in the country parks or swimming at the beach. The weather is hot in summer and cool in winter. Many students join clubs after school to learn music, sports or coding." },
-    { "id": "en-s3", "lang": "en", "kind": "test", "title": "英文評測：中三", "subtitle": "2 分鐘，目標 30 WPM、準確率 90%", "timeLimit": 120, "pass": { "wpm": 30, "accuracy": 90 },
-      "text": "Learning a new skill takes patience and good habits. At the beginning, everyone is slow and makes mistakes; that is normal. The important thing is to find out where you often go wrong and practise those parts again. If you keep going for ten minutes a day, you will notice real progress within a few weeks. Remember: accuracy first, then speed." },
-    { "id": "zh-s1", "lang": "zh", "kind": "test", "title": "速成評測：中一", "subtitle": "2 分鐘，目標每分鐘 6 字、準確率 90%", "timeLimit": 120, "pass": { "wpm": 6, "accuracy": 90 },
-      "text": "我是中一學生，今年九月開始學打字。老師說，先求準確，再求速度。每天練習十分鐘，手指就會記住字根的位置。放學後，我和同學一起去圖書館做功課，然後回家吃晚飯。" },
-    { "id": "zh-s2", "lang": "zh", "kind": "test", "title": "速成評測：中二", "subtitle": "2 分鐘，目標每分鐘 12 字、準確率 90%", "timeLimit": 120, "pass": { "wpm": 12, "accuracy": 90 },
-      "text": "香港是一個國際城市，交通十分方便。乘坐地鐵和巴士，可以到達不同的地方。週末的時候，很多人會去海灘游泳，或者到山頂看風景。天氣好的日子，公園裏總是有很多家庭在野餐。" },
-    { "id": "zh-s3", "lang": "zh", "kind": "test", "title": "速成評測：中三", "subtitle": "2 分鐘，目標每分鐘 18 字、準確率 90%", "timeLimit": 120, "pass": { "wpm": 18, "accuracy": 90 },
-      "text": "學習一種新技能需要耐心和方法。開始的時候，速度一定比較慢，犯錯也很平常。重要的是找出自己常錯的地方，針對弱點反覆練習。只要堅持下去，進步會在不知不覺間出現。記住，準確比快更重要。" }
-  ]
+    {
+     "minWpm": 20,
+     "minAcc": 92,
+     "startLesson": 12,
+     "note": "字母都熟了，由第 12 課（Shift 與大寫）開始。"
+    },
+    {
+     "minWpm": 30,
+     "minAcc": 94,
+     "startLesson": 15,
+     "note": "已經很流暢，直接做第 15、16 課，然後去練習區練速度。"
+    }
+   ],
+   "forms": [
+    "Our school library opens at eight o'clock every morning. Students can borrow two books at a time and keep them for two weeks. There are quiet tables near the windows, a corner for magazines and six computers for homework. Last month the librarian asked us to vote for new books, and our class chose a detective story, a book about space and a guide to drawing comics. Please remember to return your books on time, because other students are waiting to read them too.",
+    "Every summer my cousins visit us from Canada. We usually take the Star Ferry across the harbour, eat dim sum in a busy restaurant and walk along the waterfront at night to watch the lights. This year we also climbed Lion Rock early in the morning. The path was steep and rocky, but the view of Kowloon from the top was amazing. My little cousin said it looked like a city made of toy blocks, and we all laughed. I hope they come back again next year.",
+    "Most people can learn to type without looking at the keys. The secret is to start slowly and keep your fingers on the home row. Each finger has its own keys to look after, and after a few weeks your hands will remember where everything is. Try to sit up straight, relax your shoulders and take a short break every twenty minutes. If you make a mistake, do not panic; just keep going and fix it later. Good habits matter more than speed at the beginning."
+   ]
+  },
+  {
+   "id": "zh-placement",
+   "lang": "zh",
+   "kind": "placement",
+   "title": "速成分級測驗",
+   "subtitle": "3 分鐘，看看你已經到哪個程度",
+   "timeLimit": 180,
+   "pass": {},
+   "text": "星期六早上，我和家人一起到公園散步。公園裡有很多花，也有小朋友在玩。爸爸說，多做運動對身體好。中午我們在附近的茶樓吃點心，大家都很開心。下午我們去了圖書館，我借了兩本關於太空的書。回家後，我把今天的事寫在日記上，還畫了一幅公園的圖畫。",
+   "levels": [
+    {
+     "minWpm": 0,
+     "minAcc": 0,
+     "startLesson": 0,
+     "note": "由第 0 課開始，先認字根。"
+    },
+    {
+     "minWpm": 8,
+     "minAcc": 85,
+     "startLesson": 9,
+     "note": "字根已經認得，由第 9 課（取碼原則三）開始；第 2、5 課的取碼原則可以回看。"
+    },
+    {
+     "minWpm": 12,
+     "minAcc": 88,
+     "startLesson": 12,
+     "note": "拆字已上手，由第 12 課（常用字）開始練速度。"
+    },
+    {
+     "minWpm": 20,
+     "minAcc": 92,
+     "startLesson": 15,
+     "note": "已經很流暢，做第 15 課後去練習區練速度。"
+    }
+   ],
+   "forms": [
+    "星期六早上，我和家人一起到公園散步。公園裡有很多花，也有小朋友在玩。爸爸說，多做運動對身體好。中午我們在附近的茶樓吃點心，大家都很開心。下午我們去了圖書館，我借了兩本關於太空的書。回家後，我把今天的事寫在日記上，還畫了一幅公園的圖畫。",
+    "我們班上星期去了科學館參觀。館內有很多有趣的展品，例如會說話的機械人和可以用手觸摸的模型。導賞員向我們介紹了電力的原理，又讓我們親手做了一個簡單的實驗。我最喜歡的是天象廳，坐在椅子上抬頭看星空，好像真的飛到了宇宙一樣。",
+    "每天放學後，我都會先做功課，然後練習打字二十分鐘。開始的時候我常常看著鍵盤，速度很慢。後來老師教我們把手指放在基準位，眼睛只看螢幕。現在我已經記住了大部分字根的位置，打字比以前快得多，也少了錯誤。"
+   ]
+  },
+  {
+   "id": "en-s1",
+   "lang": "en",
+   "kind": "test",
+   "title": "英文評測：中一",
+   "subtitle": "2 分鐘，目標 10 WPM、準確率 90%",
+   "timeLimit": 120,
+   "pass": {
+    "wpm": 15,
+    "accuracy": 90
+   },
+   "text": "My school is near the park. Every morning I walk there with my friend. We like to play football after lunch, and sometimes we sit under the big tree to read. The library is a quiet place to do homework. Our teacher says that practice makes perfect. Today we learn to type with ten fingers. It is slow at first, but it gets faster every day. I keep my eyes on the screen and my fingers on the home row. After school I help my mum cook dinner, and then I finish my homework before bed.",
+   "forms": [
+    "My school is near the park. Every morning I walk there with my friend. We like to play football after lunch, and sometimes we sit under the big tree to read. The library is a quiet place to do homework. Our teacher says that practice makes perfect. Today we learn to type with ten fingers. It is slow at first, but it gets faster every day. I keep my eyes on the screen and my fingers on the home row. After school I help my mum cook dinner, and then I finish my homework before bed.",
+    "Every Friday our class has a computer lesson. We sit up straight, put our fingers on the home row and look at the screen, not at the keys. Our teacher plays quiet music while we type. Last week I typed a short story about my cat, Mochi. She likes to sleep on the warm keyboard, so I always have to move her before I start! On Saturday I showed the story to my grandma. She laughed and asked me to print it so that she could stick it on the fridge.",
+    "On Sunday my family went to the beach at Repulse Bay. The sand was soft and warm, and the water was clear and blue. My brother built a big sandcastle while I swam with my dad. At noon we ate sandwiches and fruit under a large umbrella. In the afternoon the wind became stronger, so we packed our bags and took the bus home. I was tired but very happy. That night I wrote about the trip in my diary and drew a picture of the sandcastle."
+   ]
+  },
+  {
+   "id": "en-s2",
+   "lang": "en",
+   "kind": "test",
+   "title": "英文評測：中二",
+   "subtitle": "2 分鐘，目標 20 WPM、準確率 90%",
+   "timeLimit": 120,
+   "pass": {
+    "wpm": 22,
+    "accuracy": 92
+   },
+   "text": "Hong Kong is a busy city with many tall buildings. People travel by train, bus and ferry every day. At weekends, families go hiking in the country parks or swimming at the beach. The weather is hot and wet in summer and cool and dry in winter. Many students join clubs after school to learn music, sports or coding. Some of them also help at community centres, where they teach older people how to use mobile phones and send messages to their grandchildren.",
+   "forms": [
+    "Hong Kong is a busy city with many tall buildings. People travel by train, bus and ferry every day. At weekends, families go hiking in the country parks or swimming at the beach. The weather is hot and wet in summer and cool and dry in winter. Many students join clubs after school to learn music, sports or coding. Some of them also help at community centres, where they teach older people how to use mobile phones and send messages to their grandchildren.",
+    "On Saturday morning my family went hiking in Sai Kung. The trail was steep, so we stopped often to drink water and rest in the shade. From the top we could see the sea, the islands and dozens of small boats. Dad took photos while my sister counted the boats. It was a long walk, but the view was worth every step, and we all slept well that night. Next month we plan to try the MacLehose Trail, so we must start training now.",
+    "Our class is preparing for the school's science fair. My group wants to find out which kind of paper towel holds the most water. We will test five brands, measure the water with a cylinder and record the results in a table. Then we will draw a bar chart and explain what we found. Our teacher reminded us to repeat each test three times so that the results are fair. If our project is chosen, we will present it to the whole school in the hall."
+   ]
+  },
+  {
+   "id": "en-s3",
+   "lang": "en",
+   "kind": "test",
+   "title": "英文評測：中三",
+   "subtitle": "2 分鐘，目標 30 WPM、準確率 90%",
+   "timeLimit": 120,
+   "pass": {
+    "wpm": 30,
+    "accuracy": 92
+   },
+   "text": "Learning a new skill takes patience and good habits. At the beginning, everyone is slow and makes mistakes; that is normal. The important thing is to find out where you often go wrong and practise those parts again. If you keep going for ten minutes a day, you will notice real progress within a few weeks. Remember: accuracy first, then speed. Many people give up too early because they compare themselves with others. Instead, compare yourself with the person you were last month.",
+   "forms": [
+    "Learning a new skill takes patience and good habits. At the beginning, everyone is slow and makes mistakes; that is normal. The important thing is to find out where you often go wrong and practise those parts again. If you keep going for ten minutes a day, you will notice real progress within a few weeks. Remember: accuracy first, then speed. Many people give up too early because they compare themselves with others. Instead, compare yourself with the person you were last month.",
+    "Good typists rarely look at the keyboard. Instead, they trust their fingers to find each key and keep their eyes on the text. This habit takes weeks to build, and many learners give up too early because they feel slower at first. If you practise for fifteen minutes a day, check which keys you often miss, and slow down when your accuracy drops below ninety-five per cent, your speed will rise steadily over the term. In the end, typing becomes as natural as writing with a pen.",
+    "Every year, Hong Kong throws away thousands of tonnes of food. Much of it comes from restaurants, supermarkets and homes, and most of it ends up in landfills that are almost full. There are simple ways to help: buy only what you need, keep leftovers in the fridge and share extra food with neighbours or charities. Some schools have started composting programmes, turning fruit peel and vegetable waste into fertiliser for their gardens. Small actions, repeated by many people, can make a real difference."
+   ]
+  },
+  {
+   "id": "zh-s1",
+   "lang": "zh",
+   "kind": "test",
+   "title": "速成評測：中一",
+   "subtitle": "2 分鐘，目標每分鐘 6 字、準確率 90%",
+   "timeLimit": 120,
+   "pass": {
+    "wpm": 10,
+    "accuracy": 90
+   },
+   "text": "我是中一學生，今年九月開始學打字。老師說，打字要有耐性。每天練習十分鐘，手指就會記住字根的位置。放學後，我和同學一起去圖書館做功課，然後回家吃晚飯。晚上我會看一會兒書，再早點睡覺，明天才有精神上學。",
+   "forms": [
+    "我是中一學生，今年九月開始學打字。老師說，打字要有耐性。每天練習十分鐘，手指就會記住字根的位置。放學後，我和同學一起去圖書館做功課，然後回家吃晚飯。晚上我會看一會兒書，再早點睡覺，明天才有精神上學。",
+    "星期日早上，媽媽帶我和弟弟去街市買菜。街市裡人很多，有賣魚的，也有賣水果和蔬菜的。媽媽買了一條魚、一些青菜和雞蛋，弟弟就要了兩個大蘋果。回家後，我幫媽媽洗菜，弟弟負責擺放碗筷。午飯的時候，大家都說今天的菜特別好吃。",
+    "我的好朋友叫小明，他住在我家附近。我們每天一起上學，在路上會談學校的事情。小明很喜歡踢足球，每個星期都會參加學校的練習。我比較喜歡畫畫，所以參加了美術學會。雖然我們的興趣不同，但是我們常常互相幫助，是很好的朋友。"
+   ]
+  },
+  {
+   "id": "zh-s2",
+   "lang": "zh",
+   "kind": "test",
+   "title": "速成評測：中二",
+   "subtitle": "2 分鐘，目標每分鐘 12 字、準確率 90%",
+   "timeLimit": 120,
+   "pass": {
+    "wpm": 15,
+    "accuracy": 90
+   },
+   "text": "我們學校每年都會舉行運動會。比賽前一個月，同學們每天放學後都留下來練習跑步和跳遠。運動會當天，天氣很熱，但大家仍然盡力完成比賽。我們班最後得到全級第二名，老師說我們的合作精神比獎牌更重要。",
+   "forms": [
+    "我們學校每年都會舉行運動會。比賽前一個月，同學們每天放學後都留下來練習跑步和跳遠。運動會當天，天氣很熱，但大家仍然盡力完成比賽。我們班最後得到全級第二名，老師說我們的合作精神比獎牌更重要。",
+    "香港有很多郊野公園，是市民假日休息的好地方。我和家人最喜歡去大帽山，因為那裡可以看到整個新界的景色。上山的路有點長，我們會帶備足夠的食水和乾糧。到了山頂，涼風吹來，大家都忘記了剛才的辛苦。",
+    "上星期，我們班在圖書館舉行了一次讀書分享會。每位同學都要介紹一本自己喜歡的書，並說出書中最難忘的情節。我介紹了一本關於海洋生物的書，同學們對深海裡會發光的魚特別有興趣。老師說，閱讀可以令我們認識更廣闊的世界。"
+   ]
+  },
+  {
+   "id": "zh-s3",
+   "lang": "zh",
+   "kind": "test",
+   "title": "速成評測：中三",
+   "subtitle": "2 分鐘，目標每分鐘 18 字、準確率 90%",
+   "timeLimit": 120,
+   "pass": {
+    "wpm": 20,
+    "accuracy": 90
+   },
+   "text": "學習一種新技能需要耐心和方法。開始的時候，速度一定比較慢，犯錯也很平常。重要的是找出自己常錯的地方，針對弱點反覆練習。只要堅持下去，進步會在不知不覺間出現。很多人中途放棄，是因為只跟別人比較；其實應該跟上個月的自己比較。",
+   "forms": [
+    "學習一種新技能需要耐心和方法。開始的時候，速度一定比較慢，犯錯也很平常。重要的是找出自己常錯的地方，針對弱點反覆練習。只要堅持下去，進步會在不知不覺間出現。很多人中途放棄，是因為只跟別人比較；其實應該跟上個月的自己比較。",
+    "網上資訊非常多，但不是每一則消息都可信。遇到驚人的標題時，我們應先查看來源，再比較不同媒體的報道。如果資料沒有註明出處，或者內容只想令人憤怒，就要特別小心。學會分辨真假，是現代學生必須具備的能力。",
+    "香港每天都會產生大量廚餘，其中很多來自餐廳、超級市場和家庭。這些廚餘大部分被送到堆填區，令堆填區很快就會飽和。我們可以從生活小事做起，例如只買需要的食物、把剩菜好好保存，以及把多餘的食物分享給有需要的人。"
+   ]
+  }
+ ]
 }

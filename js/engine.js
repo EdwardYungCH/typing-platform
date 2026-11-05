@@ -1,6 +1,9 @@
 // 打字引擎：逐字比對、計時、記錄每一下按鍵。
 // 只接受真實鍵盤按鍵（isTrusted），不接受貼上或程式模擬的按鍵。
 
+// 打字時要攔住的鍵：不可以移走焦點或捲動頁面
+export const TRAP = new Set(['Tab', 'Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End']);
+
 export class TypingEngine {
   /**
    * @param {object} opts
@@ -11,7 +14,9 @@ export class TypingEngine {
    * @param {Function} [opts.onFinish]     完成時呼叫 (engine)
    * @param {Function} [opts.onTick]       計時中每 250 毫秒呼叫 (engine)
    */
-  constructor({ text, errorMode = 'block', timeLimit = 0, onKey, onFinish, onTick }) {
+  constructor({ text, errorMode = 'block', timeLimit = 0, onKey, onFinish, onTick, onIme, onCapsLock }) {
+    this.onIme = onIme;
+    this.onCapsLock = onCapsLock;
     this.text = text;
     this.errorMode = errorMode;
     this.timeLimit = timeLimit;
@@ -74,7 +79,10 @@ export class TypingEngine {
     if (!e.isTrusted) return;
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName) || e.target?.closest?.('dialog')) return;   // 在表單或對話框（例如回報問題）打字不算作答
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.isComposing || e.key === 'Process') return;
+    // Tab、方向鍵、Enter 等不可以把焦點帶走或捲動頁面（例如 Tab 再 Enter 會離開課堂）
+    if (TRAP.has(e.key)) { e.preventDefault(); return; }
+    // 開着系統中文輸入法：網站收不到英文字母，提示學生切換
+    if (e.isComposing || e.key === 'Process') { e.preventDefault(); this.onIme?.(); return; }
 
     if (e.key === 'Backspace') {
       e.preventDefault();
@@ -92,9 +100,11 @@ export class TypingEngine {
     e.preventDefault();               // 例如空白鍵不會捲動頁面
     if (e.repeat) return;             // 按住不放不計
 
+    const expected = this.expected;
+    // Caps Lock 開着：大小寫相反的字母不計錯，只提示學生關掉
+    if (expected && e.key !== expected && e.key.toLowerCase() === expected.toLowerCase() && e.getModifierState?.('CapsLock')) { this.onCapsLock?.(); return; }
     if (!this.started) this.start();
 
-    const expected = this.expected;
     const ok = e.key === expected;
     this.keystrokes.push({ t: this._now(), key: e.key, code: e.code, expected, ok });
 

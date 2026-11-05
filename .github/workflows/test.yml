@@ -1,0 +1,28 @@
+# 每次推送：建置、自動打完英文和中文每一課
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: npm install --no-audit --no-fund
+      - run: node build.mjs
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: 伺服器冒煙測試
+        run: |
+          node --experimental-sqlite tools/dev-server.mjs 8787 > dev.log 2>&1 &
+          sleep 3
+          python tools/test/smoke_single.py http://localhost:8787
+      - name: 自動打完每一課
+        run: |
+          python -m http.server 8765 > /dev/null 2>&1 &
+          sleep 2
+          python tools/test/play_all_en.py | tee en.log
+          python tools/test/play_all_zh.py | tee zh.log
+          ! grep -q PROBLEM en.log zh.log

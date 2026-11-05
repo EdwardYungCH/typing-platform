@@ -6,7 +6,7 @@ def h(route):
     r=route.fetch(); t=r.text()+"\nwindow.__t={state};"
     route.fulfill(response=r,body=t,headers={**r.headers,'content-type':'text/javascript'})
 with sync_playwright() as p:
-    b=p.chromium.launch(executable_path='/opt/pw-browsers/chromium'); errs=[]
+    b=p.chromium.launch(executable_path=None); errs=[]
     pg=b.new_page(viewport={'width':1200,'height':900}); pg.on('pageerror',lambda e:errs.append(str(e)))
     pg.route('**/js/type-page.js',h)
     for l in L:

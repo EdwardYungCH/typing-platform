@@ -4,7 +4,7 @@
 
 .combo {
   position: absolute; right: 18px; bottom: 12px; z-index: 3; pointer-events: none;
-  padding: 2px 14px; border-radius: 4px; font-weight: 800; letter-spacing: 0.03em;
+  padding: 2px 14px; border-radius: 4px; font-weight: 700; letter-spacing: 0.03em;
   background: var(--surface); color: var(--accent); border: 1px solid var(--accent); font-variant-numeric: tabular-nums;
 }
 .combo[data-tier="2"] { background: var(--accent); color: var(--accent-ink); }

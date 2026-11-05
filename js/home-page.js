@@ -10,8 +10,8 @@ import { applyWorld } from './world.js';
 const $ = (id) => document.getElementById(id);
 const html = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const WORLDS = {
-  planet: { lang: 'en', name: '英文打字', sub: '鍵帽星系', desc: '由基準鍵到整段文字，16 課' },
-  magic: { lang: 'zh', name: '中文速成', sub: '字根魔法學院', desc: '字根、拆字、選字、常用字，16 課' },
+  planet: { lang: 'en', name: '英文打字', sub: '鍵帽星系', desc: '由基準鍵到整段文字和符號，18 課' },
+  magic: { lang: 'zh', name: '中文速成', sub: '字根魔法學院', desc: '字根、拆字、選字、常用字，17 課' },
 };
 
 const me = await syncStart();
@@ -45,7 +45,7 @@ function render() {
   const placement = getSetting(`placement:${lang}`, null);
   const dp = dailyProgress(lang);
   const st = streakInfo();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString('sv');   // 本地日期 YYYY-MM-DD
   const hwOf = (id) => homework.find((h) => h.lang === lang && h.lesson_id === id);
 
   $('world-tabs').innerHTML = Object.entries(WORLDS).map(([w, i]) => `<button class="wtab${w === world ? ' on' : ''}" data-w="${w}" type="button" aria-pressed="${w === world}">${i.name}<small>${i.sub}</small></button>`).join('');

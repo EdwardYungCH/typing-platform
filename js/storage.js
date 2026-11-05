@@ -29,11 +29,11 @@ export function notifyChanged() {
 }
 
 /** 儲存一次作答的結果（不存按鍵細節，免得佔空間）。 */
-export function saveAttempt({ lang, mode, lessonId, step, stats, stars }) {
+export function saveAttempt({ lang, mode, lessonId, step, stats, stars, input }) {
   const data = readAll();
   data.attempts.push({
     at: new Date().toISOString(),
-    lang, mode, lessonId, step,
+    lang, mode, lessonId, step, input,   // input：en、quick、ime（真正打字）或 roots、shapes、chart、split（字根練習，單位是個/分）
     wpm: Math.round(stats.netWpm * 10) / 10,
     accuracy: Math.round(stats.accuracy * 10) / 10,
     seconds: Math.round(stats.seconds),

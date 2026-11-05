@@ -2,18 +2,18 @@
 // 各頁面要能照常以「只存在瀏覽器」模式運作。
 
 export class ApiError extends Error {
-  constructor(message, status) { super(message); this.status = status; }
+  constructor(message, status, data = null) { super(message); this.status = status; this.data = data; }
 }
 
 /** 呼叫 /api/...；成功回傳 JSON，失敗拋出 ApiError（message 是伺服器的中文錯誤訊息）。 */
-export async function api(path, { method = 'GET', body = null, raw = false } = {}) {
+export async function api(path, { method = 'GET', body = null, raw = false, headers = {} } = {}) {
   const base = document.baseURI.includes('/zh/') || document.baseURI.includes('/teacher/') ? '../' : '';
   let res;
   try {
     res = await fetch(`${base}${path.replace(/^\//, '')}`, {
       method,
       credentials: 'same-origin',
-      headers: body !== null ? { 'content-type': 'application/json' } : {},
+      headers: { ...(body !== null ? { 'content-type': 'application/json' } : {}), ...headers },
       body: body !== null ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
     });
   } catch {
@@ -23,6 +23,6 @@ export async function api(path, { method = 'GET', body = null, raw = false } = {
   const ct = res.headers.get('content-type') ?? '';
   if (!ct.includes('application/json')) throw new ApiError('這個網站沒有開啟伺服器功能', 404);
   const data = await res.json();
-  if (!res.ok) throw new ApiError(data?.error ?? `伺服器錯誤（${res.status}）`, res.status);
+  if (!res.ok) throw new ApiError(data?.error ?? (res.status === 409 && data?.conflict ? '紀錄有更新' : `伺服器錯誤（${res.status}）`), res.status, data);
   return data;
 }

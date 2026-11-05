@@ -10,8 +10,8 @@ import { join, extname } from 'node:path';
 const OUT = 'dist';
 
 // 只有這些資料夾和檔案會上線；工具、資料庫腳本和設定檔不會發佈。
-const SITE_DIRS = ['css', 'js', 'data', 'assets', 'en', 'zh', 'games', 'teacher', 'plus'];
-const SITE_FILES = ['index.html', 'type.html', 'practice.html', 'tests.html', 'milestones.html', 'login.html', 'me.html', 'shortcuts.html', 'shop.html', 'board.html', 'games.html', '_headers'];
+const SITE_DIRS = ['css', 'js', 'data', 'assets', 'en', 'zh', 'games', 'teacher', 'plus', 'help'];
+const SITE_FILES = ['index.html', 'type.html', 'practice.html', 'tests.html', 'milestones.html', 'login.html', 'me.html', 'shortcuts.html', 'shop.html', 'board.html', 'games.html', 'privacy.html', 'terms.html', 'credits.html', 'about.html', '_headers'];
 
 async function exists(path) {
   try { await stat(path); return true; } catch { return false; }
@@ -29,6 +29,14 @@ async function listFiles(dir) {
 
 await rm(OUT, { recursive: true, force: true });
 await mkdir(OUT, { recursive: true });
+
+// 評測題目：網站上只公開第一份（未登入時試做）；正式評測的其他題目只在伺服器（worker 直接讀原檔）
+async function publicTests(src, dest) {
+  const { readFile, writeFile } = await import('node:fs/promises');
+  const d = JSON.parse(await readFile(src, 'utf8'));
+  for (const t of d.tests) delete t.forms;
+  await writeFile(dest, JSON.stringify(d));
+}
 
 for (const file of SITE_FILES) {
   if (await exists(file)) await cp(file, join(OUT, file));
@@ -50,6 +58,9 @@ for (const dir of SITE_DIRS) {
         legalComments: 'none',
         logLevel: 'error',
       });
+    } else if (file === join('data', 'tests.json')) {
+      await mkdir(join(target, '..'), { recursive: true });
+      await publicTests(file, target);
     } else {
       await mkdir(join(target, '..'), { recursive: true });
       await cp(file, target);

@@ -6,8 +6,18 @@
 import * as mastery from './mastery.js';
 import { getLessonResult } from './storage.js';
 
+// 英文句子庫：每句記下要完成第幾課才打得到（tools/gen_en_lessons.py 產生）
+const SENTENCES = await fetch('data/en-sentences.json').then((r) => r.json()).then((d) => d.sentences).catch(() => []);
+/** 學生已完成的課打得到的句子，隨機抽 n 句接成一段 */
+export function pickSentences(doneUpTo, n = 2) {
+  const ok = SENTENCES.filter((s) => s.lesson <= doneUpTo && s.text.length < 120);
+  const out = [];
+  for (let i = 0; i < n && ok.length; i++) out.push(ok.splice(Math.floor(Math.random() * ok.length), 1)[0].text);
+  return out.join(' ');
+}
+
 const ALL_ZH = 'abcdefghijklmnopqrstuvwy';
-const EXCLUDE = new Set('呵喫縣臺爾啦黨');
+const EXCLUDE = new Set('呵喫縣臺爾啦黨纔于啥');
 
 /** 已完成課堂教過的鍵 */
 function learnedKeys(lang, lessons) {
@@ -86,11 +96,11 @@ export function buildDaily({ lang, zh, lessons, chartInfo }) {
     const dueKeys = mastery.due('en', 'k:').map((id) => id.slice(2));
     const chars = [...new Set([...dueKeys, ...keys])].join('');
     steps.push({ type: 'drill', daily: 'review', title: '單鍵複習', gen: { kind: 'groups', chars: (dueKeys.length ? dueKeys.join('') : chars) + 'asdfjkl', groups: 10, minLen: 2, maxLen: 4 },
-                 hint: `今日要重溫 ${dueKeys.length} 個鍵。眼看螢幕，手指回到起始位置。` });
+                 hint: dueKeys.length ? `今日要重溫 ${dueKeys.length} 個鍵。眼看螢幕，手指回到起始位置。` : '重溫學過的鍵。眼看螢幕，手指回到起始位置。' });
     const words = [...new Set(lessons.flatMap((l) => l.steps.flatMap((s) => s.gen?.words ?? [])).filter((w) => [...w].every((c) => chars.includes(c))))];
     if (words.length >= 10) steps.push({ type: 'drill', daily: 'split', title: '詞語', gen: { kind: 'words', words, count: 15 }, hint: '一個一個詞打，打錯要退回改正。' });
-    const texts = lessons.filter((l) => getLessonResult('en', l.id)?.done).flatMap((l) => l.steps.map((s) => s.text).filter((t) => t && t.length > 25));
-    steps.push({ type: 'drill', daily: 'type', title: '句子', text: texts.length ? texts[Math.floor(Math.random() * texts.length)] : 'a sad lad had a salad', hint: '打一段句子，保持準確。' });
+    const doneUpTo = Math.max(1, ...lessons.filter((l) => getLessonResult('en', l.id)?.done).map((l) => l.id));
+    steps.push({ type: 'drill', daily: 'type', title: '句子', text: pickSentences(doneUpTo, 2) || 'a sad lad had a salad', hint: '打一段句子，保持準確。' });
   }
   for (const s of steps) s.hint = `${s.hint} ${hintTail}`;
   return { id: 0, title: '每日任務', subtitle: new Date().toLocaleDateString('zh-HK'), newKeys: [], daily: true, steps };

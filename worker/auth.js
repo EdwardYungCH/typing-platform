@@ -32,11 +32,11 @@ export async function verifyPassword(password, salt, hash) {
 }
 
 const COOKIE = { student: 'tp_s', teacher: 'tp_t' };
-const DAYS = { student: 90, teacher: 14 };
+const DAYS = { student: 30, teacher: 14 };
 
 export function cookieHeader(kind, token, maxAgeDays) {
-  const age = maxAgeDays * 86400;
-  return `${COOKIE[kind]}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${age}`;
+  const age = maxAgeDays ? `; Max-Age=${maxAgeDays * 86400}` : '';
+  return `${COOKIE[kind]}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax${age}`;
 }
 
 export function clearCookie(kind) {
@@ -52,11 +52,16 @@ function readCookie(req, name) {
   return null;
 }
 
-export async function createSession(db, kind, userId) {
+/**
+ * 建立登入狀態。學生沒有剔「記住我」：cookie 在關閉瀏覽器時失效，伺服器最多保留 10 小時
+ * （學校電腦室共用電腦，下一位同學不會接手上一位的帳戶）。老師一律 14 日。
+ */
+export async function createSession(db, kind, userId, remember = kind === 'teacher') {
   const token = randomHex(32);
-  const expires = new Date(Date.now() + DAYS[kind] * 86400000).toISOString();
+  const ms = remember ? DAYS[kind] * 86400000 : 10 * 3600000;
+  const expires = new Date(Date.now() + ms).toISOString();
   await db.prepare('INSERT INTO sessions (token, kind, user_id, expires_at) VALUES (?, ?, ?, ?)').bind(token, kind, userId, expires).run();
-  return { token, header: cookieHeader(kind, token, DAYS[kind]) };
+  return { token, header: cookieHeader(kind, token, remember ? DAYS[kind] : 0) };
 }
 
 /** 讀 cookie 找出目前登入的學生或老師；沒有就回 null。 */
@@ -85,7 +90,7 @@ export async function sweepSessions(db) {
 // ---------- 登入次數限制 ----------
 // 同一個網絡（IP）：10 分鐘內失敗 60 次就暫停 10 分鐘（學校全校共用一個對外 IP，所以上限較寬）；
 // 教師帳號：失敗 5 次鎖 15 分鐘；學生帳號另有 8 次鎖 10 分鐘（worker/index.js）。
-export const LIMITS = { ip: { max: 60, windowMin: 10, lockMin: 10 }, teacher: { max: 5, windowMin: 15, lockMin: 15 } };
+export const LIMITS = { ip: { max: 300, windowMin: 10, lockMin: 10 }, teacher: { max: 5, windowMin: 15, lockMin: 15 } };
 
 export function clientIp(req) {
   return req.headers.get('CF-Connecting-IP') ?? req.headers.get('X-Forwarded-For')?.split(',')[0].trim() ?? 'local';

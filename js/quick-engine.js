@@ -118,6 +118,9 @@ export class QuickEngine {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     // 學生開着系統中文輸入法：網站收不到英文字母，提示他切換
     if (e.isComposing || e.key === 'Process') { this.onIme?.(); return; }
+    // Tab、方向鍵等不可以把焦點帶走或捲動頁面（翻頁鍵和 Enter 由下面處理）
+    if (['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) { e.preventDefault(); return; }
+    if (e.key === 'Enter' && !this.awaitEnter) { e.preventDefault(); return; }
 
     const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const isLetter = /^[a-y]$/.test(key) || key === 'x';

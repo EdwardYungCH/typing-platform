@@ -31,7 +31,9 @@ dialog.t-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 @media print {
   body > .page { display: none; }
   .slips { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 10px; font-family: 'Noto Sans TC', sans-serif; color: #000; }
-  .slip { border: 1px dashed #888; padding: 10px 12px; break-inside: avoid; font-size: 13px; }
+  @page { margin: 12mm; }
+  .slips { gap: 0 !important; }
+  .slip { border: 1px solid #000; margin: -0.5px; padding: 10px 12px; break-inside: avoid; font-size: 13px; }
   .slip b { font-size: 15px; }
   .slip .pw { font-size: 18px; }
 }
@@ -51,7 +53,7 @@ dialog.t-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 .rp-tile span { font-size: 12px; color: var(--ink-2); }
 .rp-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .rp-grid section { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
-.rp-dist { display: grid; grid-template-columns: repeat(17, 1fr); gap: 3px; height: 130px; align-items: end; }
+.rp-dist { display: grid; grid-template-columns: repeat(19, minmax(0, 1fr)); gap: 3px; height: 130px; align-items: end; }
 .rp-col { display: grid; grid-template-rows: 1fr auto auto; height: 100%; text-align: center; }
 .rp-col .rp-bar { align-self: end; display: block; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 0; }
 .rp-col i { font-style: normal; font-size: 11px; color: var(--ink-2); }
@@ -66,9 +68,21 @@ dialog.t-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 .rp-dist.days { grid-template-columns: repeat(30, 1fr); gap: 2px; }
 .rp-dist.days small { font-size: 9px; }
 .tbl a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+/* 學生詳細頁列印（只限 student.html；不可影響後台首頁的帳號紙條 #print） */
 @media print {
-  body > .page { display: block !important; }
-  .topbar .btn, #back, #print, #replay { display: none !important; }
-  .card { break-inside: avoid; border: 1px solid #999; background: #fff; color: #000; }
-  .rp-bar { background: #456 !important; }
+  @page { margin: 12mm; }
+  body { background: #fff; }
+  body.student-page > .page { display: block !important; }
+  body.student-page .topbar .btn, body.student-page #replay, body.student-page .no-print, body.student-page [data-replay], body.student-page .card > .hint { display: none !important; }
+  body.student-page .card { break-inside: auto; border: 0; padding: 0; background: #fff; color: #000; }
+  body.student-page thead { display: table-header-group; }
+  body.student-page tr { break-inside: avoid; }
+  body.student-page .rp-bar { background: #555 !important; }
+  .print-head { display: block !important; font-size: 12px; color: #000; margin-bottom: 6px; }
 }
+.print-head { display: none; }
+.empty-chart { padding: 24px 0; text-align: center; color: var(--ink-3); }
+.rp-dist.days { grid-template-columns: repeat(30, minmax(0, 1fr)); }
+.rp-dist.days small { visibility: hidden; }
+.rp-dist.days .rp-col:nth-child(7n+1) small, .rp-dist.days .rp-col:last-child small { visibility: visible; }
+.t-main .card, body.student-page .card { padding: 16px 20px; }

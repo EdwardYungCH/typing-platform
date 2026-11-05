@@ -21,9 +21,14 @@
       <span class="crumb muted" id="crumb"></span>
       <span class="spacer"></span>
       <span class="focus-tag" id="focus-tag">評測・專注模式</span>
-      <button class="btn ghost" id="toggle-sound" type="button" aria-pressed="true">音效：開</button>
-      <button class="btn ghost" id="toggle-fx" type="button">特效：全</button>
-      <button class="btn ghost" id="toggle-fingers" type="button" aria-pressed="true">手指顏色：開</button>
+      <details class="settings-menu">
+        <summary class="btn ghost">設定</summary>
+        <div>
+          <button class="btn ghost" id="toggle-sound" type="button" aria-pressed="true">音效：開</button>
+          <button class="btn ghost" id="toggle-fx" type="button">特效：全</button>
+          <button class="btn ghost" id="toggle-fingers" type="button" aria-pressed="true">手指顏色：開</button>
+        </div>
+      </details>
     </header>
 
     <section class="lesson-head">
@@ -34,7 +39,9 @@
       <ol class="steps" id="steps" aria-label="課堂步驟"></ol>
     </section>
 
-    <section class="stage card" id="stage" aria-live="polite">
+    <p class="phone-note">打字練習要用實體鍵盤：請用電腦或接上鍵盤的平板。</p>
+    <p class="visually-hidden" id="sr-status" aria-live="assertive"></p>
+    <section class="stage card" id="stage">
       <div class="stage-head">
         <div>
           <h2 id="step-title"></h2>
@@ -80,7 +87,7 @@
   </div>
 
   <div class="overlay" id="overlay" hidden>
-    <div class="panel card" role="dialog" aria-modal="true" aria-labelledby="panel-title">
+    <div class="panel card" role="dialog" aria-modal="true" aria-labelledby="panel-title" tabindex="-1">
       <p class="panel-cheer" id="panel-cheer" hidden></p>
       <div class="stars" id="panel-stars" aria-hidden="true"></div>
       <h2 id="panel-title"></h2>
